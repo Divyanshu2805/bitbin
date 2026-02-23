@@ -44,7 +44,13 @@ export default function DashboardLayout({
   // Wrap content with EditorPreferencesProvider if preferences are provided
   const content = (
     <>
-      <main className="flex-1 overflow-auto p-6">{children}</main>
+      <main className="thin-scrollbar relative flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(194,242,75,0.05),transparent)]"
+          aria-hidden
+        />
+        <div className="relative">{children}</div>
+      </main>
       <ItemDrawer />
       <CommandPalette />
     </>
