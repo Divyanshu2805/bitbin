@@ -1,10 +1,8 @@
 "use client";
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Pin, Copy, Check } from 'lucide-react';
-import { getItemTypeIcon } from '@/lib/constants/item-types';
+import { ItemTypeIcon } from '@/components/shared/item-type-icon';
 import { formatRelativeDate } from '@/lib/utils/date';
 import { useItemDrawer } from '@/components/items/item-drawer-provider';
 import { useState } from 'react';
@@ -17,9 +15,7 @@ interface ItemCardProps {
 export default function ItemCard({ item }: ItemCardProps) {
   const { openDrawer } = useItemDrawer();
   const [copied, setCopied] = useState(false);
-  const IconComponent = getItemTypeIcon(item.itemType.icon);
   const iconColor = item.itemType.color;
-  const borderStyle = { borderLeftColor: iconColor, borderLeftWidth: '3px' };
 
   // Determine if item has copyable content
   const copyableContent = item.content || item.url;
@@ -39,67 +35,90 @@ export default function ItemCard({ item }: ItemCardProps) {
   };
 
   return (
-    <Card
-      className="group relative bg-card border-border hover:border-muted-foreground/50 transition-colors cursor-pointer py-0"
-      style={borderStyle}
+    <div
+      role="button"
+      tabIndex={0}
+      className="card-lift group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      style={{ '--accent-color': iconColor } as React.CSSProperties}
       onClick={() => openDrawer(item.id)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDrawer(item.id);
+        }
+      }}
     >
-      <CardContent className="flex items-start gap-3 px-4 pt-6 pb-14">
+      {/* type accent strip */}
+      <span
+        className="absolute inset-x-0 top-0 h-[2px] opacity-70 transition-opacity group-hover:opacity-100"
+        style={{ background: `linear-gradient(90deg, ${iconColor}, transparent 80%)` }}
+      />
+
+      <div className="flex items-start gap-3">
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: `${iconColor}20` }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:-rotate-6"
+          style={{ backgroundColor: `${iconColor}1f`, color: iconColor }}
         >
-          <IconComponent className="h-5 w-5" style={{ color: iconColor }} />
+          <ItemTypeIcon icon={item.itemType.icon} className="h-[18px] w-[18px]" />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground truncate">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h3 className="truncate font-sans text-[15px] font-semibold tracking-normal text-foreground">
               {item.title}
             </h3>
             {item.isFavorite && (
-              <Star className="h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
+              <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
             )}
             {item.isPinned && (
-              <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Pin className="h-3.5 w-3.5 shrink-0 text-lime" />
             )}
           </div>
-          {item.description && (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+          {item.description ? (
+            <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">
               {item.description}
             </p>
+          ) : (
+            <p className="mt-1 text-sm italic text-muted-foreground/50">No description</p>
           )}
         </div>
-        <span className="text-xs text-muted-foreground shrink-0">
+      </div>
+
+      <div className="mt-4 flex min-h-7 items-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+          {item.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+            >
+              #{tag}
+            </span>
+          ))}
+          {item.tags.length > 3 && (
+            <span className="px-1 py-0.5 font-mono text-[11px] text-muted-foreground/60">
+              +{item.tags.length - 3}
+            </span>
+          )}
+        </div>
+        <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">
           {formatRelativeDate(item.updatedAt)}
         </span>
-      </CardContent>
-      {item.tags.length > 0 && (
-        <div className="absolute bottom-3 left-4 flex flex-wrap gap-1">
-          {item.tags.slice(0, 3).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs bg-muted text-muted-foreground"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )}
-      {canCopy && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute bottom-3 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={handleCopy}
-        >
-          {copied ? (
-            <Check className="h-4 w-4 text-green-500" />
-          ) : (
-            <Copy className="h-4 w-4 text-muted-foreground" />
-          )}
-        </Button>
-      )}
-    </Card>
+        {canCopy && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
+            onClick={handleCopy}
+            aria-label="Copy content"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-lime" />
+            ) : (
+              <Copy className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
