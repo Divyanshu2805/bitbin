@@ -1,5 +1,6 @@
-import Link from 'next/link';
+import { Library } from 'lucide-react';
 import CollectionCard from './collection-card';
+import SectionHeader from './section-header';
 import type { CollectionWithTypes } from '@/lib/db/collections';
 
 interface CollectionsSectionProps {
@@ -11,19 +12,20 @@ export default function CollectionsSection({
 }: CollectionsSectionProps) {
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Collections</h2>
-        <Link
-          href="/collections"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View all
-        </Link>
-      </div>
+      <SectionHeader
+        icon={<Library className="h-4 w-4" />}
+        title="Collections"
+        href="/collections"
+      />
       {collections.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No collections yet.</p>
+        <div className="rounded-xl border border-dashed border-border bg-card/40 p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            No collections yet. Group related items together with{' '}
+            <span className="font-medium text-foreground">Collection</span> in the top bar.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 stagger sm:grid-cols-2 lg:grid-cols-3">
           {collections.map((collection) => (
             <CollectionCard key={collection.id} collection={collection} />
           ))}
