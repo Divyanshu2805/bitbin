@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Star, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Star, MoreHorizontal, Pencil, Trash2, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -35,10 +34,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  const borderStyle = collection.dominantColor
-    ? { borderLeftColor: collection.dominantColor, borderLeftWidth: "3px" }
-    : {};
+  const accent = collection.dominantColor || "#6b7280";
 
   const handleCardClick = () => {
     router.push(`/collections/${collection.id}`);
@@ -69,73 +65,102 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
 
   return (
     <>
-      <Card
-        className="group relative bg-card border-border hover:border-muted-foreground/50 transition-colors cursor-pointer py-0"
-        style={borderStyle}
+      <div
+        role="link"
+        tabIndex={0}
+        className="card-lift group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-card p-4 outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+        style={{ "--accent-color": accent } as React.CSSProperties}
         onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && e.key === "Enter") handleCardClick();
+        }}
       >
-        <CardContent className="px-4 py-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground">{collection.name}</h3>
-              {collection.isFavorite && (
-                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-              )}
+        {/* folder tab */}
+        <span
+          className="absolute left-4 top-0 h-1 w-10 rounded-b-md transition-all duration-300 group-hover:w-16"
+          style={{ backgroundColor: accent }}
+        />
+
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: `${accent}1f`, color: accent }}
+            >
+              <Folder className="h-4 w-4" />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleToggleFavorite}>
-                  <Star className="h-4 w-4" />
-                  {collection.isFavorite ? "Unfavorite" : "Favorite"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <h3 className="truncate font-sans text-[15px] font-semibold tracking-normal text-foreground">
+              {collection.name}
+            </h3>
+            {collection.isFavorite && (
+              <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
+            )}
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-mr-1 -mt-1 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 max-md:opacity-100"
+                aria-label="Collection actions"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <Pencil className="h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleToggleFavorite}>
+                <Star className="h-4 w-4" />
+                {collection.isFavorite ? "Unfavorite" : "Favorite"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {collection.description ? (
+          <p className="mt-3 line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {collection.description}
           </p>
-          {collection.description && (
-            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-              {collection.description}
-            </p>
-          )}
+        ) : (
+          <p className="mt-3 text-sm italic text-muted-foreground/50">No description</p>
+        )}
+
+        <div className="mt-4 flex items-center justify-between">
+          <span className="font-mono text-xs text-muted-foreground">
+            {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
+          </span>
           {collection.itemTypes.length > 0 && (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="flex items-center -space-x-1">
               {collection.itemTypes.map((itemType) => {
                 const IconComponent = getItemTypeIcon(itemType.icon);
                 return (
-                  <IconComponent
+                  <span
                     key={itemType.name}
-                    className="h-4 w-4"
-                    style={{ color: itemType.color }}
-                  />
+                    title={itemType.name}
+                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-muted"
+                  >
+                    <IconComponent
+                      className="h-3 w-3"
+                      style={{ color: itemType.color }}
+                    />
+                  </span>
                 );
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <EditCollectionDialog
         open={editOpen}
