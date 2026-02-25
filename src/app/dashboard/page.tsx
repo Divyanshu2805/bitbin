@@ -35,6 +35,8 @@ export default async function DashboardPage() {
       ])
     : [[], [], [], { totalItems: 0, totalCollections: 0, favoriteItems: 0, favoriteCollections: 0 }, [], { favorites: [], recents: [] }, undefined];
 
+  const firstName = user?.name?.split(' ')[0];
+
   return (
     <DashboardLayout
       itemTypes={itemTypes}
@@ -43,11 +45,21 @@ export default async function DashboardPage() {
       editorPreferences={editorPreferences}
       isPro={session.user.isPro}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-10">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Your developer knowledge hub</p>
+        <div className="flex flex-wrap items-end justify-between gap-4 animate-fade-up">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-lime">Dashboard</p>
+            <h1 className="mt-2 text-3xl font-bold text-foreground">
+              Welcome back{firstName ? `, ${firstName}` : ''}
+            </h1>
+            <p className="mt-1 text-muted-foreground">Here&apos;s what&apos;s in your bin.</p>
+          </div>
+          <p className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
+            Press
+            <kbd className="rounded border border-border bg-muted px-1.5 font-mono text-[11px]">⌘K</kbd>
+            to search everything
+          </p>
         </div>
 
         {/* Stats Cards */}
