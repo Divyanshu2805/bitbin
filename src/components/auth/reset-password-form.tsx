@@ -92,7 +92,7 @@ export function ResetPasswordForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
-            <CheckCircle className="h-12 w-12 text-green-500" />
+            <CheckCircle className="h-12 w-12 text-lime" />
           </div>
           <CardTitle className="text-2xl">Password Reset!</CardTitle>
           <CardDescription>{message}</CardDescription>

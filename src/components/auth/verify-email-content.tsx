@@ -56,7 +56,7 @@ export function VerifyEmailContent() {
             <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
           )}
           {status === 'success' && (
-            <CheckCircle className="h-12 w-12 text-green-500" />
+            <CheckCircle className="h-12 w-12 text-lime" />
           )}
           {status === 'error' && (
             <XCircle className="h-12 w-12 text-destructive" />

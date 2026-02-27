@@ -109,7 +109,7 @@ export default function SuggestTagsButton({
               <button
                 type="button"
                 onClick={() => handleAccept(tag)}
-                className="rounded-sm p-0.5 hover:bg-green-500/20 text-green-400"
+                className="rounded-sm p-0.5 hover:bg-lime/15 text-lime"
                 title="Accept tag"
               >
                 <Check className="h-3 w-3" />

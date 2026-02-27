@@ -83,8 +83,8 @@ export default function EditorHeader({
         >
           {copied ? (
             <>
-              <Check className="h-3.5 w-3.5 text-green-500" />
-              <span className="text-green-500">Copied</span>
+              <Check className="h-3.5 w-3.5 text-lime" />
+              <span className="text-lime">Copied</span>
             </>
           ) : (
             <>

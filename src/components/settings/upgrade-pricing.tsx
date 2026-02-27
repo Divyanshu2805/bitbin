@@ -55,13 +55,13 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
         >
           <span
             className={`absolute top-[3px] left-[3px] w-5 h-5 rounded-full transition-all duration-200 ${
-              isYearly ? 'translate-x-5 bg-green-500' : 'translate-x-0 bg-muted-foreground'
+              isYearly ? 'translate-x-5 bg-lime' : 'translate-x-0 bg-muted-foreground'
             }`}
           />
         </button>
         <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
           Yearly{' '}
-          <span className="inline-block bg-green-500/20 text-green-500 text-xs font-bold px-2 py-0.5 rounded-lg ml-1">
+          <span className="inline-block bg-lime/15 text-lime text-xs font-bold px-2 py-0.5 rounded-lg ml-1">
             Save 25%
           </span>
         </span>
@@ -88,7 +88,7 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
                 }`}
               >
                 {f.included ? (
-                  <Check className="size-4 text-green-500 shrink-0" strokeWidth={2.5} />
+                  <Check className="size-4 text-lime shrink-0" strokeWidth={2.5} />
                 ) : (
                   <X className="size-4 text-muted-foreground/50 shrink-0" />
                 )}
@@ -121,7 +121,7 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
           <ul className="flex flex-col gap-3 mb-6">
             {PRO_FEATURES.map((text) => (
               <li key={text} className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                <Check className="size-4 text-green-500 shrink-0" strokeWidth={2.5} />
+                <Check className="size-4 text-lime shrink-0" strokeWidth={2.5} />
                 {text}
               </li>
             ))}
