@@ -1,15 +1,16 @@
 import { Suspense } from "react";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { AuthFallback } from "@/components/auth/auth-fallback";
 
 export const metadata = {
-  title: "Sign In - BitBin",
+  title: "Sign in",
   description: "Sign in to your BitBin account",
 };
 
 export default function SignInPage() {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
-      <Suspense fallback={<div>Loading...</div>}>
+    <div className="w-full max-w-md animate-fade-up">
+      <Suspense fallback={<AuthFallback />}>
         <SignInForm />
       </Suspense>
     </div>
