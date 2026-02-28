@@ -1,5 +1,5 @@
-import { FolderOpen } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/shared/logo";
 
 const FOOTER_LINKS = {
   Product: [
@@ -21,31 +21,28 @@ const FOOTER_LINKS = {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#1e1e2e] pt-16 pb-8 bg-[#0a0a0f]">
-      <div className="max-w-[1200px] mx-auto px-6">
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12 max-md:grid-cols-2 max-md:gap-8 max-sm:grid-cols-1">
-          {/* Brand */}
+    <footer className="border-t border-border bg-surface pb-8 pt-16">
+      <div className="mx-auto max-w-[1120px] px-6">
+        <div className="mb-14 grid grid-cols-[2fr_1fr_1fr_1fr] gap-12 max-md:grid-cols-2 max-md:gap-8 max-sm:grid-cols-1">
           <div className="max-md:col-span-2 max-sm:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-[#e4e4ef] mb-3">
-              <FolderOpen className="size-6" />
-              BitBin
+            <Link href="/" className="mb-4 inline-block">
+              <Logo />
             </Link>
-            <p className="text-sm text-[#8888a4] max-w-[280px] leading-relaxed">
-              Your developer knowledge hub. One place for snippets, prompts, commands, and more.
+            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              One bin for snippets, prompts, commands, notes, files and links.
             </p>
           </div>
 
-          {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([title, links]) => (
             <div key={title} className="flex flex-col gap-2.5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#e4e4ef] mb-1">
+              <h4 className="mb-1 font-mono text-xs uppercase tracking-widest text-muted-foreground/70">
                 {title}
               </h4>
               {links.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-sm text-[#8888a4] hover:text-[#e4e4ef] transition-colors"
+                  className="w-fit text-sm text-muted-foreground transition-colors hover:text-lime"
                 >
                   {link.label}
                 </a>
@@ -54,9 +51,12 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="border-t border-[#1e1e2e] pt-6 text-center">
-          <p className="text-sm text-[#55556a]">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
+          <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} BitBin. All rights reserved.
+          </p>
+          <p className="font-mono text-xs text-muted-foreground/70">
+            made for developers who hoard snippets
           </p>
         </div>
       </div>
