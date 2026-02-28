@@ -1,3 +1,5 @@
+import { LogoMark } from "@/components/shared/logo";
+
 const SIDEBAR_ITEMS = [
   { label: "Snippets", color: "#3b82f6", active: true },
   { label: "Prompts", color: "#8b5cf6" },
@@ -13,44 +15,56 @@ const RECENT_CARDS = ["#ec4899", "#3b82f6", "#fde047", "#6b7280"];
 
 function DashCard({ color }: { color: string }) {
   return (
-    <div
-      className="bg-[#1a1a28] rounded-lg p-2 flex flex-col gap-1.5"
-      style={{ borderTop: `3px solid ${color}` }}
-    >
-      <div className="w-[60%] h-[5px] rounded-sm bg-[#55556a]" />
-      <div className="w-[90%] h-[3px] rounded-sm bg-[#1e1e2e]" />
-      <div className="w-[50%] h-[3px] rounded-sm bg-[#1e1e2e]" />
+    <div className="relative flex flex-col gap-1.5 overflow-hidden rounded-md border border-border bg-surface-2 p-2">
+      <span className="absolute inset-x-0 top-0 h-[2px]" style={{ background: color }} />
+      <div className="flex items-center gap-1">
+        <span className="h-[5px] w-[5px] rounded-sm" style={{ background: color }} />
+        <div className="h-[5px] w-[55%] rounded-sm bg-muted-foreground/50" />
+      </div>
+      <div className="h-[3px] w-[90%] rounded-sm bg-border" />
+      <div className="h-[3px] w-[50%] rounded-sm bg-border" />
     </div>
   );
 }
 
+/** Miniature, non-interactive mock of the BitBin dashboard used in the hero */
 export default function DashboardPreview() {
   return (
-    <div className="h-[280px] max-md:h-[220px] bg-[#12121a] border border-[#1e1e2e] rounded-xl flex flex-col overflow-hidden">
+    <div className="relative flex h-[280px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_30px_80px_-30px_rgba(194,242,75,0.25)] max-md:h-[220px]">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e1e2e] bg-[#1a1a28] shrink-0">
-        <div className="w-[100px] h-2 rounded bg-[#1e1e2e]" />
-        <div className="w-3.5 h-3.5 rounded-full bg-[#3b82f6]" />
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+        <LogoMark className="h-3.5 w-3.5" animated />
+        <div className="flex h-3.5 flex-1 items-center rounded border border-border bg-background px-1.5">
+          <div className="h-[3px] w-10 rounded bg-muted-foreground/40" />
+          <span className="ml-auto font-mono text-[6px] text-muted-foreground">⌘K</span>
+        </div>
+        <div className="h-3.5 w-8 rounded bg-lime" />
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         {/* Sidebar */}
-        <div className="w-[90px] bg-[#1a1a28] border-r border-[#1e1e2e] p-2 flex flex-col gap-1 shrink-0">
+        <div className="flex w-[92px] shrink-0 flex-col gap-0.5 border-r border-border bg-sidebar p-2">
+          <span className="mb-1 px-1.5 font-mono text-[0.4rem] uppercase tracking-widest text-muted-foreground/70">
+            Types
+          </span>
           {SIDEBAR_ITEMS.map((item) => (
             <div
               key={item.label}
-              className={`flex items-center gap-1.5 px-1.5 py-0.5 rounded ${
-                item.active ? "bg-white/[0.06]" : ""
+              className={`relative flex items-center gap-1.5 rounded px-1.5 py-[3px] ${
+                item.active ? "bg-accent" : ""
               }`}
             >
+              {item.active && (
+                <span className="absolute -left-2 top-1/2 h-2.5 w-[2px] -translate-y-1/2 rounded-full bg-lime" />
+              )}
               <span
-                className="w-[5px] h-[5px] rounded-full shrink-0"
+                className="h-[5px] w-[5px] shrink-0 rounded-full"
                 style={{ background: item.color }}
               />
               <span
-                className={`text-[0.45rem] font-medium leading-none whitespace-nowrap ${
-                  item.active ? "text-[#8888a4]" : "text-[#55556a]"
+                className={`whitespace-nowrap text-[0.45rem] font-medium leading-none ${
+                  item.active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {item.label}
@@ -60,19 +74,27 @@ export default function DashboardPreview() {
         </div>
 
         {/* Main */}
-        <div className="flex-1 p-2.5 flex flex-col gap-1.5 overflow-hidden">
-          <div className="text-[0.45rem] font-bold text-[#55556a] uppercase tracking-wider">
+        <div className="flex flex-1 flex-col gap-1.5 overflow-hidden p-2.5">
+          <div className="grid grid-cols-4 gap-1">
+            {["#c2f24b", "#ff7a4d", "#5ee6d8", "#a78bfa"].map((c) => (
+              <div key={c} className="rounded border border-border bg-surface-2 p-1">
+                <div className="h-[5px] w-3 rounded-sm" style={{ background: c }} />
+                <div className="mt-1 h-[3px] w-6 rounded-sm bg-border" />
+              </div>
+            ))}
+          </div>
+          <div className="font-mono text-[0.42rem] font-bold uppercase tracking-wider text-muted-foreground">
             Collections
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5 stagger">
             {COLLECTION_CARDS.map((c) => (
               <DashCard key={`col-${c}`} color={c} />
             ))}
           </div>
-          <div className="text-[0.45rem] font-bold text-[#55556a] uppercase tracking-wider">
-            Recent Items
+          <div className="font-mono text-[0.42rem] font-bold uppercase tracking-wider text-muted-foreground">
+            Recent
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5 stagger">
             {RECENT_CARDS.map((c) => (
               <DashCard key={`rec-${c}`} color={c} />
             ))}

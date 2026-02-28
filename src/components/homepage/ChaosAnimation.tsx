@@ -141,13 +141,13 @@ export default function ChaosAnimation() {
   return (
     <div
       ref={containerRef}
-      className="relative h-[280px] md:h-[280px] max-md:h-[220px] bg-[#12121a] border border-[#1e1e2e] rounded-xl overflow-hidden"
+      className="relative h-[280px] max-md:h-[220px] overflow-hidden rounded-2xl border border-border bg-card bg-dots"
     >
       {ICON_SVGS.map((svg, i) => (
         <div
           key={i}
           ref={(el) => { iconsRef.current[i] = el; }}
-          className="absolute text-[#8888a4] opacity-70 flex items-center justify-center"
+          className="absolute flex items-center justify-center text-muted-foreground opacity-60 transition-colors hover:text-coral"
           style={{ width: ICON_SIZE, height: ICON_SIZE }}
           dangerouslySetInnerHTML={{ __html: `<div class="w-[54px] h-[54px]">${svg}</div>` }}
         />
