@@ -2,141 +2,149 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import ScrollFadeIn from "./ScrollFadeIn";
+import SectionHeading from "./SectionHeading";
 
 const FREE_FEATURES = [
   { text: "50 items", included: true },
   { text: "3 collections", included: true },
-  { text: "Snippets, Prompts, Commands, Notes, Links", included: true },
+  { text: "Snippets, prompts, commands, notes, links", included: true },
   { text: "Basic search", included: true },
-  { text: "File & Image uploads", included: false },
+  { text: "File & image uploads", included: false },
   { text: "AI features", included: false },
 ];
 
 const PRO_FEATURES = [
   "Unlimited items",
   "Unlimited collections",
-  "All item types including Files & Images",
+  "All item types including files & images",
   "AI auto-tagging & summaries",
-  "\u201CExplain This Code\u201D",
-  "AI Prompt Optimizer",
+  "“Explain this code”",
+  "AI prompt optimizer",
   "Data export (JSON/ZIP)",
+];
+
+const BILLING_OPTIONS = [
+  { label: "Monthly", yearly: false },
+  { label: "Yearly", yearly: true },
 ];
 
 export default function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <section id="pricing" className="py-[120px] text-center bg-[#0a0a0f]">
-      <div className="max-w-[1200px] mx-auto px-6">
-        <ScrollFadeIn>
-          <h2 className="text-[clamp(1.8rem,3.5vw,2.8rem)] font-extrabold leading-tight mb-4 tracking-tight max-sm:text-[1.6rem]">
-            Simple, Transparent
-            <br />
-            <span className="bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 bg-clip-text text-transparent">
-              Pricing
-            </span>
-          </h2>
-        </ScrollFadeIn>
-        <ScrollFadeIn>
-          <p className="text-base text-[#8888a4] max-w-[520px] mx-auto mb-10 leading-relaxed">
-            Start free. Upgrade when you need more power.
-          </p>
-        </ScrollFadeIn>
+    <section id="pricing" className="py-[120px]">
+      <div className="mx-auto max-w-[1120px] px-6">
+        <SectionHeading
+          align="center"
+          eyebrow="Pricing"
+          title="Free to start. Cheap to keep."
+          description="Upgrade when your bin gets full. Cancel whenever."
+        />
 
-        {/* Toggle */}
-        <ScrollFadeIn>
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <span className={`text-sm font-medium transition-colors ${!isYearly ? "text-[#e4e4ef]" : "text-[#8888a4]"}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setIsYearly(!isYearly)}
-              className="w-12 h-7 bg-[#1a1a28] border border-[#1e1e2e] rounded-full relative cursor-pointer transition-colors"
-              aria-label="Toggle billing period"
-            >
-              <span
-                className={`absolute top-[3px] left-[3px] w-5 h-5 rounded-full transition-all duration-200 ${
-                  isYearly ? "translate-x-5 bg-[#22c55e]" : "translate-x-0 bg-[#8888a4]"
-                }`}
-              />
-            </button>
-            <span className={`text-sm font-medium transition-colors ${isYearly ? "text-[#e4e4ef]" : "text-[#8888a4]"}`}>
-              Yearly{" "}
-              <span className="inline-block bg-gradient-to-r from-[#22c55e] to-[#15803d] text-black text-[0.7rem] font-bold px-2 py-0.5 rounded-lg ml-1">
-                Save 25%
-              </span>
-            </span>
+        {/* Billing toggle */}
+        <ScrollFadeIn delay={80}>
+          <div className="mx-auto mb-12 mt-10 flex w-fit items-center rounded-xl border border-border bg-card p-1">
+            {BILLING_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                onClick={() => setIsYearly(opt.yearly)}
+                className={cn(
+                  "relative flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-all",
+                  isYearly === opt.yearly
+                    ? "bg-accent text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-pressed={isYearly === opt.yearly}
+              >
+                {opt.label}
+                {opt.yearly && (
+                  <span className="rounded-md bg-lime/15 px-1.5 py-0.5 font-mono text-[10px] font-bold text-lime">
+                    -25%
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </ScrollFadeIn>
 
-        {/* Cards */}
-        <div className="grid grid-cols-2 gap-6 max-w-[720px] mx-auto max-md:grid-cols-1">
+        <div className="mx-auto grid max-w-[780px] grid-cols-2 gap-5 max-md:grid-cols-1">
           {/* Free */}
           <ScrollFadeIn>
-            <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-10 text-left transition-all duration-300 hover:-translate-y-1 max-sm:p-8">
-              <div className="mb-8">
-                <h3 className="text-xl font-bold mb-2 text-[#e4e4ef]">Free</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-extrabold tracking-tight max-sm:text-4xl text-[#e4e4ef]">$0</span>
-                  <span className="text-sm text-[#8888a4]">/month</span>
-                </div>
-                <p className="text-sm text-[#8888a4] mt-1">Perfect for getting started</p>
+            <div className="card-lift flex h-full flex-col rounded-2xl border border-border bg-card p-8 text-left">
+              <h3 className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Free</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="font-display text-5xl font-bold tracking-tight">$0</span>
+                <span className="text-sm text-muted-foreground">/month</span>
               </div>
-              <ul className="flex flex-col gap-3.5 mb-8">
+              <p className="mt-1 text-sm text-muted-foreground">Perfect for getting started</p>
+
+              <ul className="my-8 flex flex-1 flex-col gap-3">
                 {FREE_FEATURES.map((f) => (
                   <li
                     key={f.text}
-                    className={`flex items-center gap-2.5 text-sm ${
-                      f.included ? "text-[#8888a4]" : "text-[#55556a]"
-                    }`}
+                    className={cn(
+                      "flex items-center gap-2.5 text-sm",
+                      f.included ? "text-muted-foreground" : "text-muted-foreground/45 line-through"
+                    )}
                   >
                     {f.included ? (
-                      <Check className="size-[18px] text-[#22c55e] shrink-0" strokeWidth={2.5} />
+                      <Check className="size-4 shrink-0 text-lime" strokeWidth={2.5} />
                     ) : (
-                      <X className="size-[18px] text-[#55556a] shrink-0" />
+                      <Minus className="size-4 shrink-0" />
                     )}
                     {f.text}
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" asChild className="w-full border-[#1e1e2e] text-[#8888a4] hover:text-[#e4e4ef] hover:border-[#8888a4] bg-transparent">
-                <Link href="/register">Get Started</Link>
+              <Button variant="outline" asChild className="w-full rounded-xl">
+                <Link href="/register">Get started</Link>
               </Button>
             </div>
           </ScrollFadeIn>
 
-          {/* Pro */}
-          <ScrollFadeIn>
-            <div className="bg-gradient-to-b from-blue-500/[0.06] to-[#12121a] border border-blue-500 rounded-xl p-10 text-left relative transition-all duration-300 hover:-translate-y-1 max-sm:p-8">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-400 text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
-                Most Popular
-              </span>
-              <div className="mb-8">
-                <h3 className="text-xl font-bold mb-2 text-[#e4e4ef]">Pro</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-extrabold tracking-tight max-sm:text-4xl text-[#e4e4ef]">
-                    {isYearly ? "$6" : "$8"}
-                  </span>
-                  <span className="text-sm text-[#8888a4]">
-                    {isYearly ? "/month (billed $72/yr)" : "/month"}
+          {/* Pro with a slowly rotating gradient border */}
+          <ScrollFadeIn delay={100}>
+            <div className="relative h-full overflow-hidden rounded-2xl p-px">
+              <div
+                className="absolute inset-[-60%] animate-spin-slow bg-[conic-gradient(from_0deg,transparent_0deg,transparent_250deg,var(--brand-lime)_320deg,var(--brand-cyan)_360deg)]"
+                aria-hidden
+              />
+              <div className="relative flex h-full flex-col rounded-[15px] bg-card p-8 text-left">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-mono text-sm uppercase tracking-widest text-lime">Pro</h3>
+                  <span className="rounded-full bg-coral/15 px-2.5 py-0.5 text-xs font-semibold text-coral">
+                    Most popular
                   </span>
                 </div>
-                <p className="text-sm text-[#8888a4] mt-1">For serious developers</p>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span
+                    key={isYearly ? "yearly" : "monthly"}
+                    className="font-display text-5xl font-bold tracking-tight animate-fade-up"
+                  >
+                    {isYearly ? "$6" : "$8"}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {isYearly ? "/month, billed $72/yr" : "/month"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">For serious developers</p>
+
+                <ul className="my-8 flex flex-1 flex-col gap-3">
+                  {PRO_FEATURES.map((text) => (
+                    <li key={text} className="flex items-center gap-2.5 text-sm text-foreground/85">
+                      <Check className="size-4 shrink-0 text-lime" strokeWidth={2.5} />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild className="w-full rounded-xl font-semibold">
+                  <Link href="/register">Go Pro</Link>
+                </Button>
               </div>
-              <ul className="flex flex-col gap-3.5 mb-8">
-                {PRO_FEATURES.map((text) => (
-                  <li key={text} className="flex items-center gap-2.5 text-sm text-[#8888a4]">
-                    <Check className="size-[18px] text-[#22c55e] shrink-0" strokeWidth={2.5} />
-                    {text}
-                  </li>
-                ))}
-              </ul>
-              <Button asChild className="w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-400 text-white border-0 hover:opacity-90">
-                <Link href="/register">Start Free Trial</Link>
-              </Button>
             </div>
           </ScrollFadeIn>
         </div>
