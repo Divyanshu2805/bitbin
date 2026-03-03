@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import DashboardLayout from '@/components/layout/dashboard-layout';
+import EmptyState from '@/components/shared/empty-state';
 import ItemCard from '@/components/dashboard/item-card';
 import ImageThumbnailCard from '@/components/items/image-thumbnail-card';
 import FileListRow from '@/components/items/file-list-row';
@@ -73,7 +74,7 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold text-foreground">{collection.name}</h1>
               {collection.isFavorite && (
-                <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
               )}
               <span className="text-muted-foreground">
                 ({collection.itemCount} {collection.itemCount === 1 ? 'item' : 'items'})
@@ -145,11 +146,10 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
             )}
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
-            <p className="text-muted-foreground">
-              This collection is empty. Add items to get started!
-            </p>
-          </div>
+          <EmptyState
+            title="This collection is empty"
+            description="Add items to it from the item drawer or when creating a new item."
+          />
         )}
 
         {/* Pagination */}

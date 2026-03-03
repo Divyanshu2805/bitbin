@@ -64,8 +64,9 @@ export default async function ProfilePage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-          <p className="text-muted-foreground">View your account information and usage</p>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-lime">Account</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">Profile</h1>
+          <p className="mt-1 text-muted-foreground">View your account information and usage</p>
         </div>
 
         {/* Profile Info */}

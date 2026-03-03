@@ -7,6 +7,7 @@ import ImageThumbnailCard from '@/components/items/image-thumbnail-card';
 import FileListRow from '@/components/items/file-list-row';
 import ItemsPageHeader from '@/components/items/items-page-header';
 import Pagination from '@/components/shared/pagination';
+import EmptyState from '@/components/shared/empty-state';
 import { getSidebarCollections } from '@/lib/db/collections';
 import { getItemsByType, getItemTypesWithCounts, VALID_ITEM_TYPES } from '@/lib/db/items';
 import { getEditorPreferences } from '@/lib/db/users';
@@ -85,14 +86,14 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
         {items.length > 0 ? (
           typeName === 'file' ? (
             // Single-column list for files
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 stagger">
               {items.map((item) => (
                 <FileListRow key={item.id} item={item} />
               ))}
             </div>
           ) : (
             // Grid for images and other types
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 stagger md:grid-cols-2 lg:grid-cols-3">
               {items.map((item) =>
                 typeName === 'image' ? (
                   <ImageThumbnailCard key={item.id} item={item} />
@@ -103,11 +104,10 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             </div>
           )
         ) : (
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
-            <p className="text-muted-foreground">
-              No {typeName}s yet. Create your first one!
-            </p>
-          </div>
+          <EmptyState
+            title={`No ${typeName}s yet`}
+            description={`Your ${typeName}s will show up here. Hit "New ${typeName.charAt(0).toUpperCase() + typeName.slice(1)}" to add the first one.`}
+          />
         )}
 
         {/* Pagination */}

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import DashboardLayout from "@/components/layout/dashboard-layout";
+import PageHeader from "@/components/shared/page-header";
+import EmptyState from "@/components/shared/empty-state";
 import FavoritesItemList from "@/components/favorites/favorites-item-list";
 import FavoritesCollectionList from "@/components/favorites/favorites-collection-list";
 import { getSidebarCollections, getFavoriteCollections } from "@/lib/db/collections";
@@ -48,19 +50,18 @@ export default async function FavoritesPage() {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
-          <h1 className="text-2xl font-semibold text-foreground">Favorites</h1>
-          <span className="text-muted-foreground">({totalFavorites})</span>
-        </div>
+        <PageHeader
+          eyebrow="Starred"
+          title="Favorites"
+          count={totalFavorites}
+          icon={<Star className="h-6 w-6 fill-amber-400 text-amber-400" />}
+        />
 
         {hasNoFavorites ? (
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
-            <Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              No favorites yet. Star items or collections to see them here.
-            </p>
-          </div>
+          <EmptyState
+            title="No favorites yet"
+            description="Star items or collections and they'll be waiting for you here."
+          />
         ) : (
           <div className="space-y-8">
             {favoriteItems.length > 0 && (

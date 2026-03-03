@@ -43,8 +43,9 @@ export default async function SettingsPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Manage your account settings</p>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-lime">Preferences</p>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">Settings</h1>
+          <p className="mt-1 text-muted-foreground">Manage your account settings</p>
         </div>
 
         {/* Editor Settings */}

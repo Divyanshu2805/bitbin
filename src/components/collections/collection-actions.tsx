@@ -65,7 +65,7 @@ export default function CollectionActions({ collection }: CollectionActionsProps
         >
           <Star
             className={`h-4 w-4 ${
-              collection.isFavorite ? "fill-yellow-500 text-yellow-500" : ""
+              collection.isFavorite ? "fill-amber-400 text-amber-400" : ""
             }`}
           />
         </Button>
