@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Star, Pin, File, FileText, FileImage, FileVideo, FileAudio, FileArchive, FileCode, FileSpreadsheet } from 'lucide-react';
+import { createElement } from 'react';
 import { useItemDrawer } from '@/components/items/item-drawer-provider';
 import { formatRelativeDate } from '@/lib/utils/date';
 import { formatFileSize } from '@/lib/r2';
@@ -58,7 +59,6 @@ function getFileIcon(fileName: string | null) {
 
 export default function FileListRow({ item }: FileListRowProps) {
   const { openDrawer } = useItemDrawer();
-  const FileIcon = getFileIcon(item.fileName);
   const iconColor = item.itemType.color;
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -88,7 +88,7 @@ export default function FileListRow({ item }: FileListRowProps) {
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
         style={{ backgroundColor: `${iconColor}20` }}
       >
-        <FileIcon className="h-5 w-5" style={{ color: iconColor }} />
+        {createElement(getFileIcon(item.fileName), { className: "h-5 w-5", style: { color: iconColor } })}
       </div>
 
       {/* File Info - Desktop */}
@@ -100,7 +100,7 @@ export default function FileListRow({ item }: FileListRowProps) {
               {item.title}
             </span>
             {item.isFavorite && (
-              <Star className="h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
+              <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
             )}
             {item.isPinned && (
               <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -131,7 +131,7 @@ export default function FileListRow({ item }: FileListRowProps) {
             {item.title}
           </span>
           {item.isFavorite && (
-            <Star className="h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
+            <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
           )}
           {item.isPinned && (
             <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />

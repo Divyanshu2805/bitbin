@@ -42,7 +42,7 @@ export default function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
             {item.title}
           </h3>
           {item.isFavorite && (
-            <Star className="h-4 w-4 shrink-0 fill-yellow-500 text-yellow-500" />
+            <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
           )}
           {item.isPinned && (
             <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />

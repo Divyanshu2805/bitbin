@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { getItemTypeIcon } from "@/lib/constants/item-types";
+import { ItemTypeIcon } from "@/components/shared/item-type-icon";
 import { formatRelativeDate } from "@/lib/utils/date";
 import { useItemDrawer } from "@/components/items/item-drawer-provider";
 import type { ItemWithType } from "@/lib/db/items";
@@ -12,7 +12,6 @@ interface FavoriteItemRowProps {
 
 export default function FavoriteItemRow({ item }: FavoriteItemRowProps) {
   const { openDrawer } = useItemDrawer();
-  const IconComponent = getItemTypeIcon(item.itemType.icon);
   const iconColor = item.itemType.color;
 
   return (
@@ -21,7 +20,8 @@ export default function FavoriteItemRow({ item }: FavoriteItemRowProps) {
       onClick={() => openDrawer(item.id)}
       className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted/50 transition-colors rounded-sm group"
     >
-      <IconComponent
+      <ItemTypeIcon
+        icon={item.itemType.icon}
         className="h-4 w-4 shrink-0"
         style={{ color: iconColor }}
       />
