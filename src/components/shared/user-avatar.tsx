@@ -25,7 +25,7 @@ export function UserAvatar({ name, image, className }: UserAvatarProps) {
   return (
     <Avatar className={cn("h-8 w-8", className)}>
       {image && <AvatarImage src={image} alt={name || "User avatar"} />}
-      <AvatarFallback className="bg-primary text-xs text-primary-foreground">
+      <AvatarFallback className="bg-gradient-to-br from-lime to-cyan text-xs font-bold text-primary-foreground">
         {initials}
       </AvatarFallback>
     </Avatar>
