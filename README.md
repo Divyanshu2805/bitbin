@@ -1,183 +1,141 @@
 <p align="center">
-  <img src="https://img.icons8.com/fluency/96/code-folder.png" alt="BitBin" width="80" />
-</p>
-
-<h1 align="center">BitBin</h1>
-
-<p align="center">
-  A unified hub for developer knowledge & resources
+  <img src="docs/assets/banner.svg" alt="BitBin" width="820" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19-blue?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma" alt="Prisma" />
-  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+  <b>Every snippet, prompt &amp; command, in one bin.</b><br/>
+  A fast, searchable home for developer knowledge.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-0a0b0d?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-0a0b0d?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/license-MIT-c2f24b" alt="License" />
 </p>
 
 ---
 
-Developers keep their essentials scattered across VS Code snippets, browser bookmarks, chat histories, bash history, and random folders. BitBin brings everything into **one fast, searchable, AI-enhanced hub**.
+Developers keep their essentials scattered across editor snippets, browser
+bookmarks, chat threads, shell history and random folders. **BitBin** pulls
+all of it into one place: organized, tagged and a keystroke away.
 
 ## Features
 
 **Core**
-- Save code snippets, AI prompts, terminal commands, notes, and links
+- Save code snippets, AI prompts, terminal commands, notes and links
 - Upload files and images (Pro)
-- Organize items into collections with many-to-many relationships
-- Pin, favorite, and tag items for quick access
+- Organize items into collections (an item can belong to many collections)
+- Pin, favorite and tag items for quick access
 - Monaco code editor with syntax highlighting for 30+ languages
-- Markdown editor with GitHub Flavored Markdown preview
-- Global search / command palette (Cmd+K)
-- Dark mode by default, light mode optional
+- Markdown editor with GitHub-flavored preview
+- Global command palette search (<kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd>)
+- Dark-first "graphite + lime" interface with subtle motion
 
-**AI-Powered (Pro)**
+**AI (Pro)**
 - Auto-tag suggestions
 - Description generator
-- Code explanation
+- "Explain this code"
 - Prompt optimizer
 
-**Other**
-- Email/password and GitHub OAuth authentication
-- Email verification and password reset flows
-- Rate limiting on auth endpoints
-- Stripe subscriptions (Free / Pro tiers)
-- File uploads via Cloudflare R2
-- Import/export data (JSON free, ZIP with files for Pro)
-- Pagination, sorting, and filtering
-- Responsive design (desktop, tablet, mobile)
+**Platform**
+- Email/password and GitHub OAuth sign-in
+- Email verification and password reset
+- Rate limiting on auth, upload and AI endpoints
+- Stripe subscriptions (Free / Pro)
+- File storage on Cloudflare R2
+- Import/export (JSON on Free, ZIP with files on Pro)
+- Pagination, responsive layout from phone to desktop
 
-## Tech Stack
+## Tech stack
 
-| Category       | Technology                     |
-| -------------- | ------------------------------ |
-| Framework      | Next.js 16 / React 19         |
-| Language       | TypeScript 5                   |
-| Database       | Neon PostgreSQL                |
-| ORM            | Prisma 7                       |
-| Auth           | NextAuth v5 (JWT)              |
-| Styling        | Tailwind CSS v4 + shadcn/ui   |
-| AI             | OpenAI                         |
-| Payments       | Stripe                         |
-| File Storage   | Cloudflare R2                  |
-| Rate Limiting  | Upstash Redis                  |
-| Email          | Resend                         |
-| Testing        | Vitest                         |
+| Area          | Choice                          |
+| ------------- | ------------------------------- |
+| Framework     | Next.js 16 (App Router), React 19 |
+| Language      | TypeScript 5                    |
+| Database      | PostgreSQL (Neon)               |
+| ORM           | Prisma 7                        |
+| Auth          | NextAuth v5 (JWT sessions)      |
+| Styling       | Tailwind CSS v4 + shadcn/ui     |
+| AI            | OpenAI                          |
+| Payments      | Stripe                          |
+| File storage  | Cloudflare R2                   |
+| Rate limiting | Upstash Redis                   |
+| Email         | Resend                          |
+| Tests         | Vitest                          |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-- A [Neon](https://neon.tech) PostgreSQL database
-
-### Installation
+## Quick start
 
 ```bash
 git clone https://github.com/Divyanshu2805/bitbin.git
 cd bitbin
 npm install
-```
-
-### Environment Variables
-
-Copy the example env file and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Description |
-| -------- | ----------- |
-| `NEXT_PUBLIC_APP_URL` | App URL (default: `http://localhost:3000`) |
-| `DATABASE_URL` | Neon PostgreSQL connection string |
-| `AUTH_SECRET` | NextAuth secret (generate with `npx auth secret`) |
-| `AUTH_GITHUB_ID` | GitHub OAuth app ID |
-| `AUTH_GITHUB_SECRET` | GitHub OAuth app secret |
-| `RESEND_API_KEY` | Resend API key for emails |
-| `SKIP_EMAIL_VERIFICATION` | Set to `true` to skip email verification in dev |
-| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL for rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
-| `R2_ACCOUNT_ID` | Cloudflare R2 account ID |
-| `R2_ACCESS_KEY_ID` | R2 access key |
-| `R2_SECRET_ACCESS_KEY` | R2 secret key |
-| `R2_BUCKET_NAME` | R2 bucket name |
-| `R2_PUBLIC_URL` | R2 public URL |
-| `OPENAI_API_KEY` | OpenAI API key for AI features |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `STRIPE_PRICE_ID_MONTHLY` | Stripe monthly price ID |
-| `STRIPE_PRICE_ID_YEARLY` | Stripe yearly price ID |
-
-### Database Setup
-
-```bash
-# Run migrations
-npx prisma migrate dev
-
-# Seed system item types (snippet, prompt, command, note, file, image, link)
-npm run db:seed
-```
-
-### Run
-
-```bash
+cp .env.example .env      # then fill in the placeholders
+npx prisma migrate dev    # create the schema
+npm run db:seed           # seed system item types + demo data
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open <http://localhost:3000>.
+
+> **Credentials:** `.env.example` only contains placeholders (`YOUR_...`).
+> Real keys for the database, auth, Stripe, R2, Resend, Upstash and OpenAI
+> have to be added to `.env` before the related features work. See
+> [docs/environment-variables.md](docs/environment-variables.md).
 
 ## Scripts
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Start dev server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run tests (single run) |
-| `npm run test:watch` | Run tests (watch mode) |
-| `npm run db:migrate` | Create and run migrations |
-| `npm run db:seed` | Seed system item types |
-| `npm run db:studio` | Open Prisma Studio |
+| Command              | What it does                         |
+| -------------------- | ------------------------------------ |
+| `npm run dev`        | Start the dev server                 |
+| `npm run build`      | Generate Prisma client + production build |
+| `npm run start`      | Serve the production build           |
+| `npm run lint`       | ESLint                               |
+| `npm run test`       | Vitest (single run)                  |
+| `npm run test:watch` | Vitest in watch mode                 |
+| `npm run db:migrate` | Create/apply migrations              |
+| `npm run db:seed`    | Seed item types and demo content     |
+| `npm run db:studio`  | Open Prisma Studio                   |
 
-## Project Structure
+## Documentation
+
+Everything lives in [`docs/`](docs/README.md):
+
+- [Getting started](docs/getting-started.md) · [Environment variables](docs/environment-variables.md)
+- [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Authentication](docs/authentication.md)
+- [Items](docs/items.md) · [Item types](docs/item-types.md) · [Collections](docs/collections.md) · [Search](docs/search.md)
+- [File uploads](docs/file-uploads.md) · [AI features](docs/ai-features.md) · [Billing](docs/billing.md)
+- [Rate limiting](docs/rate-limiting.md) · [Import & export](docs/import-export.md)
+- [Design system](docs/design-system.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md)
+
+## Project structure
 
 ```
 src/
 ├── app/
-│   ├── (auth)/          # Sign-in, register, verify, password reset
-│   ├── api/             # API routes (upload, download, stripe, auth)
-│   ├── collections/     # Collections list and detail pages
-│   ├── dashboard/       # Main dashboard
-│   ├── favorites/       # Favorites page
-│   ├── items/           # Items list by type (/items/snippets, etc.)
-│   ├── profile/         # User profile
-│   ├── settings/        # Settings (editor prefs, billing, account)
-│   └── page.tsx         # Marketing homepage
-├── actions/             # Server actions (items, collections, ai, etc.)
+│   ├── (auth)/        # sign-in, register, verify, password reset (split-screen layout)
+│   ├── api/           # route handlers: auth, upload, download, export, stripe
+│   ├── collections/   # collection list + detail
+│   ├── dashboard/     # main dashboard
+│   ├── favorites/     # starred items & collections
+│   ├── items/[type]/  # items by type (/items/snippets, ...)
+│   ├── profile/ settings/ upgrade/
+│   └── page.tsx       # marketing homepage
+├── actions/           # server actions (items, collections, ai, search, import/export)
 ├── components/
-│   ├── ui/              # shadcn/ui components
-│   ├── items/           # Item cards, drawer, dialogs
-│   ├── collections/     # Collection cards, dialogs
-│   ├── layout/          # Sidebar, top bar, user menu
-│   ├── homepage/        # Marketing page components
-│   └── shared/          # Reusable components
-├── lib/
-│   ├── db/              # Prisma queries (items, collections)
-│   ├── prisma.ts        # Prisma client
-│   ├── auth.ts          # NextAuth config
-│   ├── stripe.ts        # Stripe client
-│   ├── openai.ts        # OpenAI client
-│   └── r2.ts            # Cloudflare R2 utilities
-├── hooks/               # Custom React hooks
-└── types/               # TypeScript type definitions
+│   ├── ui/            # shadcn/ui primitives
+│   ├── homepage/      # marketing sections
+│   ├── layout/        # top bar, sidebar, mobile sidebar
+│   ├── dashboard/     # stat cards, item & collection cards
+│   ├── items/         # drawer, editors, dialogs, uploads
+│   └── shared/        # logo, empty states, page header, etc.
+├── lib/               # prisma, db queries, stripe, r2, openai, rate limiting
+├── hooks/
+└── types/
 ```
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)
