@@ -1,7 +1,11 @@
 import { resend } from './resend'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-const FROM_EMAIL = 'BitBin <noreply@bitbin.dev>'
+// Resend's shared sandbox sender works out of the box but can only deliver
+// to the email address the Resend account was created with. Once a real
+// domain is verified in Resend (Domains -> Add Domain), set FROM_EMAIL to an
+// address on that domain to send to any recipient.
+const FROM_EMAIL = process.env.FROM_EMAIL || 'BitBin <onboarding@resend.dev>'
 
 export async function sendVerificationEmail(email: string, token: string) {
   const verificationUrl = `${APP_URL}/verify-email?token=${token}`
