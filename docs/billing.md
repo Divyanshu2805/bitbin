@@ -23,10 +23,11 @@ only mirrors them.
    └── POST /api/stripe/checkout { plan: "monthly" | "yearly" }
           ├── find or create Stripe customer (metadata.userId)
           ├── save stripeCustomerId on the user
-          └── Checkout Session → redirect to Stripe
+          └── Checkout Session (metadata: userId, app: "bitbin") → redirect to Stripe
 
 Stripe → POST /api/webhooks/stripe (signature verified with STRIPE_WEBHOOK_SECRET)
    ├── checkout.session.completed      → isPro = true, store subscription id
+   │                                      (skipped unless metadata.app is "bitbin")
    ├── invoice.paid                    → isPro = true (renewals)
    ├── invoice.payment_failed          → logged
    ├── customer.subscription.updated   → isPro = status is active/trialing
@@ -41,15 +42,42 @@ Back in the app: /settings?upgraded=true → "Welcome to BitBin Pro!" toast
 "Manage subscription" calls `POST /api/stripe/portal`, which returns a Customer
 Portal URL for the saved `stripeCustomerId`.
 
+## Sharing a Stripe account with other apps
+
+Stripe sends every event to every webhook endpoint on the account. If another
+app uses the same account (or sandbox), BitBin receives that app's events too.
+
+- Invoice and subscription events are matched by `stripeCustomerId`. Other
+  apps' customers never match a BitBin user, so those events change nothing.
+- Checkout events are matched by `metadata.userId`, a common field name.
+  BitBin tags its own checkout sessions with `metadata.app = "bitbin"`
+  (`STRIPE_APP_TAG` in `src/lib/stripe.ts`), and the webhook returns 200
+  without doing anything for checkouts that lack the tag. Without this, a
+  foreign checkout would make the handler throw and return 500, and Stripe
+  retries failing endpoints for days and can eventually disable them.
+
+A separate Stripe account per app is still the cleanest setup, since the
+tag can't stop *other* apps from receiving BitBin's events.
+
 ## Local testing
 
 ```bash
-stripe login
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
+stripe login        # choose the account BitBin uses
+stripe listen \
+  --events checkout.session.completed,invoice.paid,invoice.payment_failed,customer.subscription.updated,customer.subscription.deleted \
+  --forward-to localhost:3000/api/webhooks/stripe
 # copy the whsec_... it prints into STRIPE_WEBHOOK_SECRET
 ```
 
+`--events` limits forwarding to the five events BitBin handles. Passing
+`--api-key "$STRIPE_SECRET_KEY"` instead of `stripe login` guarantees the CLI
+listens to the same account as the app.
+
 Use card `4242 4242 4242 4242`, any future date and any CVC.
+
+To test delivery without a checkout, run `stripe trigger
+checkout.session.completed`. The generated session has no `app` tag, so the
+webhook should answer 200 and leave every user unchanged.
 
 ## Stripe dashboard setup
 

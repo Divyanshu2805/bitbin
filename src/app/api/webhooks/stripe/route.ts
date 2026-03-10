@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import type Stripe from 'stripe'
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // The Stripe account may be shared with other apps. Their checkouts reach
+  // this endpoint too; skip them instead of failing, or Stripe keeps retrying
+  // and may eventually disable the endpoint.
+  if (session.metadata?.app !== STRIPE_APP_TAG) {
+    return
+  }
+
   const userId = session.metadata?.userId
   if (!userId) {
     console.warn('checkout.session.completed: missing metadata.userId')

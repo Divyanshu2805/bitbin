@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { stripe } from '@/lib/stripe'
+import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 
 const PRICE_MAP: Record<string, string | undefined> = {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${appUrl}/settings?upgraded=true`,
       cancel_url: `${appUrl}/settings`,
-      metadata: { userId: session.user.id },
+      metadata: { userId: session.user.id, app: STRIPE_APP_TAG },
     })
 
     return NextResponse.json({ url: checkoutSession.url })
