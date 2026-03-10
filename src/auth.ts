@@ -19,7 +19,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/sign-in',
   },
   providers: [
-    GitHub,
+    // GitHub includes `iss=https://github.com/login/oauth` in its OAuth
+    // callback (RFC 9207). Without a matching issuer, Auth.js compares it to
+    // its "https://authjs.dev" fallback and rejects the sign-in.
+    GitHub({ issuer: 'https://github.com/login/oauth' }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },

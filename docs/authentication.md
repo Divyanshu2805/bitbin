@@ -35,6 +35,20 @@ raced the session cookie. Doing it on the server fixes that.
 If a GitHub email already belongs to a password account, NextAuth returns
 `OAuthAccountNotLinked` and the sign-in form explains what happened.
 
+**Issuer.** GitHub adds `iss=https://github.com/login/oauth` to its OAuth
+callback (RFC 9207). Auth.js validates that value against the provider's
+`issuer`, and for providers without one it falls back to
+`https://authjs.dev`, so every GitHub sign-in failed with
+`unexpected "iss" (issuer) response parameter value`. Both `auth.ts` and
+`auth.config.ts` therefore configure the provider as:
+
+```ts
+GitHub({ issuer: 'https://github.com/login/oauth' })
+```
+
+GitHub defines its own token and user-info endpoints, so setting `issuer`
+doesn't trigger OIDC discovery; it only fixes the comparison.
+
 ## Password reset
 
 1. `POST /api/auth/forgot-password` always returns 200, so it never reveals

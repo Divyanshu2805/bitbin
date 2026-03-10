@@ -15,7 +15,8 @@ export default {
     signIn: '/sign-in',
   },
   providers: [
-    GitHub,
+    // Keep in sync with auth.ts (see the issuer note there)
+    GitHub({ issuer: 'https://github.com/login/oauth' }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
