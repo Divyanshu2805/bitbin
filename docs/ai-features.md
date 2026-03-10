@@ -47,8 +47,35 @@ Content sent to the model is truncated to **2,000 characters**
 validation, rate limiting and response parsing. No network calls are made in
 tests.
 
-## Changing the model
+## Provider and model
 
-Update `AI_MODEL` in `src/lib/openai.ts`. All four actions pick it up. The
-prompts are plain strings inside each action, so tuning them doesn't need any
-other changes.
+The client in `src/lib/openai.ts` works with OpenAI or any OpenAI-compatible
+API. It's configured with three variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | none (required) | Key for the provider you use |
+| `OPENAI_BASE_URL` | OpenAI's API | Point at another provider |
+| `AI_MODEL` | `gpt-5-nano` | Model name as the provider spells it |
+
+### Using OpenRouter
+
+```
+OPENAI_API_KEY="sk-or-..."
+OPENAI_BASE_URL="https://openrouter.ai/api/v1"
+AI_MODEL="mistralai/mistral-small-3.2-24b-instruct"
+```
+
+OpenRouter model names are prefixed with the vendor (`openai/gpt-4.1-nano`,
+`google/gemini-2.5-flash-lite`, ...). The actions use the Responses API with
+`text.format: json_object` for tags and descriptions. Pick a model that
+supports JSON mode, or those two actions reply with *"AI returned an
+unexpected format"*.
+
+**Reasoning models cost more than they look.** Models like `gpt-5-nano` think
+before answering, and those hidden tokens are billed as output. A cheaper-looking
+reasoning model can end up costing more per request than a small non-reasoning
+one.
+
+All four actions read `AI_MODEL`, and the prompts are plain strings inside
+each action, so switching models or tuning prompts needs no other changes.
