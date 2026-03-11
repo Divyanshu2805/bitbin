@@ -23,13 +23,20 @@ placeholder for every variable. Replace each `YOUR_...` value with a real one.
 
 | Variable | Notes |
 | --- | --- |
-| `RESEND_API_KEY` | Sends verification and password-reset emails (`src/lib/email.ts`). Verify your sending domain in Resend for production. |
+| `RESEND_API_KEY` | Sends verification and password-reset emails (`src/lib/email.ts`). |
+| `FROM_EMAIL` | Optional sender, e.g. `BitBin <noreply@bitbin.yourdomain.com>`. Defaults to Resend's shared sandbox sender `onboarding@resend.dev`. |
+
+**Resend's sandbox sender only delivers to the email address your Resend
+account was created with.** That's enough to test sign-up locally with your
+own address. To email anyone else, verify a domain in Resend (Domains → Add
+Domain) and set `FROM_EMAIL` to an address on it. A domain nobody has
+verified is rejected with a 403 and registration fails.
 
 ## Rate limiting
 
 | Variable | Notes |
 | --- | --- |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console (REST API section). If unset, rate limiting is **disabled** (fails open) and a warning is logged. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console (REST API section). If unset, still `YOUR_...` placeholders, or invalid, rate limiting is **disabled** (fails open) and a warning is logged. |
 
 ## File storage (Cloudflare R2)
 
@@ -54,7 +61,11 @@ placeholder for every variable. Replace each `YOUR_...` value with a real one.
 
 | Variable | Notes |
 | --- | --- |
-| `OPENAI_API_KEY` | Used by `src/lib/openai.ts`. Model is set in `AI_MODEL`. |
+| `OPENAI_API_KEY` | Key for OpenAI or any OpenAI-compatible provider (e.g. an OpenRouter `sk-or-...` key) |
+| `OPENAI_BASE_URL` | Optional. Leave unset for OpenAI; `https://openrouter.ai/api/v1` for OpenRouter |
+| `AI_MODEL` | Optional. Defaults to `gpt-5-nano`; on OpenRouter use prefixed names like `mistralai/mistral-small-3.2-24b-instruct` |
+
+See [ai-features.md](ai-features.md#provider-and-model) for choosing a model.
 
 ## What works without which key
 
@@ -64,4 +75,4 @@ placeholder for every variable. Replace each `YOUR_...` value with a real one.
 | Upstash | No rate limiting |
 | R2 | File/image uploads fail |
 | Stripe | Upgrade/checkout and billing portal fail; build still passes if a dummy key is set |
-| OpenAI | AI buttons show an error toast |
+| AI key | AI buttons show an error toast |
