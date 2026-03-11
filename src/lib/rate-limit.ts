@@ -5,18 +5,32 @@ import { headers } from 'next/headers'
 // Create Redis client (lazy initialization)
 let redis: Redis | null = null
 
+/**
+ * True when an env value is actually filled in. Values copied straight from
+ * .env.example ("YOUR_...") count as unset.
+ */
+function isConfigured(value: string | undefined): value is string {
+  return !!value && !value.startsWith('YOUR_')
+}
+
 function getRedis(): Redis | null {
   if (redis) return redis
 
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
 
-  if (!url || !token) {
+  if (!isConfigured(url) || !isConfigured(token)) {
     console.warn('Upstash Redis not configured - rate limiting disabled')
     return null
   }
 
-  redis = new Redis({ url, token })
+  try {
+    redis = new Redis({ url, token })
+  } catch (error) {
+    // e.g. a URL without https:// - keep the fail-open behaviour
+    console.error('Invalid Upstash Redis config - rate limiting disabled:', error)
+    return null
+  }
   return redis
 }
 

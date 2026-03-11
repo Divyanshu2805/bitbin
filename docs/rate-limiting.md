@@ -34,9 +34,17 @@ in `ActionResult.error`.
 
 Rate limiting **fails open**:
 
-- If `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are not set, a
-  warning is logged once and every check passes.
+- If `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are not set, or
+  still hold the `YOUR_...` placeholders from `.env.example`, a warning is
+  logged on each check and every check passes.
+- If the values are set but invalid (e.g. a URL without `https://`), the
+  Redis client can't be created. The error is logged and every check passes.
+  Before this was handled, a leftover placeholder made registration crash
+  with a 500.
 - If Redis errors at runtime, the error is logged and the request is allowed.
+
+`src/lib/rate-limit.test.ts` covers the unset, placeholder and invalid-URL
+cases.
 
 A Redis outage therefore never locks users out of the app.
 
