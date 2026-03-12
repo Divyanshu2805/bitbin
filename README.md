@@ -13,7 +13,10 @@
   <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/license-MIT-c2f24b" alt="License" />
+</p>
+
+<p align="center">
+  <a href="https://bitbin.divyanshuagrahari.dev"><b>bitbin.divyanshuagrahari.dev</b></a>
 </p>
 
 ---
@@ -109,6 +112,7 @@ Everything lives in [`docs/`](docs/README.md):
 - [File uploads](docs/file-uploads.md) · [AI features](docs/ai-features.md) · [Billing](docs/billing.md)
 - [Rate limiting](docs/rate-limiting.md) · [Import & export](docs/import-export.md)
 - [Design system](docs/design-system.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md)
+- [Known gaps & roadmap](docs/known-gaps.md)
 
 ## Project structure
 
@@ -135,7 +139,3 @@ src/
 ├── hooks/
 └── types/
 ```
-
-## License
-
-[MIT](LICENSE)
