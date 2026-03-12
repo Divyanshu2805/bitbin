@@ -38,6 +38,7 @@ Start with **Getting started**, then dip into whichever area you're working on.
 | Doc | What's inside |
 | --- | --- |
 | [Testing](testing.md) | Vitest setup, what's covered, how to add tests |
+| [Known gaps](known-gaps.md) | Open issues, their impact and suggested fixes, plus the roadmap |
 
 ## Design notes
 
