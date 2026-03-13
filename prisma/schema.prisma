@@ -32,6 +32,7 @@ model User {
   itemTypes   ItemType[]
   accounts    Account[]
   sessions    Session[]
+  apiTokens   ApiToken[]
 
   @@map("users")
 }
@@ -77,6 +78,24 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ============================================
+// API TOKEN (personal access tokens for the browser extension)
+// ============================================
+model ApiToken {
+  id         String    @id @default(cuid())
+  name       String
+  tokenHash  String    @unique // SHA-256 of the token; the token itself is never stored
+  prefix     String // First characters of the token, shown in the UI to tell tokens apart
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_tokens")
 }
 
 // ============================================
