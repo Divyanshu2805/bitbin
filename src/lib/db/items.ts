@@ -386,6 +386,23 @@ export async function getItemById(
   return toItemDetail(item);
 }
 
+/**
+ * Keep only the collection ids that belong to the user, so an item can't be
+ * linked into someone else's collection.
+ */
+async function filterOwnedCollectionIds(
+  userId: string,
+  collectionIds: string[]
+): Promise<string[]> {
+  if (collectionIds.length === 0) return [];
+  const owned = await prisma.collection.findMany({
+    where: { id: { in: collectionIds }, userId },
+    select: { id: true },
+  });
+  const ownedIds = new Set(owned.map((c) => c.id));
+  return [...new Set(collectionIds)].filter((id) => ownedIds.has(id));
+}
+
 export interface UpdateItemData {
   title: string;
   description: string | null;
@@ -416,13 +433,15 @@ export async function updateItem(
 
   // Update collections if provided (delete all existing, then create new)
   if (data.collectionIds !== undefined) {
+    const collectionIds = await filterOwnedCollectionIds(userId, data.collectionIds);
+
     await prisma.itemCollection.deleteMany({
       where: { itemId },
     });
 
-    if (data.collectionIds.length > 0) {
+    if (collectionIds.length > 0) {
       await prisma.itemCollection.createMany({
-        data: data.collectionIds.map((collectionId) => ({
+        data: collectionIds.map((collectionId) => ({
           itemId,
           collectionId,
         })),
@@ -658,6 +677,8 @@ export async function createItem(
 
   // Determine contentType based on item type
   let contentType: 'TEXT' | 'FILE' | 'URL' = 'TEXT';
+  const collectionIds = await filterOwnedCollectionIds(userId, data.collectionIds ?? []);
+
   if (data.typeName === 'link') {
     contentType = 'URL';
   } else if (data.typeName === 'file' || data.typeName === 'image') {
@@ -683,9 +704,9 @@ export async function createItem(
           create: { name: tagName },
         })),
       },
-      collections: data.collectionIds?.length
+      collections: collectionIds.length
         ? {
-            create: data.collectionIds.map((collectionId) => ({
+            create: collectionIds.map((collectionId) => ({
               collectionId,
             })),
           }

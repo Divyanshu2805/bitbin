@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getItemById, deleteItem } from './items';
+import { getItemById, deleteItem, createItem } from './items';
 
 // Mock Prisma client
 vi.mock('@/lib/prisma', () => ({
@@ -7,6 +7,13 @@ vi.mock('@/lib/prisma', () => ({
     item: {
       findUnique: vi.fn(),
       delete: vi.fn(),
+      create: vi.fn(),
+    },
+    itemType: {
+      findFirst: vi.fn(),
+    },
+    collection: {
+      findMany: vi.fn(),
     },
   },
 }));
@@ -197,5 +204,43 @@ describe('deleteItem', () => {
 
     expect(result).toBe(true);
     expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+  });
+});
+
+describe('createItem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('links only collections the user owns', async () => {
+    vi.mocked(prisma.itemType.findFirst).mockResolvedValue({ id: 'type-note' } as never);
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([{ id: 'mine' }] as never);
+    vi.mocked(prisma.item.create).mockResolvedValue({
+      id: 'item-1',
+      title: 'Hello',
+      itemType: { id: 'type-note', name: 'note', icon: 'StickyNote', color: '#fff' },
+      tags: [],
+      collections: [],
+      createdAt: mockDate,
+      updatedAt: mockDate,
+    } as never);
+
+    await createItem('user-1', {
+      typeName: 'note',
+      title: 'Hello',
+      description: null,
+      content: null,
+      url: null,
+      language: null,
+      tags: [],
+      collectionIds: ['mine', 'someone-elses', 'mine'],
+    });
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['mine', 'someone-elses', 'mine'] }, userId: 'user-1' },
+      select: { id: true },
+    });
+    const createArgs = vi.mocked(prisma.item.create).mock.calls[0][0];
+    expect(createArgs.data.collections).toEqual({ create: [{ collectionId: 'mine' }] });
   });
 });
