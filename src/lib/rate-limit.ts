@@ -71,6 +71,11 @@ export const rateLimitConfigs = {
     limiter: Ratelimit.slidingWindow(20, '1 h'),
     prefix: 'ratelimit:ai',
   },
+  // Token API (browser extension): 60 requests per minute (keyed by user ID)
+  api: {
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
+    prefix: 'ratelimit:api',
+  },
 } as const
 
 export type RateLimitType = keyof typeof rateLimitConfigs
