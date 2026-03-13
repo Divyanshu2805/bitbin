@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { generateAutoTags, type GenerateAutoTagsInput } from "@/actions/ai";
+import { generateAutoTags } from "@/actions/ai";
+import type { GenerateAutoTagsInput } from "@/lib/ai-tags";
 
 interface SuggestTagsButtonProps {
   title: string;
