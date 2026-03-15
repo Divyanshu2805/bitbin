@@ -32,16 +32,19 @@ These are authoritative and kept current:
 ```
 src/
   app/                pages (RSC) and api/ route handlers; (auth)/ group for the sign-in pages
-  actions/            server actions — every UI write: items, collections, ai, search, settings, import, export, auth
+  actions/            server actions — every UI write: items, collections, ai, api-tokens, search, settings, import, export, auth
   auth.ts             NextAuth: adapter, providers, jwt/session callbacks (isPro re-read every evaluation)
   auth.config.ts      edge-safe subset for proxy.ts only
   proxy.ts            guards /dashboard/* — other pages call auth() themselves
   lib/db/             queries, every one scoped by userId
   lib/                action-utils (ActionResult, getAuthedSession, requirePro), validation, usage (Free limits),
-                      rate-limit, tokens, stripe, r2, openai, email, constants/
+                      rate-limit, tokens, api-tokens + api-auth (/api/v1 Bearer tokens), item-create + ai-tags
+                      (shared by actions and /api/v1), extension-package (Settings ZIP download), stripe, r2, openai, email, constants/
   components/         ui/ (shadcn), layout/, items/, dashboard/, collections/, search/, settings/, shared/, homepage/
   generated/prisma/   generated client — git-ignored
 prisma/               schema.prisma, migrations/, seed.ts
+extension/            Chrome/Edge MV3 extension, plain JS, outside the Next build (tsconfig/eslint exclude it);
+                      served as a ZIP from Settings; bump manifest.json version on every change
 scripts/              test-db.ts, cleanup-users.ts
 docs/                 documentation — start at docs/README.md
 ```
@@ -67,6 +70,8 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **After a mutation, `router.refresh()`** — actions don't revalidate.
 - **The Stripe webhook verifies the raw body** before doing anything, and only acts on checkouts tagged `metadata.app = STRIPE_APP_TAG`.
 - **A NextAuth provider change goes in both `auth.ts` and `auth.config.ts`** — e.g. GitHub's `issuer` override.
+- **`/api/v1/*` is the token API** — every handler starts with `authenticateApiRequest`, reuses the shared lib logic (`item-create`, `ai-tags`) instead of forking it, and stays backward compatible: the extension depends on it.
+- **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
 
 ## Practices
 

@@ -17,7 +17,11 @@ npm run test:watch   # watch mode
 | `src/actions/import.test.ts`, `export.test.ts` | Manifest format, validation, duplicate detection, Free limits |
 | `src/actions/search.test.ts` | Search data shape |
 | `src/actions/settings.test.ts` | Editor preference validation |
-| `src/lib/db/items.test.ts`, `collections.test.ts` | Query shaping, ownership, dominant colour |
+| `src/actions/api-tokens.test.ts` | Pro guard, token limit, hash-only storage, scoped revoke |
+| `src/lib/api-tokens.test.ts`, `api-auth.test.ts` | Token format and hashing, Bearer parsing; `401` / `403` / `429` and the per-request Pro check |
+| `src/app/api/v1/items/route.test.ts`, `ai/tags/route.test.ts` | Token API status codes, rejected file types, dropped file fields, shared validation |
+| `src/lib/extension-package.test.ts`, `src/app/api/extension/download/route.test.ts` | The extension ZIP: contents, localhost stripped in production, Pro-only download |
+| `src/lib/db/items.test.ts`, `collections.test.ts` | Query shaping, ownership (including foreign collection ids), dominant colour |
 | `src/lib/r2.test.ts` | File validation, size formatting, key parsing |
 | `src/lib/rate-limit.test.ts` | Failing open with unset, placeholder and invalid Upstash config |
 | `src/lib/usage.test.ts` | Free / Pro limits |
@@ -35,7 +39,8 @@ npm run test:watch   # watch mode
 
 Check these by hand when a change touches them:
 
-- Route handlers — auth flows, upload / download, export, Stripe checkout and webhook. Adding tests for these is [tracked](../known-gaps/not-yet-built.md#code-health).
+- Route handlers other than `/api/v1`: auth flows, upload / download, export, Stripe checkout and webhook. Adding tests for these is [tracked](../known-gaps/not-yet-built.md#code-health). The `/api/v1` route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/lib/api-auth` and the library underneath.
+- The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
 - NextAuth callbacks and `proxy.ts`.
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.

@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Save from anywhere (Pro):** a Chrome / Edge extension (`extension/`). Select
+  text on any page, press `Ctrl+Shift+B` (or right-click → *Save selection to
+  BitBin*), and save it as a note, snippet, command, prompt or link. It includes
+  a collection picker, tags and AI tag suggestions
+- Personal access tokens in **Settings → Browser extension**: create, list and
+  revoke. Tokens are stored hashed and shown once
+- **Download extension** button in the same section, with install steps. It
+  serves a ZIP of the extension (`GET /api/extension/download`, Pro only)
+- Snippets saved from the extension get a language picker with auto-detection,
+  and a title taken from the page's heading instead of the first line of code
+- Token API under `/api/v1` (`me`, `collections`, `items`, `ai/tags`) with a
+  per-request Pro check and a 60-per-minute rate limit
+- `api_tokens` table (migration `20260924225247_add_api_tokens`)
+
+### Fixed
+- Items could be linked into another user's collection by sending its id;
+  foreign collection ids are now dropped on create and update
+
+### Docs
+- ADR 0007, token API reference, save-from-extension flow, extension README
+
 ## 1.0.1 — 2026-03-12
 
 Fixes found while deploying to https://bitbin.divyanshuagrahari.dev.

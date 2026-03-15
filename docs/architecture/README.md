@@ -15,6 +15,7 @@ If you are new to the codebase, read these in order:
    - [AI features](flows/ai-features.md) — the four Pro helpers and their shared guard sequence.
    - [Import and export](flows/import-export.md) — JSON and ZIP exports, transactional imports.
    - [Search](flows/search.md) — the ⌘K command palette.
+   - [Save from anywhere](flows/save-from-extension.md) — the browser extension, API tokens and `/api/v1`.
 
 ## Reference
 

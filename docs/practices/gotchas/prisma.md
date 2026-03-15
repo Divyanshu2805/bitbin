@@ -4,6 +4,8 @@
 
 The generator's `output` is `../src/generated/prisma`, which is git-ignored. A fresh clone, a new branch with schema changes, or a CI job must run `prisma generate` (`npm run db:generate`, or `npm run build`, which does it first) before the app or the type-check can find `@/generated/prisma`.
 
+In Prisma 7, `npm run db:migrate` (`prisma migrate dev`) **doesn't regenerate the client** either. After adding a model, run `npm run db:generate`. Until you do, `tsc` reports that the new model (`prisma.apiToken`) doesn't exist on `PrismaClient`, while the tests pass because they mock Prisma.
+
 ## Never `db push`
 
 `npm run db:push` is overridden to fail. `npx prisma db push` still works if typed directly — and silently diverges the database from the migration history. Always `npm run db:migrate`. See [ADR 0006](../../architecture/decisions/0006-schema-changes-only-through-migrations.md).

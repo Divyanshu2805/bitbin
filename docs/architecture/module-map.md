@@ -8,7 +8,7 @@ What lives where, and the rules for which layer may call which.
 src/
 ├── app/
 │   ├── (auth)/            sign-in, register, verify-email, forgot-password, reset-password — share the split-screen layout
-│   ├── api/               route handlers: auth/*, items/[id], upload, download/[...path], export, stripe/*, webhooks/stripe
+│   ├── api/               route handlers: auth/*, items/[id], upload, download/[...path], export, stripe/*, webhooks/stripe, v1/* (token API), extension/download
 │   ├── dashboard/         stats, collections, pinned and recent items (+ loading.tsx, error.tsx)
 │   ├── items/[type]/      items of one type: /items/snippets, /items/prompts, …
 │   ├── collections/       paginated list and /collections/[id]
@@ -17,7 +17,7 @@ src/
 │   ├── page.tsx           marketing homepage
 │   ├── layout.tsx         fonts, <html class="dark">, Toaster, Vercel Analytics
 │   └── globals.css        design tokens and motion utilities
-├── actions/               server actions: items, collections, ai, search, settings, import, export, auth
+├── actions/               server actions: items, collections, ai, api-tokens, search, settings, import, export, auth
 ├── auth.ts, auth.config.ts   NextAuth — full config, and the edge-safe subset used by proxy.ts
 ├── proxy.ts               guards /dashboard/*
 ├── components/
@@ -29,7 +29,7 @@ src/
 │   ├── homepage/          marketing sections
 │   └── shared/            logo, empty state, page header, pagination, confirm dialogs, …
 ├── lib/
-│   ├── db/                items, collections, users, export — the app's queries
+│   ├── db/                items, collections, users, export, api-tokens — the app's queries
 │   ├── constants/         pagination, pricing, item types, editor defaults
 │   ├── utils/             date formatting
 │   ├── prisma.ts          the Prisma client (pg adapter, one instance per process)
@@ -38,12 +38,16 @@ src/
 │   ├── usage.ts           Free plan limits
 │   ├── rate-limit.ts      Upstash limiters
 │   ├── tokens.ts          verification and password-reset tokens
+│   ├── api-tokens.ts, api-auth.ts   personal access tokens and the /api/v1 Bearer check
+│   ├── item-create.ts, ai-tags.ts   item creation and AI tagging shared by actions and /api/v1
+│   ├── extension-package.ts   zips extension/ for the Settings download
 │   └── stripe.ts, stripe-client.ts, r2.ts, openai.ts, email.ts, resend.ts
 ├── hooks/                 use-clipboard
 ├── types/                 next-auth session augmentation
 └── generated/prisma/      generated client (git-ignored)
 prisma/                    schema.prisma, migrations/, seed.ts
 scripts/                   test-db.ts, cleanup-users.ts
+extension/                 the Chrome / Edge extension (plain JS, not part of the Next build)
 ```
 
 ## Routes

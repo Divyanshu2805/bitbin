@@ -11,10 +11,11 @@ Errors are JSON with a single message and a status code:
 | Status | Meaning |
 |---|---|
 | `400` | Invalid input, or an invalid / expired token |
-| `401` | No session (or, for the Stripe webhook, never — it uses `400` for a bad signature) |
+| `401` | No session, or for `/api/v1`, no valid token. (The Stripe webhook never returns `401`: it uses `400` for a bad signature) |
 | `403` | Signed in, but not allowed: not Pro, or not the owner of a file path |
 | `404` | Not found — including rows that belong to someone else |
 | `429` | Rate limited, with `Retry-After` |
+| `502` | `/api/v1/ai/tags` only: the AI provider failed or answered in an unexpected format |
 | `500` | Unexpected error, logged server-side; the message is generic |
 
 ## Server actions
@@ -43,7 +44,8 @@ Actions never throw to the client. They return:
 | `resetPassword` | 5 / 15 min | IP | `POST /api/auth/reset-password` |
 | `resendVerification` | 3 / 15 min | IP + email | `POST /api/auth/resend-verification` |
 | `upload` | 10 / hour | IP + user id | `POST /api/upload` |
-| `ai` | 20 / hour | IP + user id | All four AI actions |
+| `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` |
+| `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
 
 The IP is the first entry of `x-forwarded-for`, then `x-real-ip`, then `127.0.0.1`.
 

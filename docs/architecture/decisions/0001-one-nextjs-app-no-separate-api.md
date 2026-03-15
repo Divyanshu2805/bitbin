@@ -1,6 +1,6 @@
 # 0001. One Next.js application, no separate API
 
-**Status:** Accepted
+**Status:** Accepted. The "no public API" consequence is amended by [0007](0007-token-api-for-the-browser-extension.md), which adds a token-authenticated `/api/v1` inside this same app.
 
 ## Context
 

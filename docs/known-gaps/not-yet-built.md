@@ -6,7 +6,7 @@ Missing features and open issues — found while deploying BitBin and while docu
 
 1. **High — Deleting an item can delete someone else's file.** `createItem` accepts `fileUrl` from the client for any item type (only `file` / `image` are Pro-gated), and `importData` keeps imported `fileUrl`s for Pro users. `deleteItem` then deletes the R2 key derived from that URL without checking it starts with the caller's `{userId}/`. Anyone who knows another user's file URL — image URLs are public — can store it on an item of their own and delete it. **Fix:** in `createItem`, `importData` and before `deleteFromR2`, require the key to start with `${session.user.id}/`, and ignore `fileUrl` for non-file types. (`src/actions/items.ts`, `src/actions/import.ts`, `src/lib/db/items.ts`)
 2. **High — Open dependency advisories.** `npm audit` reports 70 advisories (10 critical, 31 high), including in `next`, `next-auth`, `@auth/prisma-adapter`, `prisma` and `vitest`. **Fix:** upgrade `next` to the patched 16.x release first, then the rest one at a time with `npm run test && npm run build` after each. Avoid `npm audit fix --force` — it proposes breaking downgrades.
-3. **Medium — Collection ids aren't checked for ownership.** `createItem` and `updateItem` link the item to whatever `collectionIds` the client sends. Ids are unguessable cuids, but a leaked id lets another user add items to someone's collection. **Fix:** filter `collectionIds` to the caller's collections in `lib/db/items.ts`.
+3. ~~**Medium — Collection ids aren't checked for ownership.**~~ **Fixed:** `createItem` and `updateItem` in `lib/db/items.ts` now drop any `collectionIds` that aren't the caller's. (Kept here so the numbering of other items doesn't change.)
 4. **Medium — Credentials sign-in isn't rate limited on the server.** The `login` limit lives in `/api/auth/check-login-limit`, which the sign-in form calls voluntarily; a script can post to NextAuth's credentials callback directly. **Fix:** check the limit inside `authorize()` in `src/auth.ts`.
 5. **Medium — The auth library is a beta.** `next-auth@5.0.0-beta.30`. GitHub sign-in only works because of the `issuer` override in `auth.ts` / `auth.config.ts`; upgrading within the beta line didn't fix it. Re-test GitHub sign-in after every upgrade, and drop the override once Auth.js handles GitHub's `iss` itself.
 6. **Medium — No session invalidation.** Resetting or changing a password, or deleting the account, leaves existing JWTs valid until they expire.
@@ -47,7 +47,7 @@ Missing features and open issues — found while deploying BitBin and while docu
 
 ## Code health
 
-32. **Medium — Route handlers have no tests.** The tests cover server actions and libraries, but none of the API routes — register, verify, password reset, upload, download, export, Stripe checkout / portal and the webhook. The registration and webhook gaps above would have been caught by them. **Fix:** route tests with mocked Prisma, Resend and Stripe, starting with registration and the webhook.
+32. **Medium — Most route handlers have no tests.** Only the token API has them (`src/app/api/v1/items`, `src/app/api/v1/ai/tags`, and `src/lib/api-auth.ts`). The rest are untested: register, verify, password reset, upload, download, export, Stripe checkout / portal and the webhook. The registration and webhook gaps above would have been caught by them. **Fix:** route tests with mocked Prisma, Resend and Stripe, starting with registration and the webhook.
 33. **`exportData` action is unused.** The UI downloads exports through `/api/export`; `src/actions/export.ts` duplicates it and can be removed (with its test) or used.
 34. **Direct Prisma use outside `lib/db`.** Several route handlers and pages query Prisma directly ([module map](../architecture/module-map.md#layering-rules)); moving them into `lib/db` would put every ownership check in one place.
 35. **`updateItem` isn't transactional.** Its collection-link rewrite and item update are separate statements.
@@ -56,6 +56,8 @@ Missing features and open issues — found while deploying BitBin and while docu
 
 Planned additions, not bugs:
 
-- **Save from anywhere (Pro)** — a keyboard shortcut that saves the current text selection into BitBin through a small popup. Planned as a browser extension first, then a desktop tray app with a system-wide shortcut. Both need personal access tokens and a small `POST /api/v1/items` endpoint — BitBin's first public API ([ADR 0001](../architecture/decisions/0001-one-nextjs-app-no-separate-api.md)).
+- **Save from anywhere: desktop app (Pro).** The browser extension is built ([flow](../architecture/flows/save-from-extension.md)). A desktop tray app with a system-wide shortcut could follow and would use the same [token API](../api/token-api.md) without server changes.
+- **Publish the extension** to the Chrome Web Store and Edge Add-ons. Today Pro users download a ZIP from Settings and load it unpacked, which needs Developer mode and has no automatic updates. See [`extension/README.md`](../../extension/README.md#publishing).
+- **Firefox support** for the extension. It needs a `browser_specific_settings` block and a background script instead of a service worker.
 - **A separate development database** (item 19).
 - **Live Stripe payments** once the account can be activated (item 12).

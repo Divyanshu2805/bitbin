@@ -35,6 +35,7 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | AI prompts, model or provider | The prompt strings in `src/actions/ai.ts`; the model and provider are the `AI_MODEL` and `OPENAI_BASE_URL` variables, read in `src/lib/openai.ts` |
 | Export / import format | `src/lib/db/export.ts` and the Zod schema in `src/actions/import.ts` — bump `version` if the shape changes incompatibly |
 | ⌘K search | `src/actions/search.ts`, `components/search/*` |
+| The browser extension | `extension/` (popup, options, type guessing in `lib.js`); its endpoints in `src/app/api/v1/*` and the token check in `src/lib/api-auth.ts`. See the [token API](../api/token-api.md) before changing a response. The Settings download is packaged by `src/lib/extension-package.ts`; bump `version` in `extension/manifest.json` for every extension change |
 
 ## Look and feel
 

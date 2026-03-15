@@ -36,6 +36,10 @@ Actions don't revalidate; components call `router.refresh()` after a successful 
 
 `SearchProvider` loads the ⌘K index once when the dashboard layout mounts. `refreshSearchData` exists but nothing calls it, so a just-created item isn't searchable until a reload. Call it after mutations if you're fixing this — see [search](../../architecture/flows/search.md).
 
+## `'use server'` files may only export async functions
+
+Next treats every export of a `'use server'` file as a server action, including `export type { X }` re-exports. Re-exporting a type from `src/actions/*` crashes the action loader at runtime (`ReferenceError: X is not defined`), which breaks every action on the page. `tsc`, the tests and `next build` all still pass. Import types from the `lib/` module that defines them instead (e.g. `CreateItemInput` from `@/lib/item-create`).
+
 ## The React Compiler is on
 
 `reactCompiler: true` in `next.config.ts`. Components that break the rules of hooks, or mutate values during render, can behave differently once compiled. Treat the `react-hooks` lint errors as real bugs.

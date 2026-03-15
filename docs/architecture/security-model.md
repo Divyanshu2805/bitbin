@@ -7,7 +7,7 @@ Who can see and change what, and where each boundary is enforced. The rules a ch
 BitBin is single-user per account: every item, collection and custom item type belongs to exactly one user, and nothing is shared between accounts. Isolation is enforced in the application, not the database — there is no row-level security.
 
 - Every `lib/db` function takes the user id as an argument and filters or checks ownership with it (`findFirst({ where: { id, userId } })`, or a `findUnique` followed by an `existing.userId !== userId` check).
-- That user id always comes from the session (`getAuthedSession()` in actions, `auth()` in route handlers and pages), never from a request body, query string or path.
+- That user id always comes from the session (`getAuthedSession()` in actions, `auth()` in route handlers and pages), or for `/api/v1`, from the API token, never from a request body, query string or path.
 - A row that exists but belongs to someone else is reported exactly like a missing one — "Item not found or access denied", `404 Item not found` — so ids can't be probed.
 
 Tags are the exception: tag names are globally unique rows shared by everyone, connected to items with `connectOrCreate`. They carry no data beyond the name.
@@ -26,6 +26,7 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 |---|---|---|
 | Email + password | Credentials provider in `src/auth.ts` | bcrypt (cost 12), minimum length 8, email must be verified (unless `SKIP_EMAIL_VERIFICATION`), `login` rate limit checked by the sign-in form first |
 | GitHub | GitHub provider + `signInWithGitHub` server action | GitHub sign-in is refused for an email that already has a password account (`OAuthAccountNotLinked`), and the account row the adapter created is removed |
+| API token | `/api/v1/*`, `src/lib/api-auth.ts` | `bb_` + 32 random bytes, stored as a SHA-256 hash, shown once; `Bearer` header only (cookies ignored); owner's `isPro` re-read on every request; `api` rate limit; revocable in Settings, at most 10 per user |
 | Password reset | `/api/auth/forgot-password`, `/api/auth/reset-password` | 32-byte random token, 1-hour expiry, single use; the forgot endpoint answers identically whether or not the email exists |
 | Email verification | `/api/auth/verify` | 32-byte random token, 24-hour expiry, single use |
 
@@ -38,6 +39,8 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 | Server actions | `getAuthedSession()` first; returns `Unauthorized` without a session |
 | `/api/items/[id]`, `/api/upload`, `/api/download/*`, `/api/export`, `/api/stripe/*`, `/api/auth/change-password`, `/api/auth/delete-account` | `auth()` → `401` without a session |
 | `/api/download/{path}` | The path must start with the caller's user id → `403` otherwise |
+| `/api/extension/download` | `auth()` → `401`; session `isPro` → `403` |
+| `/api/v1/*` | `authenticateApiRequest`: valid token → `401` otherwise; owner on Pro → `403` otherwise; `api` rate limit → `429` |
 | `/api/webhooks/stripe` | No session — the `stripe-signature` header is verified against `STRIPE_WEBHOOK_SECRET` → `400` otherwise |
 | Registration, password reset, resend verification | Public, rate limited per IP (and per email where relevant) |
 
@@ -50,6 +53,7 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 | 50 items, 3 collections on Free | `lib/usage.ts` (`canCreateItem`, `canCreateCollection`), called by `createItem`, `createCollection`, and `importData` |
 | File and image items are Pro | `createItem` (session `isPro`), `/api/upload` (re-reads `isPro` from the database) |
 | AI is Pro | `requirePro` in every action in `src/actions/ai.ts` |
+| API tokens and `/api/v1` are Pro | `createApiToken` (session `isPro`); `authenticateApiRequest` (re-reads `isPro` from the database) |
 | ZIP export is Pro | `/api/export` → `403` |
 
 ## Files

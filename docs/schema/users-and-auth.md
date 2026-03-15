@@ -1,6 +1,6 @@
 # Users and Auth Tables
 
-The account itself, and the three tables NextAuth's Prisma adapter needs.
+The account itself, the three tables NextAuth's Prisma adapter needs, and the API tokens used by the browser extension.
 
 ## `users`
 
@@ -17,7 +17,7 @@ The account itself, and the three tables NextAuth's Prisma adapter needs.
 | `editorPreferences` | jsonb, nullable | Monaco settings; `null` means the defaults in `src/lib/constants/editor.ts` |
 | `createdAt`, `updatedAt` | timestamp | |
 
-Deleting a user cascades to `items`, `collections`, `item_types` owned by the user, `accounts` and `sessions`.
+Deleting a user cascades to `items`, `collections`, `item_types` owned by the user, `accounts`, `sessions` and `api_tokens`.
 
 ## `accounts`
 
@@ -44,6 +44,22 @@ When GitHub sign-in is refused for an email that has a password account, the `si
 | `expires` | 24 hours for verification, 1 hour for password reset |
 
 Unique on (`identifier`, `token`). Creating a token first deletes any earlier token with the same identifier, so each email has at most one live token of each kind. Tokens are deleted when used; expired tokens are deleted only when someone tries to use them.
+
+## `api_tokens`
+
+Personal access tokens for the [token API](../api/token-api.md), created in Settings → Browser extension. Added by migration `20260924225247_add_api_tokens`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | text, PK | `cuid()` |
+| `userId` | text, FK → `users.id`, cascade | Indexed |
+| `name` | text | Chosen by the user, up to 50 characters |
+| `tokenHash` | text, unique | SHA-256 (hex) of the token. The token itself is never stored |
+| `prefix` | text | The token's first 10 characters (`bb_…`), shown in Settings to tell tokens apart |
+| `lastUsedAt` | timestamp, nullable | Updated by `/api/v1` requests, at most once a minute |
+| `createdAt` | timestamp | |
+
+At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). Tokens don't expire. Revoking one deletes the row. Tokens are **not** exported or imported.
 
 ## Related
 

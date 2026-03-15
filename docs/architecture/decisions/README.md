@@ -4,12 +4,13 @@ Short records of the decisions that shape BitBin, each with the context that for
 
 | # | Decision | Status |
 |---|---|---|
-| [0001](0001-one-nextjs-app-no-separate-api.md) | Build BitBin as one Next.js application, with no separate API server | Accepted |
+| [0001](0001-one-nextjs-app-no-separate-api.md) | Build BitBin as one Next.js application, with no separate API server | Accepted, amended by 0007 |
 | [0002](0002-server-actions-for-writes.md) | Send every write from the UI through a server action that returns an `ActionResult` | Accepted |
 | [0003](0003-jwt-sessions-with-live-plan.md) | Use JWT sessions, and re-read the plan from the database on every evaluation | Accepted |
 | [0004](0004-files-in-r2-behind-a-download-proxy.md) | Store binaries in Cloudflare R2, and download them through an app route | Accepted |
 | [0005](0005-rate-limits-fail-open.md) | Let rate limiting fail open when Redis is missing or down | Accepted |
 | [0006](0006-schema-changes-only-through-migrations.md) | Change the schema only through committed Prisma migrations | Accepted |
+| [0007](0007-token-api-for-the-browser-extension.md) | Add a small `/api/v1` authenticated by personal access tokens, for the browser extension | Accepted |
 
 ## Writing a new record
 

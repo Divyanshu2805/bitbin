@@ -1,6 +1,6 @@
 # API Reference
 
-BitBin has no public API — every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. There are two kinds:
+Almost every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. The exception is the [token API](token-api.md) under `/api/v1`, which the browser extension calls with a personal access token ([ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md)). There are two kinds of endpoint:
 
 - **Route handlers** under `src/app/api/` — real HTTP endpoints, used where the browser, NextAuth or Stripe needs a URL.
 - **Server actions** under `src/actions/` — async functions called from client components, which Next.js turns into POST requests. Every UI write goes through one ([ADR 0002](../architecture/decisions/0002-server-actions-for-writes.md)).
@@ -22,9 +22,14 @@ BitBin has no public API — every endpoint here exists for BitBin's own UI and 
 | `POST` | `/api/upload` | Session, Pro | Upload a file or image to R2 | [Items and files](items-and-files.md) |
 | `GET` | `/api/download/[...path]` | Session, owner | Download a file with its name | [Items and files](items-and-files.md) |
 | `GET` | `/api/export` | Session (ZIP: Pro) | Download a JSON or ZIP export | [Export format](export-format.md) |
+| `GET` | `/api/extension/download` | Session, Pro | Download the browser extension as a ZIP | [Token API](token-api.md#downloading-the-extension) |
 | `POST` | `/api/stripe/checkout` | Session | Start a Checkout Session | [Billing](billing.md) |
 | `POST` | `/api/stripe/portal` | Session | Open the Customer Portal | [Billing](billing.md) |
 | `POST` | `/api/webhooks/stripe` | Stripe signature | Receive subscription events | [Billing](billing.md) |
+| `GET` | `/api/v1/me` | Token, Pro | Check an API token | [Token API](token-api.md) |
+| `GET` | `/api/v1/collections` | Token, Pro | The caller's collections, for the extension's picker | [Token API](token-api.md) |
+| `POST` | `/api/v1/items` | Token, Pro | Create a text or link item | [Token API](token-api.md) |
+| `POST` | `/api/v1/ai/tags` | Token, Pro | AI tag suggestions | [Token API](token-api.md) |
 
 ## Server actions
 
@@ -34,12 +39,13 @@ BitBin has no public API — every endpoint here exists for BitBin's own UI and 
 | `collections.ts` | `createCollection`, `updateCollection`, `deleteCollection`, `toggleCollectionFavorite`, `getUserCollections` | [Server actions](server-actions.md#collections) |
 | `ai.ts` | `generateAutoTags`, `generateDescription`, `explainCode`, `optimizePrompt` | [Server actions](server-actions.md#ai) |
 | `import.ts`, `export.ts` | `previewImport`, `importData`, `exportData` | [Server actions](server-actions.md#import-and-export) |
+| `api-tokens.ts` | `createApiToken`, `revokeApiToken` | [Server actions](server-actions.md#api-tokens) |
 | `search.ts`, `settings.ts`, `auth.ts` | `getSearchData`, `updateEditorPreferences`, `signInWithGitHub` | [Server actions](server-actions.md#search-settings-and-sign-in) |
 
 ## Conventions
 
 - Route handlers return JSON; errors are `{ "error": "…" }` with a meaningful status. Server actions return an `ActionResult`. Both are described in [errors and rate limits](errors-and-rate-limits.md).
-- The user is always taken from the session. No endpoint accepts a user id as input.
+- The user is always taken from the session, or for `/api/v1`, from the token. No endpoint accepts a user id as input.
 
 ## Related
 

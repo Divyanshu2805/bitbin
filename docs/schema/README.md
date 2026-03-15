@@ -10,6 +10,7 @@ BitBin's data lives in one PostgreSQL database, defined by `prisma/schema.prisma
 | `accounts` | `Account` | OAuth links (GitHub) — NextAuth adapter | [Users and auth](users-and-auth.md) |
 | `sessions` | `Session` | NextAuth adapter table; unused with JWT sessions | [Users and auth](users-and-auth.md) |
 | `verification_tokens` | `VerificationToken` | Email verification and password-reset tokens | [Users and auth](users-and-auth.md) |
+| `api_tokens` | `ApiToken` | Personal access tokens for the browser extension (hashed) | [Users and auth](users-and-auth.md#api_tokens) |
 | `items` | `Item` | Every saved snippet, prompt, command, note, file, image and link | [Items and item types](items-and-types.md) |
 | `item_types` | `ItemType` | The seven system types (and, in principle, per-user custom types) | [Items and item types](items-and-types.md) |
 | `collections` | `Collection` | Named groups of items | [Collections and tags](collections-and-tags.md) |
@@ -28,6 +29,7 @@ User 1───* Item *───1 ItemType
   │
   1───* Collection
   1───* Account / Session        (NextAuth)
+  1───* ApiToken                 (token API)
 ```
 
 Every user-owned row cascades on user delete, so deleting a user removes all of their data in the database.

@@ -14,7 +14,7 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `toggleItemFavorite` | `itemId` | `{ isFavorite }` | Owned |
 | `toggleItemPin` | `itemId` | `{ isPinned }` | Owned |
 
-`typeName` is one of `snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`. `url` and `fileUrl` must be `http(s)`.
+`typeName` is one of `snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`. `url` and `fileUrl` must be `http(s)`. `collectionIds` that aren't the caller's are dropped. `createItem`'s checks live in `createItemForUser` (`src/lib/item-create.ts`), which [`POST /api/v1/items`](token-api.md#post-apiv1items) shares.
 
 ## Collections
 
@@ -39,6 +39,8 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `explainCode` | `{ title, content, language?, typeName: 'snippet' \| 'command' }` | `string` (markdown) |
 | `optimizePrompt` | `{ title, content }` | `string` |
 
+`generateAutoTags` does its work in `suggestTagsForUser` (`src/lib/ai-tags.ts`), which [`POST /api/v1/ai/tags`](token-api.md#post-apiv1aitags) shares.
+
 ## Import and export
 
 | Action | Input | Returns |
@@ -46,6 +48,17 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…" |
 | `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. One transaction; Free limits apply; file and image items skipped for Free users |
 | `exportData` | — | The manifest as data. Not used by the UI, which downloads through [`/api/export`](export-format.md) |
+
+## API tokens
+
+`src/actions/api-tokens.ts`: personal access tokens for the [token API](token-api.md).
+
+| Action | Input | Returns | Checks |
+|---|---|---|---|
+| `createApiToken` | `{ name }` (1–50 chars) | `{ token, summary }`. `token` is the plain `bb_…` value, returned only here | Pro; at most 10 tokens per user. Stores only the SHA-256 hash |
+| `revokeApiToken` | `tokenId` | `null` | Owned. Works on any plan |
+
+The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`): name, prefix, created and last used. Never the hash.
 
 ## Search, settings and sign-in
 
