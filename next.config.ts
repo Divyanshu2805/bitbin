@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   devIndicators: false,
+  // The extension download route zips extension/ at runtime; ship those files with it
+  outputFileTracingIncludes: {
+    '/api/extension/download': ['./extension/**/*'],
+  },
   images: {
     remotePatterns: [
       {

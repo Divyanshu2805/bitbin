@@ -5,6 +5,8 @@ import AccountSettings from '@/components/settings/account-settings';
 import BillingSettings from '@/components/settings/billing-settings';
 import DataSettings from '@/components/settings/data-settings';
 import EditorSettings from '@/components/settings/editor-settings';
+import ExtensionSettings from '@/components/settings/extension-settings';
+import { getApiTokens } from '@/lib/db/api-tokens';
 import { getSidebarCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
 import { getUserWithSettings } from '@/lib/db/users';
@@ -26,10 +28,11 @@ export default async function SettingsPage() {
   const isPro = session.user.isPro ?? false;
 
   // Get sidebar data and usage stats for layout
-  const [itemTypesWithCounts, sidebarCollections, usage] = await Promise.all([
+  const [itemTypesWithCounts, sidebarCollections, usage, apiTokens] = await Promise.all([
     getItemTypesWithCounts(user.id),
     getSidebarCollections(user.id),
     getUserUsage(user.id, isPro),
+    getApiTokens(user.id),
   ]);
 
   return (
@@ -57,6 +60,9 @@ export default async function SettingsPage() {
           itemCount={usage.itemCount}
           collectionCount={usage.collectionCount}
         />
+
+        {/* Browser extension tokens */}
+        <ExtensionSettings isPro={isPro} tokens={apiTokens} />
 
         {/* Data Settings */}
         <DataSettings isPro={isPro} />
