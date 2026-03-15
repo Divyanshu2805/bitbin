@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "BitBin: Save from anywhere",
+  "short_name": "BitBin",
+  "version": "1.0.0",
+  "description": "Save selected text from any page to your BitBin with a shortcut. Requires BitBin Pro.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Save selection to BitBin",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Save the selection to BitBin"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "host_permissions": [
+    "https://bitbin.divyanshuagrahari.dev/*",
+    "http://localhost:3000/*"
+  ]
+}

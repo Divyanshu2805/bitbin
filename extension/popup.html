@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Save to BitBin</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>body { width: 380px; }</style>
+</head>
+<body>
+  <header>
+    <img src="icons/icon-32.png" alt="">
+    <h1>Save to BitBin</h1>
+    <span class="eyebrow">Pro</span>
+  </header>
+
+  <div id="loading" class="panel"><p>Loading…</p></div>
+
+  <div id="setup" class="panel" hidden>
+    <p id="setup-message">Connect the extension to your BitBin account first.</p>
+    <button id="open-options" class="primary" type="button">Open options</button>
+  </div>
+
+  <div id="done" class="panel" hidden>
+    <p><strong>Saved to BitBin.</strong></p>
+    <button id="open-bitbin" class="link" type="button">Open BitBin</button>
+  </div>
+
+  <form id="form" hidden>
+    <main>
+      <div class="row">
+        <label>Type
+          <select id="type"></select>
+        </label>
+        <label>Collection
+          <select id="collection">
+            <option value="">No collection</option>
+          </select>
+        </label>
+      </div>
+
+      <label>Title
+        <input id="title" required maxlength="200">
+      </label>
+
+      <label id="language-field">Language
+        <select id="language"></select>
+      </label>
+
+      <label id="content-field">Content
+        <textarea id="content" spellcheck="false"></textarea>
+      </label>
+
+      <label id="url-field">URL
+        <input id="url" type="url" placeholder="https://">
+      </label>
+
+      <label>Tags
+        <div class="tags-row">
+          <input id="tags" placeholder="comma, separated">
+          <button id="suggest" type="button" title="Suggest tags with AI">✦ Suggest</button>
+        </div>
+      </label>
+
+      <div id="source" class="source"></div>
+
+      <div id="status" class="status" role="status"></div>
+
+      <div class="actions">
+        <span class="hint">Ctrl+Enter to save</span>
+        <button id="save" class="primary" type="submit">Save</button>
+      </div>
+    </main>
+  </form>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
