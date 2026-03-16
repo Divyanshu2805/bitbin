@@ -36,15 +36,18 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 
 **AI (Pro)** — auto-tag suggestions, description generator, "Explain this code", prompt optimizer
 
+**Save from anywhere (Pro)** — a Chrome / Edge extension: select text on any page, press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>, and save it to BitBin. It guesses the type (snippet, command, note or link) and the snippet's language, takes the title from the page, and offers a collection picker, tags and AI tag suggestions. Download it from **Settings → Browser extension**. More in [`extension/`](extension/README.md).
+
 **Platform**
 - Email / password and GitHub sign-in, email verification and password reset
-- Rate limiting on auth, uploads and AI
+- Rate limiting on auth, uploads, AI and the token API
+- Personal access tokens and a small `/api/v1` for the browser extension
 - Stripe subscriptions (Free / Pro), file storage on Cloudflare R2
 - Import and export (JSON on Free, ZIP with files on Pro)
 
 ## Architecture
 
-BitBin is one Next.js 16 App Router application — no separate API server. Pages are React Server Components that read through Prisma; every write is a server action that checks the session, validates with Zod, applies plan and rate limits, and runs a query scoped to the user. Route handlers cover what needs real HTTP: auth flows, file transfer, export, and Stripe.
+BitBin is one Next.js 16 App Router application — no separate API server. Pages are React Server Components that read through Prisma; every write is a server action that checks the session, validates with Zod, applies plan and rate limits, and runs a query scoped to the user. Route handlers cover what needs real HTTP: auth flows, file transfer, export, and Stripe. The browser extension talks to a small token-authenticated `/api/v1` that reuses the same validation and queries ([ADR 0007](docs/architecture/decisions/0007-token-api-for-the-browser-extension.md)).
 
 | Area | Choice |
 |---|---|
@@ -88,7 +91,8 @@ Everything lives in [`docs/`](docs/README.md):
 | [Local development](docs/local-development/README.md) | Prerequisites, setup, configuration, commands, troubleshooting |
 | [Architecture](docs/architecture/README.md) | Layers, module map, request flows, security model, decisions |
 | [Data model](docs/schema/README.md) | Tables, item types, conventions, migrations |
-| [API reference](docs/api/README.md) | Route handlers, server actions, export format, errors and rate limits |
+| [API reference](docs/api/README.md) | Route handlers, server actions, the token API, export format, errors and rate limits |
+| [Browser extension](extension/README.md) | What it does, how users install it, loading it locally |
 | [Engineering practices](docs/practices/README.md) | Conventions, guardrails, testing, design system, pitfalls |
 | [Known gaps](docs/known-gaps/README.md) | Trade-offs, open issues and the roadmap |
 | [Deployment](docs/deployment/README.md) | Vercel, provider callbacks, smoke test |
