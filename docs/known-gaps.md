@@ -37,7 +37,7 @@ user or maintainer can get stuck, **Low** = polish.
 | Gap | Severity | Details | Suggested fix |
 | --- | --- | --- | --- |
 | No DMARC record | Medium | SPF and DKIM for `bitbin.divyanshuagrahari.dev` are set up through Resend, but there's no `_dmarc` record. Gmail and Yahoo increasingly expect one, and without it verification emails are more likely to land in spam. | Add a TXT record `_dmarc` with `v=DMARC1; p=none;` in Cloudflare, then tighten to `p=quarantine` once reports look clean. |
-| Local email only reaches the Resend owner | Low | Without `FROM_EMAIL`, local development uses Resend's sandbox sender, which only delivers to the Resend account's own address. | Expected; documented in [environment-variables.md](environment-variables.md). Set `FROM_EMAIL` locally to test other recipients. |
+| Local email only reaches the Resend owner | Low | Without `FROM_EMAIL`, local development uses Resend's sandbox sender, which only delivers to the Resend account's own address. | Expected; documented in [environment-variables.md](local-development/configuration.md). Set `FROM_EMAIL` locally to test other recipients. |
 
 ## Infrastructure & operations
 

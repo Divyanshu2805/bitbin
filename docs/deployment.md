@@ -28,7 +28,7 @@ domain you own (e.g. `bitbin.yourdomain.com`). Any Node 20 host that can run
 1. Import `github.com/Divyanshu2805/bitbin`.
 2. Framework preset: **Next.js**. The build command is already
    `prisma generate && next build` via `npm run build`.
-3. Add every variable from [environment-variables.md](environment-variables.md).
+3. Add every variable from [environment-variables.md](local-development/configuration.md).
    In production:
    - `AUTH_URL` and `NEXT_PUBLIC_APP_URL` → `https://bitbin.yourdomain.com`
    - `SKIP_EMAIL_VERIFICATION` → `false` (or leave unset)

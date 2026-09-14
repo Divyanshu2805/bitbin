@@ -52,6 +52,6 @@ left in the bucket.
 
 1. Create a bucket and enable the **public r2.dev URL** (or attach a domain)
 2. Create an API token with *Object Read & Write* on that bucket
-3. Fill the `R2_*` variables ([environment-variables.md](environment-variables.md))
+3. Fill the `R2_*` variables ([environment-variables.md](local-development/configuration.md))
 4. `next.config.ts` already allows `*.r2.dev` and `*.r2.cloudflarestorage.com`
    for `next/image`

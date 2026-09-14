@@ -6,8 +6,8 @@ Start with **Getting started**, then dip into whichever area you're working on.
 
 | Doc | What's inside |
 | --- | --- |
-| [Getting started](getting-started.md) | Install, configure, migrate, seed, run |
-| [Environment variables](environment-variables.md) | Every variable, where to get it, what breaks without it |
+| [Getting started](local-development/README.md) | Install, configure, migrate, seed, run |
+| [Environment variables](local-development/configuration.md) | Every variable, where to get it, what breaks without it |
 | [Deployment](deployment.md) | Vercel + Neon + Stripe webhooks in production |
 
 ## How it works

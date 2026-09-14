@@ -86,7 +86,7 @@ Open <http://localhost:3000>.
 > **Credentials:** `.env.example` only contains placeholders (`YOUR_...`).
 > Real keys for the database, auth, Stripe, R2, Resend, Upstash and OpenAI
 > have to be added to `.env` before the related features work. See
-> [docs/environment-variables.md](docs/environment-variables.md).
+> [docs/environment-variables.md](docs/local-development/configuration.md).
 
 ## Scripts
 
@@ -106,7 +106,7 @@ Open <http://localhost:3000>.
 
 Everything lives in [`docs/`](docs/README.md):
 
-- [Getting started](docs/getting-started.md) · [Environment variables](docs/environment-variables.md)
+- [Getting started](docs/local-development/README.md) · [Environment variables](docs/local-development/configuration.md)
 - [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Authentication](docs/authentication.md)
 - [Items](docs/items.md) · [Item types](docs/item-types.md) · [Collections](docs/collections.md) · [Search](docs/search.md)
 - [File uploads](docs/file-uploads.md) · [AI features](docs/ai-features.md) · [Billing](docs/billing.md)
