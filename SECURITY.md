@@ -18,7 +18,7 @@ Out of scope: vulnerabilities in the hosted providers themselves (Vercel, Neon, 
 
 ## Known issues
 
-Weaknesses already identified are listed under [security in known gaps](docs/known-gaps.md) — no need to report those, though fixes are welcome.
+Weaknesses already identified are listed under [security in known gaps](docs/known-gaps/not-yet-built.md#security) — no need to report those, though fixes are welcome.
 
 ## How BitBin is secured
 

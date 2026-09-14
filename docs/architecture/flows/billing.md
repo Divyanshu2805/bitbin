@@ -32,7 +32,7 @@ Stripe calls `POST /api/webhooks/stripe`. The handler reads the raw body, verifi
 | `customer.subscription.updated` | `isPro` = status is `active` or `trialing` |
 | `customer.subscription.deleted` | `isPro = false`, clears `stripeSubscriptionId` |
 
-A handler error returns `500`, so Stripe retries. Events aren't de-duplicated or ordered — see [known gaps](../../known-gaps.md).
+A handler error returns `500`, so Stripe retries. Events aren't de-duplicated or ordered — see [known gaps](../../known-gaps/constraints-and-trade-offs.md#billing).
 
 ## Sharing a Stripe account with other apps
 
@@ -72,5 +72,5 @@ To test delivery without a checkout, run `stripe trigger checkout.session.comple
 
 ## Related
 
-- [Billing endpoints](../README.md)
+- [Billing endpoints](../../api/billing.md)
 - [Stripe integration plan](../design-notes/stripe-integration-plan.md) — the original design write-up.

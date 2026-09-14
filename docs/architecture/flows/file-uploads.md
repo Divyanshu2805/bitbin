@@ -31,7 +31,7 @@ The bucket is public, so the proxy is a convenience, not an access control — a
 
 ## Deletion
 
-Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PUBLIC_URL` from the stored URL to get the key. A failure is logged and the row is deleted anyway. Deleting an account does **not** delete its files — see [known gaps](../../known-gaps.md).
+Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PUBLIC_URL` from the stored URL to get the key. A failure is logged and the row is deleted anyway. Deleting an account does **not** delete its files — see [known gaps](../../known-gaps/not-yet-built.md).
 
 ## R2 setup checklist
 
@@ -41,5 +41,5 @@ Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PU
 
 ## Related
 
-- [Upload and download endpoints](../README.md)
+- [Upload and download endpoints](../../api/items-and-files.md)
 - [ADR 0004](../decisions/0004-files-in-r2-behind-a-download-proxy.md)

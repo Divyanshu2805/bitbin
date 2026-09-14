@@ -29,7 +29,7 @@ Leave `SKIP_EMAIL_VERIFICATION="true"` while developing, so accounts can sign in
 npm run db:migrate    # prisma migrate dev — applies prisma/migrations and generates the client
 ```
 
-The generated Prisma client is written to `src/generated/prisma/` (git-ignored). Never use `prisma db push` here — `npm run db:push` is deliberately disabled; see [migrations](../database.md).
+The generated Prisma client is written to `src/generated/prisma/` (git-ignored). Never use `prisma db push` here — `npm run db:push` is deliberately disabled; see [migrations](../schema/migrations-and-seeding.md).
 
 ## 4. Seed
 

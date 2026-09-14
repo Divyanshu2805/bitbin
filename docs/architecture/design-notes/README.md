@@ -4,7 +4,7 @@ The longer write-ups from when major features were planned. They record the opti
 
 | Note | Planned | Current behaviour |
 |---|---|---|
-| [Item CRUD architecture](item-crud-architecture.md) | The unified create / read / update / delete design for all seven item types | [Items flow](../flows/items.md), [item types](../../item-types.md) |
+| [Item CRUD architecture](item-crud-architecture.md) | The unified create / read / update / delete design for all seven item types | [Items flow](../flows/items.md), [item types](../../schema/item-types.md) |
 | [AI integration plan](ai-integration-plan.md) | Model choice, SDK setup, the four AI features, gating and cost control | [AI features flow](../flows/ai-features.md) |
 | [Stripe integration plan](stripe-integration-plan.md) | Checkout, the Customer Portal, webhooks and plan limits | [Billing flow](../flows/billing.md) |
 

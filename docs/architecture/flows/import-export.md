@@ -9,7 +9,7 @@ Both live under **Settings → Data**.
 | JSON | Free and Pro | `GET /api/export?format=json` | `bitbin-export-YYYY-MM-DD.json` |
 | ZIP | Pro (`403` otherwise) | `GET /api/export?format=zip` | `bitbin-export-YYYY-MM-DD.zip` |
 
-The manifest is built by `getUserExportData` (`src/lib/db/export.ts`) — every item with its type name, tags and collection names, and every collection. Items refer to collections **by name**, not id, so an export is portable between accounts. The full shape is in the [export format](../README.md).
+The manifest is built by `getUserExportData` (`src/lib/db/export.ts`) — every item with its type name, tags and collection names, and every collection. Items refer to collections **by name**, not id, so an export is portable between accounts. The full shape is in the [export format](../../api/export-format.md).
 
 The ZIP holds `bitbin-export.json` plus a `files/` folder with every file and image item's binary, fetched from R2 and compressed with `archiver`. A JSON export keeps the file metadata but not the bytes.
 
@@ -28,5 +28,5 @@ Rules:
 
 ## Related
 
-- [Export endpoint and format](../README.md)
-- [Import actions](../README.md)
+- [Export endpoint and format](../../api/export-format.md)
+- [Import actions](../../api/server-actions.md#import-and-export)

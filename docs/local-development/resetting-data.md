@@ -33,5 +33,5 @@ Rate-limit counters live in Upstash under `ratelimit:*` keys and expire on their
 
 ## Related
 
-- [Migrations and seeding](../database.md)
+- [Migrations and seeding](../schema/migrations-and-seeding.md)
 - [Commands](commands.md)

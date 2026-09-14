@@ -107,12 +107,12 @@ Open <http://localhost:3000>.
 Everything lives in [`docs/`](docs/README.md):
 
 - [Getting started](docs/local-development/README.md) · [Environment variables](docs/local-development/configuration.md)
-- [Architecture](docs/architecture/README.md) · [Database](docs/database.md) · [Authentication](docs/architecture/flows/authentication.md)
-- [Items](docs/architecture/flows/items.md) · [Item types](docs/item-types.md) · [Collections](docs/architecture/flows/collections.md) · [Search](docs/architecture/flows/search.md)
+- [Architecture](docs/architecture/README.md) · [Database](docs/schema/README.md) · [Authentication](docs/architecture/flows/authentication.md)
+- [Items](docs/architecture/flows/items.md) · [Item types](docs/schema/item-types.md) · [Collections](docs/architecture/flows/collections.md) · [Search](docs/architecture/flows/search.md)
 - [File uploads](docs/architecture/flows/file-uploads.md) · [AI features](docs/architecture/flows/ai-features.md) · [Billing](docs/architecture/flows/billing.md)
-- [Rate limiting](docs/rate-limiting.md) · [Import & export](docs/architecture/flows/import-export.md)
+- [Rate limiting](docs/api/errors-and-rate-limits.md) · [Import & export](docs/architecture/flows/import-export.md)
 - [Design system](docs/design-system.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md)
-- [Known gaps & roadmap](docs/known-gaps.md)
+- [Known gaps & roadmap](docs/known-gaps/README.md)
 
 ## Project structure
 

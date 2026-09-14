@@ -17,5 +17,5 @@ The `jwt` callback puts the user id on the token at sign-in and, **every time it
 - A webhook's change to `isPro` is visible on the user's next request, with no sign-out and no cache invalidation.
 - The rest of the app checks `session.user.isPro` and never queries the plan itself (the upload route re-reads it anyway, as a second check).
 - Every session evaluation costs one small primary-key query — including the ones `proxy.ts` triggers.
-- JWTs can't be revoked server-side. A password change, password reset or account deletion leaves already-issued tokens valid until they expire. See [known gaps](../../known-gaps.md).
+- JWTs can't be revoked server-side. A password change, password reset or account deletion leaves already-issued tokens valid until they expire. See [known gaps](../../known-gaps/not-yet-built.md#security).
 - The `sessions` table exists for the adapter but stays empty.

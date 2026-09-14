@@ -29,6 +29,6 @@ If you are new to the codebase, read these in order:
 
 ## Related
 
-- [Data model](../database.md) — the tables, relations, indexes and item types.
-- [API reference](README.md) — every route handler and server action.
-- [Known gaps](../known-gaps.md) — the constraints and trade-offs this design accepts today.
+- [Data model](../schema/README.md) — the tables, relations, indexes and item types.
+- [API reference](../api/README.md) — every route handler and server action.
+- [Known gaps](../known-gaps/README.md) — the constraints and trade-offs this design accepts today.

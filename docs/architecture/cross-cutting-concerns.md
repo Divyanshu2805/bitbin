@@ -17,7 +17,7 @@ interface ActionResult<T = unknown> {
 
 - Components check `result.success` and show a toast; they never wrap actions in `try/catch`.
 - Messages are written for users ("You have reached the free tier limit of 50 items…"). Provider errors are logged with `console.error` and replaced with a generic message.
-- Route handlers return JSON `{ error: string }` with a real status code (`400`, `401`, `403`, `404`, `429`, `500`) — see [errors and rate limits](../rate-limiting.md).
+- Route handlers return JSON `{ error: string }` with a real status code (`400`, `401`, `403`, `404`, `429`, `500`) — see [errors and rate limits](../api/errors-and-rate-limits.md).
 
 ## Validation
 
@@ -29,7 +29,7 @@ interface ActionResult<T = unknown> {
 
 ## Rate limiting
 
-Upstash sliding windows, keyed by client IP plus an optional identifier (email or user id). Limits are listed in the [API reference](../rate-limiting.md). Two properties matter when changing anything nearby:
+Upstash sliding windows, keyed by client IP plus an optional identifier (email or user id). Limits are listed in the [API reference](../api/errors-and-rate-limits.md#rate-limits). Two properties matter when changing anything nearby:
 
 - **It fails open.** Without Upstash configured — unset, still a `YOUR_…` placeholder, or an invalid URL — or when Redis errors, every check passes and a warning or error is logged. A Redis outage never locks users out — and never protects anything either. See [ADR 0005](decisions/0005-rate-limits-fail-open.md).
 - **The IP is the first `x-forwarded-for` entry**, then `x-real-ip`, then `127.0.0.1`. On Vercel the platform sets these headers.

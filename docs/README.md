@@ -15,16 +15,16 @@ Start with **Getting started**, then dip into whichever area you're working on.
 | Doc | What's inside |
 | --- | --- |
 | [Architecture](architecture/README.md) | Request flow, folders, server actions vs route handlers |
-| [Database](database.md) | Prisma schema, relations, indexes, migrations, seeding |
+| [Database](schema/README.md) | Prisma schema, relations, indexes, migrations, seeding |
 | [Authentication](architecture/flows/authentication.md) | NextAuth v5, credentials + GitHub, verification, password reset |
 | [Items](architecture/flows/items.md) | Item CRUD, the drawer, editors, pin/favorite |
-| [Item types](item-types.md) | The 7 system types and how each stores content |
+| [Item types](schema/item-types.md) | The 7 system types and how each stores content |
 | [Collections](architecture/flows/collections.md) | Many-to-many grouping, favorites, dominant color |
 | [Search](architecture/flows/search.md) | ⌘K command palette |
 | [File uploads](architecture/flows/file-uploads.md) | Cloudflare R2 upload/download flow and limits |
 | [AI features](architecture/flows/ai-features.md) | Auto-tag, describe, explain, optimize |
 | [Billing](architecture/flows/billing.md) | Stripe checkout, portal, webhooks, Free vs Pro |
-| [Rate limiting](rate-limiting.md) | Upstash sliding windows per endpoint |
+| [Rate limiting](api/errors-and-rate-limits.md) | Upstash sliding windows per endpoint |
 | [Import & export](architecture/flows/import-export.md) | JSON / ZIP export format and import rules |
 
 ## Frontend
@@ -38,7 +38,7 @@ Start with **Getting started**, then dip into whichever area you're working on.
 | Doc | What's inside |
 | --- | --- |
 | [Testing](testing.md) | Vitest setup, what's covered, how to add tests |
-| [Known gaps](known-gaps.md) | Open issues, their impact and suggested fixes, plus the roadmap |
+| [Known gaps](known-gaps/README.md) | Open issues, their impact and suggested fixes, plus the roadmap |
 
 ## Design notes
 

@@ -60,5 +60,5 @@ All four actions read `AI_MODEL`, and the prompts are plain strings inside each 
 
 ## Related
 
-- [AI actions](../README.md)
+- [AI actions](../../api/server-actions.md#ai)
 - [AI integration plan](../design-notes/ai-integration-plan.md) — the original design write-up.

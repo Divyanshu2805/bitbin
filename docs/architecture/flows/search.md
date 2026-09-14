@@ -36,4 +36,4 @@ CommandPalette (cmdk dialog)
 
 ## Related
 
-- [Known gaps](../../known-gaps.md)
+- [Known gaps](../../known-gaps/not-yet-built.md)

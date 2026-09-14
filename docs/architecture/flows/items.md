@@ -1,6 +1,6 @@
 # Items Flow
 
-Creating, reading, editing and deleting items — the core of BitBin. The per-type rules (which columns each type uses, which editor it opens in) are in [item types](../../item-types.md).
+Creating, reading, editing and deleting items — the core of BitBin. The per-type rules (which columns each type uses, which editor it opens in) are in [item types](../../schema/item-types.md).
 
 | Concern | File |
 |---|---|
@@ -69,6 +69,6 @@ Types with a language (snippets, commands) open in Monaco; the other text types 
 
 ## Related
 
-- [Item types](../../item-types.md) · [Items table](../../database.md)
-- [Server actions](../README.md)
+- [Item types](../../schema/item-types.md) · [Items table](../../schema/items-and-types.md)
+- [Server actions](../../api/server-actions.md#items)
 - [File uploads](file-uploads.md) — how file and image items get their `fileUrl`.

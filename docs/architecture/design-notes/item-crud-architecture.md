@@ -905,7 +905,7 @@ export default function ItemListHeader({ itemType, query, sort }) {
 ## Sources
 
 - `context/project-overview.md` - Feature specifications (planning notes, not in the repository)
-- [Item types](../../item-types.md) - Item type reference
+- [Item types](../../schema/item-types.md) - Item type reference
 - [prisma/schema.prisma](../../../prisma/schema.prisma) - Database models
 - Existing codebase patterns in `src/lib/db/`, `src/components/`
 

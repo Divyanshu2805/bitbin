@@ -58,7 +58,7 @@ scripts/                   test-db.ts, cleanup-users.ts
 | `/favorites` | Dynamic | Starred items and collections |
 | `/profile`, `/settings`, `/upgrade` | Dynamic | Account, editor preferences, data, billing |
 
-Route handlers are listed in the [API reference](README.md).
+Route handlers are listed in the [API reference](../api/README.md).
 
 ## Layering rules
 

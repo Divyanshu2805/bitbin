@@ -40,5 +40,5 @@ Collection cards and the sidebar show a colour taken from the items inside. The 
 
 ## Related
 
-- [Collections tables](../../database.md)
-- [Server actions](../README.md)
+- [Collections tables](../../schema/collections-and-tags.md)
+- [Server actions](../../api/server-actions.md#collections)

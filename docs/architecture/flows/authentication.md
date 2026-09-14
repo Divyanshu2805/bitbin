@@ -17,7 +17,7 @@ How an account is created and verified, and how both sign-in methods end in the 
 2. The handler checks the `register` rate limit (3 / hour per IP), requires matching passwords of at least 8 characters, rejects an email that's already registered, hashes the password with bcrypt (cost 12) and creates the user.
 3. Unless `SKIP_EMAIL_VERIFICATION="true"`, it creates a verification token — 32 random bytes, hex, valid 24 hours, replacing any earlier one for that email — and emails a link to `/verify-email?token=…` through Resend, from `FROM_EMAIL`. With the flag set, `emailVerified` is filled in immediately instead.
 
-   The user row is created **before** the email is sent. If the send fails — typically Resend's sandbox sender refusing a recipient other than the account owner — the response is a `500`, and a retry says the email is already registered. See [known gaps](../../known-gaps.md).
+   The user row is created **before** the email is sent. If the send fails — typically Resend's sandbox sender refusing a recipient other than the account owner — the response is a `500`, and a retry says the email is already registered. See [known gaps](../../known-gaps/not-yet-built.md#accounts-and-billing).
 4. `/verify-email` calls `GET /api/auth/verify?token=…`, which checks the token and its expiry, sets `emailVerified`, and deletes the token. A used or expired token can't be replayed.
 5. `POST /api/auth/resend-verification` issues a fresh token (3 / 15 min per IP + email). It answers the same way whether or not the account exists.
 
@@ -27,7 +27,7 @@ How an account is created and verified, and how both sign-in methods end in the 
 2. It then calls `signIn('credentials', { redirect: false })`.
 3. `authorize()` in `src/auth.ts` loads the user by email, compares the password with bcrypt, and throws `EmailNotVerified` for an unverified account (unless verification is skipped). A missing user and a wrong password both return `null`, so the form can't tell them apart.
 
-The rate-limit check is a separate request the form makes voluntarily — `authorize()` doesn't check it itself. See [known gaps](../../known-gaps.md).
+The rate-limit check is a separate request the form makes voluntarily — `authorize()` doesn't check it itself. See [known gaps](../../known-gaps/not-yet-built.md#security).
 
 ## GitHub
 
@@ -64,7 +64,7 @@ Code reads the caller with `getAuthedSession()` (server actions) or `auth()` (pa
 | Endpoint | Behaviour |
 |---|---|
 | `POST /api/auth/change-password` | Requires the current password; `400` for GitHub-only accounts |
-| `DELETE /api/auth/delete-account` | Deletes the user row. Items, collections, accounts and sessions cascade. R2 files and any Stripe subscription are **not** cleaned up — see [known gaps](../../known-gaps.md) |
+| `DELETE /api/auth/delete-account` | Deletes the user row. Items, collections, accounts and sessions cascade. R2 files and any Stripe subscription are **not** cleaned up — see [known gaps](../../known-gaps/not-yet-built.md) |
 
 ## Protecting pages
 
@@ -79,5 +79,5 @@ The five pages share `src/app/(auth)/layout.tsx`: a brand panel with an animated
 ## Related
 
 - [Security model](../security-model.md)
-- [Auth endpoints](../README.md)
-- [Users and auth tables](../../database.md)
+- [Auth endpoints](../../api/auth.md)
+- [Users and auth tables](../../schema/users-and-auth.md)

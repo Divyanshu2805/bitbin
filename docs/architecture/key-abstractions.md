@@ -8,7 +8,7 @@ Anything a user saves: a snippet, prompt, command, note, file, image or link. On
 
 ## Item type
 
-What kind of thing an item is. Seven **system types** (`isSystem = true`, `userId = null`) are seeded and shared by everyone; each has a Lucide icon name and a colour. The type decides the content type, the editor (Monaco for types with a language — snippets and commands — markdown for the other text types), the route (`/items/snippets`, …) and whether the item is Pro-only (files and images). The schema allows per-user custom types, but nothing in the app creates them yet. See [item types](../item-types.md).
+What kind of thing an item is. Seven **system types** (`isSystem = true`, `userId = null`) are seeded and shared by everyone; each has a Lucide icon name and a colour. The type decides the content type, the editor (Monaco for types with a language — snippets and commands — markdown for the other text types), the route (`/items/snippets`, …) and whether the item is Pro-only (files and images). The schema allows per-user custom types, but nothing in the app creates them yet. See [item types](../schema/item-types.md).
 
 ## Collection
 
@@ -40,5 +40,5 @@ The right-hand panel that shows and edits one item, opened from any card, row or
 
 ## Related
 
-- [Data model](../database.md)
+- [Data model](../schema/README.md)
 - [Where do I change…?](where-to-change.md)

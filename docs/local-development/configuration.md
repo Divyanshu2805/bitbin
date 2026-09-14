@@ -31,7 +31,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 
 | Variable | Notes |
 |---|---|
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), rate limiting is **disabled** — a warning or error is logged and every check passes. See [rate limits](../rate-limiting.md) |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), rate limiting is **disabled** — a warning or error is logged and every check passes. See [rate limits](../api/errors-and-rate-limits.md#failure-mode) |
 
 ## File storage (Cloudflare R2)
 
