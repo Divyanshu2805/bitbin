@@ -23,4 +23,4 @@
 
 ## Related
 
-- [Known pitfalls](../README.md) — traps that fail silently rather than with an error.
+- [Known pitfalls](../practices/gotchas/README.md) — traps that fail silently rather than with an error.

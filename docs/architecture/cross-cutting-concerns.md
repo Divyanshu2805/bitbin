@@ -75,5 +75,5 @@ Everything is an environment variable — see [configuration](../local-developme
 
 ## Related
 
-- [Coding conventions](../README.md)
-- [Known pitfalls](../README.md)
+- [Coding conventions](../practices/coding-conventions.md)
+- [Known pitfalls](../practices/gotchas/README.md)

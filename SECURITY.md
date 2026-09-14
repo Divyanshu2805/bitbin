@@ -22,4 +22,4 @@ Weaknesses already identified are listed under [security in known gaps](docs/kno
 
 ## How BitBin is secured
 
-The [security model](docs/architecture/security-model.md) describes tenancy, sessions, what protects each route, plan enforcement and secrets; the [security guardrails](docs/README.md) are the rules changes must keep.
+The [security model](docs/architecture/security-model.md) describes tenancy, sessions, what protects each route, plan enforcement and secrets; the [security guardrails](docs/practices/security-guardrails.md) are the rules changes must keep.

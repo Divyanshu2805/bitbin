@@ -61,7 +61,7 @@ The drawer switches to edit mode in place. `updateItem` checks ownership, then r
 
 - The whole card is keyboard focusable; Enter or Space opens the drawer.
 - The copy button copies `content` or `url`, and is always visible on touch screens.
-- Hover lifts the card and tints its border with the item type's colour (`card-lift`, see the [design system](../../design-system.md)).
+- Hover lifts the card and tints its border with the item type's colour (`card-lift`, see the [design system](../../practices/design-system.md)).
 
 ## Editor preferences
 

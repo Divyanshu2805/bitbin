@@ -38,4 +38,4 @@ BitBin is a single Next.js 16 App Router application. There is no separate API s
 
 - [Module map](module-map.md) — the folders and routes behind each layer.
 - [Security model](security-model.md) — what protects each layer.
-- [Deployment](../deployment.md) — how this runs on Vercel.
+- [Deployment](../deployment/README.md) — how this runs on Vercel.

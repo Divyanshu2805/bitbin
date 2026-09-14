@@ -1,4 +1,4 @@
-# Design system
+# Design System
 
 BitBin is **dark-first**. The look is "graphite + lime": near-black neutral
 surfaces, one loud accent (acid lime) for primary actions, and coral and cyan
@@ -51,7 +51,7 @@ sit above page titles and section headings.
 - `<Logo />`: mark + "Bit**Bin**" wordmark. `collapseOnMobile` hides the
   wordmark under `sm`.
 
-The favicon is `src/app/icon.svg`. README artwork is in `docs/assets/`.
+The favicon is `src/app/icon.svg`. README artwork is in `docs/assets/` (`banner.svg`, `logo.svg`).
 
 ## Motion
 
@@ -99,3 +99,8 @@ soft lime glow on hover.
   and when focused.
 - Active nav links set `aria-current="page"`. Icon-only buttons have an
   `aria-label`.
+
+## Related
+
+- [Coding conventions](coding-conventions.md#components)
+- [Where do I change…?](../architecture/where-to-change.md#look-and-feel)

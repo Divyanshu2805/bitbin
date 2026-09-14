@@ -21,53 +21,41 @@
 
 ---
 
-Developers keep their essentials scattered across editor snippets, browser
-bookmarks, chat threads, shell history and random folders. **BitBin** pulls
-all of it into one place: organized, tagged and a keystroke away.
+Developers keep their essentials scattered across editor snippets, browser bookmarks, chat threads, shell history and random folders. **BitBin** pulls all of it into one place: organized, tagged and a keystroke away.
 
 ## Features
 
 **Core**
 - Save code snippets, AI prompts, terminal commands, notes and links
 - Upload files and images (Pro)
-- Organize items into collections (an item can belong to many collections)
+- Organize items into collections — an item can belong to many
 - Pin, favorite and tag items for quick access
-- Monaco code editor with syntax highlighting for 30+ languages
-- Markdown editor with GitHub-flavored preview
+- Monaco code editor with syntax highlighting, and a markdown editor with GitHub-flavored preview
 - Global command palette search (<kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd>)
 - Dark-first "graphite + lime" interface with subtle motion
 
-**AI (Pro)**
-- Auto-tag suggestions
-- Description generator
-- "Explain this code"
-- Prompt optimizer
+**AI (Pro)** — auto-tag suggestions, description generator, "Explain this code", prompt optimizer
 
 **Platform**
-- Email/password and GitHub OAuth sign-in
-- Email verification and password reset
-- Rate limiting on auth, upload and AI endpoints
-- Stripe subscriptions (Free / Pro)
-- File storage on Cloudflare R2
-- Import/export (JSON on Free, ZIP with files on Pro)
-- Pagination, responsive layout from phone to desktop
+- Email / password and GitHub sign-in, email verification and password reset
+- Rate limiting on auth, uploads and AI
+- Stripe subscriptions (Free / Pro), file storage on Cloudflare R2
+- Import and export (JSON on Free, ZIP with files on Pro)
 
-## Tech stack
+## Architecture
 
-| Area          | Choice                          |
-| ------------- | ------------------------------- |
-| Framework     | Next.js 16 (App Router), React 19 |
-| Language      | TypeScript 5                    |
-| Database      | PostgreSQL (Neon)               |
-| ORM           | Prisma 7                        |
-| Auth          | NextAuth v5 (JWT sessions)      |
-| Styling       | Tailwind CSS v4 + shadcn/ui     |
-| AI            | OpenAI                          |
-| Payments      | Stripe                          |
-| File storage  | Cloudflare R2                   |
-| Rate limiting | Upstash Redis                   |
-| Email         | Resend                          |
-| Tests         | Vitest                          |
+BitBin is one Next.js 16 App Router application — no separate API server. Pages are React Server Components that read through Prisma; every write is a server action that checks the session, validates with Zod, applies plan and rate limits, and runs a query scoped to the user. Route handlers cover what needs real HTTP: auth flows, file transfer, export, and Stripe.
+
+| Area | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router), React 19, TypeScript 5 |
+| Data | PostgreSQL (Neon) with Prisma 7 |
+| Auth | NextAuth v5 — credentials + GitHub, JWT sessions |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Services | OpenAI (or any OpenAI-compatible provider), Stripe, Cloudflare R2, Upstash Redis, Resend |
+| Tests | Vitest |
+
+More in the [architecture overview](docs/architecture/README.md) and the [tech stack](docs/tech-stack.md).
 
 ## Quick start
 
@@ -75,67 +63,36 @@ all of it into one place: organized, tagged and a keystroke away.
 git clone https://github.com/Divyanshu2805/bitbin.git
 cd bitbin
 npm install
-cp .env.example .env      # then fill in the placeholders
-npx prisma migrate dev    # create the schema
-npm run db:seed           # seed system item types + demo data
+cp .env.example .env      # set DATABASE_URL and AUTH_SECRET at minimum
+npm run db:migrate        # create the schema
+npm run db:seed           # system item types + a demo account
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000> and sign in as `demo@bitbin.dev` / `12345678`.
 
-> **Credentials:** `.env.example` only contains placeholders (`YOUR_...`).
-> Real keys for the database, auth, Stripe, R2, Resend, Upstash and OpenAI
-> have to be added to `.env` before the related features work. See
-> [docs/environment-variables.md](docs/local-development/configuration.md).
+`.env.example` only holds `YOUR_…` placeholders; each optional service (GitHub, Resend, Upstash, R2, Stripe, OpenAI) switches on one area of the app. See [setup](docs/local-development/setup.md) and [configuration](docs/local-development/configuration.md).
 
-## Scripts
+## Deployment
 
-| Command              | What it does                         |
-| -------------------- | ------------------------------------ |
-| `npm run dev`        | Start the dev server                 |
-| `npm run build`      | Generate Prisma client + production build |
-| `npm run start`      | Serve the production build           |
-| `npm run lint`       | ESLint                               |
-| `npm run test`       | Vitest (single run)                  |
-| `npm run test:watch` | Vitest in watch mode                 |
-| `npm run db:migrate` | Create/apply migrations              |
-| `npm run db:seed`    | Seed item types and demo content     |
-| `npm run db:studio`  | Open Prisma Studio                   |
+Live at [bitbin.divyanshuagrahari.dev](https://bitbin.divyanshuagrahari.dev). Vercel builds every push to `main`; the database, storage, rate limiting and payments are managed services.
+
+See [deployment](docs/deployment/README.md).
 
 ## Documentation
 
 Everything lives in [`docs/`](docs/README.md):
 
-- [Getting started](docs/local-development/README.md) · [Environment variables](docs/local-development/configuration.md)
-- [Architecture](docs/architecture/README.md) · [Database](docs/schema/README.md) · [Authentication](docs/architecture/flows/authentication.md)
-- [Items](docs/architecture/flows/items.md) · [Item types](docs/schema/item-types.md) · [Collections](docs/architecture/flows/collections.md) · [Search](docs/architecture/flows/search.md)
-- [File uploads](docs/architecture/flows/file-uploads.md) · [AI features](docs/architecture/flows/ai-features.md) · [Billing](docs/architecture/flows/billing.md)
-- [Rate limiting](docs/api/errors-and-rate-limits.md) · [Import & export](docs/architecture/flows/import-export.md)
-- [Design system](docs/design-system.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md)
-- [Known gaps & roadmap](docs/known-gaps/README.md)
+| Section | Covers |
+|---|---|
+| [Local development](docs/local-development/README.md) | Prerequisites, setup, configuration, commands, troubleshooting |
+| [Architecture](docs/architecture/README.md) | Layers, module map, request flows, security model, decisions |
+| [Data model](docs/schema/README.md) | Tables, item types, conventions, migrations |
+| [API reference](docs/api/README.md) | Route handlers, server actions, export format, errors and rate limits |
+| [Engineering practices](docs/practices/README.md) | Conventions, guardrails, testing, design system, pitfalls |
+| [Known gaps](docs/known-gaps/README.md) | Trade-offs, open issues and the roadmap |
+| [Deployment](docs/deployment/README.md) | Vercel, provider callbacks, smoke test |
 
-## Project structure
+## Contributing
 
-```
-src/
-├── app/
-│   ├── (auth)/        # sign-in, register, verify, password reset (split-screen layout)
-│   ├── api/           # route handlers: auth, upload, download, export, stripe
-│   ├── collections/   # collection list + detail
-│   ├── dashboard/     # main dashboard
-│   ├── favorites/     # starred items & collections
-│   ├── items/[type]/  # items by type (/items/snippets, ...)
-│   ├── profile/ settings/ upgrade/
-│   └── page.tsx       # marketing homepage
-├── actions/           # server actions (items, collections, ai, search, import/export)
-├── components/
-│   ├── ui/            # shadcn/ui primitives
-│   ├── homepage/      # marketing sections
-│   ├── layout/        # top bar, sidebar, mobile sidebar
-│   ├── dashboard/     # stat cards, item & collection cards
-│   ├── items/         # drawer, editors, dialogs, uploads
-│   └── shared/        # logo, empty states, page header, etc.
-├── lib/               # prisma, db queries, stripe, r2, openai, rate limiting
-├── hooks/
-└── types/
-```
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Security issues: [`SECURITY.md`](SECURITY.md). Changes by release are in [`CHANGELOG.md`](CHANGELOG.md).

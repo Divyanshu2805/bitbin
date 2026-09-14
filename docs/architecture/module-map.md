@@ -78,4 +78,4 @@ page / client component
 ## Related
 
 - [Where do I change…?](where-to-change.md) — the same map, organised by task.
-- [Coding conventions](../README.md)
+- [Coding conventions](../practices/coding-conventions.md)

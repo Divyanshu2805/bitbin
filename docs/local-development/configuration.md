@@ -46,7 +46,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 
 | Variable | Notes |
 |---|---|
-| `STRIPE_SECRET_KEY` | `sk_test_…` locally; `sk_live_…` in production once the Stripe account is activated — see [Stripe test mode in production](../deployment.md) |
+| `STRIPE_SECRET_KEY` | `sk_test_…` locally; `sk_live_…` in production once the Stripe account is activated — see [Stripe test mode in production](../deployment/providers.md#stripe-test-mode-in-production) |
 | `STRIPE_PUBLISHABLE_KEY` | `pk_test_…` / `pk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` from `stripe listen` locally, or from the dashboard's webhook endpoint in production |
 | `STRIPE_PRICE_ID_MONTHLY` | Price ID of the $8 / month plan |
@@ -78,5 +78,5 @@ See [AI features](../architecture/flows/ai-features.md#provider-and-model) for c
 
 ## Related
 
-- [Deployment configuration](../deployment.md) — what changes for production.
-- [Security guardrails](../README.md) — what must never be committed.
+- [Deployment configuration](../deployment/vercel.md#environment-variables) — what changes for production.
+- [Security guardrails](../practices/security-guardrails.md) — what must never be committed.

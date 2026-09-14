@@ -44,4 +44,4 @@ Production needs step 1; the demo user is optional there.
 ## Related
 
 - [Setup](../local-development/setup.md) · [Resetting data](../local-development/resetting-data.md)
-- [Deployment](../deployment.md)
+- [Deployment](../deployment/vercel.md#database)

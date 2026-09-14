@@ -41,4 +41,4 @@ These are application rules only. A direct write through Prisma Studio or a scri
 ## Related
 
 - [Migrations and seeding](migrations-and-seeding.md)
-- [Coding conventions](../README.md)
+- [Coding conventions](../practices/coding-conventions.md)

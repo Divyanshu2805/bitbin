@@ -40,7 +40,7 @@ A task-oriented index into the code. Each row names the files to start from; fol
 
 | Task | Start here |
 |---|---|
-| Colours, fonts, motion | `src/app/globals.css`, fonts in `src/app/layout.tsx` — see [design system](../design-system.md) |
+| Colours, fonts, motion | `src/app/globals.css`, fonts in `src/app/layout.tsx` — see [design system](../practices/design-system.md) |
 | Navigation | `components/layout/sidebar-nav.tsx` (shared by desktop and mobile), `top-bar.tsx` |
 | Homepage | `src/app/page.tsx`, `components/homepage/*` |
 | Logo and favicon | `components/shared/logo.tsx`, `src/app/icon.svg`, README art in `docs/assets/` |

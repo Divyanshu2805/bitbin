@@ -20,7 +20,7 @@ Every script in `package.json`.
 | `npx vitest run src/actions/items.test.ts` | One file |
 | `npx vitest run -t "deleteItem server action"` | Tests whose name matches |
 
-See [testing](../testing.md) for what's covered.
+See [testing](../practices/testing.md) for what's covered.
 
 ## Database
 

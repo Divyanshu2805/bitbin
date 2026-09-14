@@ -1,6 +1,6 @@
 # Security Model
 
-Who can see and change what, and where each boundary is enforced. The rules a change must not weaken are summarised in the [security guardrails](../README.md).
+Who can see and change what, and where each boundary is enforced. The rules a change must not weaken are summarised in the [security guardrails](../practices/security-guardrails.md).
 
 ## Tenancy
 
@@ -67,5 +67,5 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 ## Related
 
 - [Authentication flow](flows/authentication.md)
-- [Security guardrails](../README.md)
+- [Security guardrails](../practices/security-guardrails.md)
 - [`SECURITY.md`](../../SECURITY.md) — reporting a vulnerability.

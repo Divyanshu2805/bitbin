@@ -1,49 +1,32 @@
-# BitBin documentation
+# BitBin Documentation
 
-Start with **Getting started**, then dip into whichever area you're working on.
+Everything about how BitBin is built, run and changed. Start with the section that matches what you're trying to do.
 
-## Setup
+## Getting started
 
-| Doc | What's inside |
-| --- | --- |
-| [Getting started](local-development/README.md) | Install, configure, migrate, seed, run |
-| [Environment variables](local-development/configuration.md) | Every variable, where to get it, what breaks without it |
-| [Deployment](deployment.md) | Vercel + Neon + Stripe webhooks in production |
+- [Local development](local-development/README.md) — prerequisites, setup, configuration, commands, troubleshooting.
+- [Tech stack](tech-stack.md) — the frameworks and services in use.
 
-## How it works
+## Understanding the app
 
-| Doc | What's inside |
-| --- | --- |
-| [Architecture](architecture/README.md) | Request flow, folders, server actions vs route handlers |
-| [Database](schema/README.md) | Prisma schema, relations, indexes, migrations, seeding |
-| [Authentication](architecture/flows/authentication.md) | NextAuth v5, credentials + GitHub, verification, password reset |
-| [Items](architecture/flows/items.md) | Item CRUD, the drawer, editors, pin/favorite |
-| [Item types](schema/item-types.md) | The 7 system types and how each stores content |
-| [Collections](architecture/flows/collections.md) | Many-to-many grouping, favorites, dominant color |
-| [Search](architecture/flows/search.md) | ⌘K command palette |
-| [File uploads](architecture/flows/file-uploads.md) | Cloudflare R2 upload/download flow and limits |
-| [AI features](architecture/flows/ai-features.md) | Auto-tag, describe, explain, optimize |
-| [Billing](architecture/flows/billing.md) | Stripe checkout, portal, webhooks, Free vs Pro |
-| [Rate limiting](api/errors-and-rate-limits.md) | Upstash sliding windows per endpoint |
-| [Import & export](architecture/flows/import-export.md) | JSON / ZIP export format and import rules |
+- [Architecture](architecture/README.md) — layers, module map, request flows, security model.
+- [Architecture decisions](architecture/decisions/README.md) — why the app is shaped the way it is.
+- [Data model](schema/README.md) — the tables, item types, conventions, migrations and seeding.
 
-## Frontend
+## Reference
 
-| Doc | What's inside |
-| --- | --- |
-| [Design system](design-system.md) | Colors, type, motion, reusable UI pieces |
+- [API reference](api/README.md) — every route handler and server action, the export format, errors and rate limits.
+- [Known gaps](known-gaps/README.md) — constraints, trade-offs, open issues, and the roadmap.
 
-## Quality
+## Contributing
 
-| Doc | What's inside |
-| --- | --- |
-| [Testing](testing.md) | Vitest setup, what's covered, how to add tests |
-| [Known gaps](known-gaps/README.md) | Open issues, their impact and suggested fixes, plus the roadmap |
+- [Engineering practices](practices/README.md) — conventions, security guardrails, testing, definition of done, design system, and known pitfalls.
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — the contribution workflow.
 
-## Design notes
+## Running in production
 
-Longer write-ups from when features were planned:
+- [Deployment](deployment/README.md) — Vercel and Neon, the custom domain, provider callbacks, and the post-deploy smoke test.
 
-- [Item CRUD architecture](architecture/design-notes/item-crud-architecture.md)
-- [AI integration plan](architecture/design-notes/ai-integration-plan.md)
-- [Stripe integration plan](architecture/design-notes/stripe-integration-plan.md)
+## Keeping these docs accurate
+
+These pages describe the app as it is now. A change that makes any of them inaccurate updates them in the same commit. The [design notes](architecture/design-notes/README.md) are the exception: they're kept as historical planning records.

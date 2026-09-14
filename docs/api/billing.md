@@ -48,5 +48,5 @@ The endpoint must be subscribed to exactly these five events in the Stripe dashb
 
 ## Related
 
-- [Deployment — provider callbacks](../deployment.md)
+- [Deployment — provider callbacks](../deployment/providers.md#stripe)
 - [Known gaps](../known-gaps/constraints-and-trade-offs.md)

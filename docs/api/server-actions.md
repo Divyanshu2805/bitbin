@@ -57,4 +57,4 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 ## Related
 
-- [Coding conventions](../README.md) — how to write a new action.
+- [Coding conventions](../practices/coding-conventions.md#server-actions) — how to write a new action.
