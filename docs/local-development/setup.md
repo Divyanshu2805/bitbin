@@ -61,7 +61,7 @@ stripe login        # choose the account BitBin uses
 stripe listen   --events checkout.session.completed,invoice.paid,invoice.payment_failed,customer.subscription.updated,customer.subscription.deleted   --forward-to localhost:3000/api/webhooks/stripe
 ```
 
-Copy the `whsec_…` it prints into `STRIPE_WEBHOOK_SECRET` and restart `npm run dev`. `--events` limits forwarding to the five events BitBin handles; `--api-key "$STRIPE_SECRET_KEY"` instead of `stripe login` guarantees the CLI listens to the same account as the app. Pay with card `4242 4242 4242 4242`, any future expiry and any CVC. See the [billing flow](../billing.md).
+Copy the `whsec_…` it prints into `STRIPE_WEBHOOK_SECRET` and restart `npm run dev`. `--events` limits forwarding to the five events BitBin handles; `--api-key "$STRIPE_SECRET_KEY"` instead of `stripe login` guarantees the CLI listens to the same account as the app. Pay with card `4242 4242 4242 4242`, any future expiry and any CVC. See the [billing flow](../architecture/flows/billing.md).
 
 ## Before you push
 

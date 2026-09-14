@@ -45,5 +45,5 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 
 ## Related
 
-- [Architecture](architecture.md) — how these pieces fit together.
+- [Architecture](architecture/README.md) — how these pieces fit together.
 - [Local development](local-development/README.md) — which of these you need running to work on BitBin.

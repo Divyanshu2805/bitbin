@@ -12,7 +12,7 @@ user or maintainer can get stuck, **Low** = polish.
 | Gap | Severity | Details | Suggested fix |
 | --- | --- | --- | --- |
 | Open security advisories | High | `npm audit` reports 70 advisories (10 critical, 31 high, 25 moderate, 4 low), including in direct dependencies `next`, `next-auth`, `@auth/prisma-adapter`, `prisma` and `vitest`. | Upgrade `next` to the patched 16.x release (a non-breaking fix is available), then re-run `npm audit` and upgrade the rest one at a time with `npm run test && npm run build` after each. Avoid `npm audit fix --force`: it proposes breaking downgrades. |
-| Auth library is a beta | Medium | `next-auth@5.0.0-beta.30`. GitHub sign-in only works because of the `issuer` override in `auth.ts` / `auth.config.ts` (see [authentication.md](authentication.md)). Upgrading within the beta line did not fix the underlying issue. | Re-test GitHub sign-in after every `next-auth` upgrade; drop the override once Auth.js handles GitHub's `iss` parameter itself. |
+| Auth library is a beta | Medium | `next-auth@5.0.0-beta.30`. GitHub sign-in only works because of the `issuer` override in `auth.ts` / `auth.config.ts` (see [authentication.md](architecture/flows/authentication.md)). Upgrading within the beta line did not fix the underlying issue. | Re-test GitHub sign-in after every `next-auth` upgrade; drop the override once Auth.js handles GitHub's `iss` parameter itself. |
 | Postgres SSL mode will change meaning | Low | Every DB connection logs a warning: `sslmode=require` is currently treated as `verify-full`, but `pg` v9 will switch to libpq semantics, which are weaker. | Use `sslmode=verify-full` explicitly in `DATABASE_URL` (local `.env` and Vercel). |
 | Prisma major upgrade pending | Low | Prisma 8 is available; the project is on 7.3. | Follow Prisma's major-version guide on a branch; regenerate the client and run the full test suite. |
 
@@ -54,7 +54,7 @@ user or maintainer can get stuck, **Low** = polish.
 | --- | --- | --- | --- |
 | Search index is loaded once | Low | The ⌘K palette fetches its data when the dashboard loads. Items created in another tab don't show up until a reload. | Refetch on palette open, or after create/update/delete actions. |
 | AI key variable is named after OpenAI | Low | `OPENAI_API_KEY` also holds OpenRouter keys, which can be confusing. | Accept `AI_API_KEY` as an alias and keep the old name for compatibility. |
-| AI output depends on the model | Low | Tags and descriptions require a model with JSON mode; others fail with *"AI returned an unexpected format"*. | Documented in [ai-features.md](ai-features.md#provider-and-model); optionally fall back to parsing JSON from plain text. |
+| AI output depends on the model | Low | Tags and descriptions require a model with JSON mode; others fail with *"AI returned an unexpected format"*. | Documented in [ai-features.md](architecture/flows/ai-features.md); optionally fall back to parsing JSON from plain text. |
 
 ## Testing
 

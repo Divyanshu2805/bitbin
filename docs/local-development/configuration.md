@@ -62,7 +62,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `OPENAI_BASE_URL` | Optional. Unset for OpenAI; `https://openrouter.ai/api/v1` for OpenRouter |
 | `AI_MODEL` | Optional, default `gpt-5-nano`. The model name as the provider spells it — prefixed on OpenRouter, e.g. `openai/gpt-5-nano` |
 
-See [AI features](../ai-features.md) for choosing a model.
+See [AI features](../architecture/flows/ai-features.md#provider-and-model) for choosing a model.
 
 ## What works without which key
 

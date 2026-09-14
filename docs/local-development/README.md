@@ -17,5 +17,5 @@ Everything needed to run BitBin on your machine. Read in order the first time:
 ## Related
 
 - [Tech stack](../tech-stack.md) — the libraries and services in use.
-- [Architecture](../architecture.md) — how the app is put together.
+- [Architecture](../architecture/README.md) — how the app is put together.
 - [Deployment](../deployment.md) — running it on Vercel instead.
