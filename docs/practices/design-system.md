@@ -80,7 +80,7 @@ fill or border, `readableTint(hex, percent)` mixes that pair with transparent
 
 ## Typography
 
-Loaded with `next/font/google` in `src/app/layout.tsx`:
+Self-hosted from `src/app/fonts/` with `next/font/local` in `src/app/layout.tsx` (latin variable files from Google Fonts; `next/font/google` intermittently fails Turbopack builds):
 
 | Role | Font | Tailwind |
 | --- | --- | --- |

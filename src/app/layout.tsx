@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,23 +7,29 @@ import { HistorySlides } from "@/components/shared/transition-link";
 import { VIEW_SCRIPT } from "@/lib/view-mode-script";
 import "./globals.css";
 
+// The fonts are self-hosted (latin variable files from Google Fonts, in
+// ./fonts) rather than loaded with next/font/google: that downloads them at
+// build time, and Turbopack intermittently fails the build on Google's reply
+// ("next/font/google queries have exactly one entry").
+
 // Geist for reading, JetBrains Mono for headings, labels and code.
-const geist = Geist({
+const geist = localFont({
+  src: "./fonts/geist-latin.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
 // IBM Plex Sans for description text (the `text-desc` utility).
-const plexSans = IBM_Plex_Sans({
+const plexSans = localFont({
+  src: "./fonts/ibm-plex-sans-latin.woff2",
   variable: "--font-plex-sans",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: "400 500",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin.woff2",
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: "300 800",
 });
 
 export const metadata: Metadata = {
