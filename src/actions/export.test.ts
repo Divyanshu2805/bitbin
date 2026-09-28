@@ -58,6 +58,7 @@ describe('exportData server action', () => {
           name: 'React Patterns',
           description: 'Common patterns',
           isFavorite: false,
+          isPinned: true,
         },
       ],
     };

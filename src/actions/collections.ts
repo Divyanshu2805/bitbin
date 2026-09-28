@@ -7,6 +7,7 @@ import {
   deleteCollection as deleteCollectionQuery,
   getUserCollections as getUserCollectionsQuery,
   toggleCollectionFavorite as toggleCollectionFavoriteQuery,
+  toggleCollectionPin as toggleCollectionPinQuery,
   type CreatedCollection,
   type CollectionForPicker,
 } from '@/lib/db/collections';
@@ -76,6 +77,24 @@ export async function toggleCollectionFavorite(
   }
 
   return { success: true, data: { isFavorite } };
+}
+
+export async function toggleCollectionPin(
+  collectionId: string
+): Promise<ActionResult<{ isPinned: boolean }>> {
+  const { session, unauthorized } = await getAuthedSession();
+  if (unauthorized) return unauthorized;
+
+  const idError = validateId(collectionId, 'collection ID');
+  if (idError) return idError;
+
+  const isPinned = await toggleCollectionPinQuery(collectionId, session.user.id);
+
+  if (isPinned === null) {
+    return { success: false, error: 'Collection not found' };
+  }
+
+  return { success: true, data: { isPinned } };
 }
 
 const updateCollectionSchema = z.object({

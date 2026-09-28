@@ -33,6 +33,7 @@ export interface CollectionWithTypes {
   name: string;
   description: string | null;
   isFavorite: boolean;
+  isPinned: boolean;
   itemCount: number;
   itemTypes: CollectionItemType[];
   dominantColor: string | null;
@@ -42,6 +43,9 @@ export interface CollectionWithTypes {
 
 // Maximum items to sample per collection for type aggregation
 const MAX_ITEMS_FOR_TYPE_SAMPLE = 50;
+
+// Pinned collections lead every card list, then the most recently edited
+const PINNED_FIRST = [{ isPinned: 'desc' as const }, { updatedAt: 'desc' as const }];
 
 // Type for items with itemType info used in type counting
 type ItemWithType = {
@@ -126,7 +130,7 @@ export async function getRecentCollections(
 
   const collections = await prisma.collection.findMany({
     where: { userId },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: PINNED_FIRST,
     take: safeLimit,
     include: {
       _count: {
@@ -161,6 +165,7 @@ export async function getRecentCollections(
       name: collection.name,
       description: collection.description,
       isFavorite: collection.isFavorite,
+      isPinned: collection.isPinned,
       itemCount: collection._count.items,
       itemTypes,
       dominantColor,
@@ -256,6 +261,7 @@ export interface CreatedCollection {
   name: string;
   description: string | null;
   isFavorite: boolean;
+  isPinned: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -306,7 +312,7 @@ export async function getAllCollections(
   const [collections, totalCount] = await Promise.all([
     prisma.collection.findMany({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: PINNED_FIRST,
       skip,
       take: limit,
       include: {
@@ -347,6 +353,7 @@ export async function getAllCollections(
         name: collection.name,
         description: collection.description,
         isFavorite: collection.isFavorite,
+        isPinned: collection.isPinned,
         itemCount: collection._count.items,
         itemTypes,
         dominantColor,
@@ -365,6 +372,7 @@ export interface CollectionDetail {
   name: string;
   description: string | null;
   isFavorite: boolean;
+  isPinned: boolean;
   itemCount: number;
   itemTypes: CollectionItemType[];
   dominantColor: string | null;
@@ -417,6 +425,7 @@ export async function getCollectionById(
     name: collection.name,
     description: collection.description,
     isFavorite: collection.isFavorite,
+    isPinned: collection.isPinned,
     itemCount: collection._count.items,
     itemTypes,
     dominantColor,
@@ -442,6 +451,7 @@ export async function createCollection(
     name: created.name,
     description: created.description,
     isFavorite: created.isFavorite,
+    isPinned: created.isPinned,
     createdAt: created.createdAt,
     updatedAt: created.updatedAt,
   };
@@ -482,6 +492,7 @@ export async function updateCollection(
     name: updated.name,
     description: updated.description,
     isFavorite: updated.isFavorite,
+    isPinned: updated.isPinned,
     createdAt: updated.createdAt,
     updatedAt: updated.updatedAt,
   };
@@ -535,6 +546,32 @@ export async function toggleCollectionFavorite(
   });
 
   return updated.isFavorite;
+}
+
+/**
+ * Toggle isPinned on a collection (with ownership check)
+ * Returns the new isPinned value, or null if not found/not owned
+ */
+export async function toggleCollectionPin(
+  collectionId: string,
+  userId: string
+): Promise<boolean | null> {
+  const existing = await prisma.collection.findFirst({
+    where: { id: collectionId, userId },
+    select: { isPinned: true },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const updated = await prisma.collection.update({
+    where: { id: collectionId },
+    data: { isPinned: !existing.isPinned },
+    select: { isPinned: true },
+  });
+
+  return updated.isPinned;
 }
 
 export interface FavoriteCollection {

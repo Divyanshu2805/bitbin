@@ -172,6 +172,7 @@ model Collection {
   name        String
   description String?  @db.Text
   isFavorite  Boolean  @default(false)
+  isPinned    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -186,6 +187,7 @@ model Collection {
 
   @@index([userId])
   @@index([userId, isFavorite])
+  @@index([userId, isPinned])
   @@index([userId, updatedAt])
   @@map("collections")
 }

@@ -35,6 +35,7 @@ const importCollectionSchema = z.object({
   name: z.string().min(1),
   description: z.string().nullable().optional().default(null),
   isFavorite: z.boolean().optional().default(false),
+  isPinned: z.boolean().optional().default(false),
 });
 
 const importDataSchema = z.object({
@@ -227,6 +228,7 @@ export async function importData(
           name: collection.name,
           description: collection.description,
           isFavorite: collection.isFavorite,
+          isPinned: collection.isPinned,
         },
       });
 

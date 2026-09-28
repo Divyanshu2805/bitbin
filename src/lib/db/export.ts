@@ -22,6 +22,7 @@ export interface ExportCollection {
   name: string;
   description: string | null;
   isFavorite: boolean;
+  isPinned: boolean;
 }
 
 export interface ExportData {
@@ -56,6 +57,7 @@ export async function getUserExportData(userId: string): Promise<ExportData> {
         name: true,
         description: true,
         isFavorite: true,
+        isPinned: true,
       },
     }),
   ]);
@@ -84,6 +86,7 @@ export async function getUserExportData(userId: string): Promise<ExportData> {
       name: c.name,
       description: c.description,
       isFavorite: c.isFavorite,
+      isPinned: c.isPinned,
     })),
   };
 }

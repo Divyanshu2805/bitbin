@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getCollectionById, updateCollection, deleteCollection } from './collections';
+import { getCollectionById, getAllCollections, updateCollection, deleteCollection, toggleCollectionPin } from './collections';
 
 // Mock Prisma client
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     collection: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -25,6 +27,7 @@ const basePrismaCollection = {
   name: 'React Patterns',
   description: 'Useful React patterns and hooks',
   isFavorite: true,
+  isPinned: false,
   userId: 'user-1',
   defaultTypeId: null,
   createdAt: mockDate,
@@ -64,6 +67,7 @@ describe('getCollectionById', () => {
       name: 'React Patterns',
       description: 'Useful React patterns and hooks',
       isFavorite: true,
+      isPinned: false,
       itemCount: 3,
       itemTypes: [
         { name: 'snippet', icon: 'Code', color: '#3b82f6', count: 2 },
@@ -225,5 +229,52 @@ describe('deleteCollection', () => {
     expect(mockFindFirst).toHaveBeenCalledWith({
       where: { id: 'col-1', userId: 'user-1' },
     });
+  });
+});
+
+describe('toggleCollectionPin', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('flips isPinned on a collection the user owns', async () => {
+    mockFindFirst.mockResolvedValue({ isPinned: false } as never);
+    mockUpdate.mockResolvedValue({ isPinned: true } as never);
+
+    const result = await toggleCollectionPin('col-1', 'user-1');
+
+    expect(result).toBe(true);
+    expect(mockFindFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'col-1', userId: 'user-1' } }));
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ data: { isPinned: true } }));
+  });
+
+  it("returns null and writes nothing for another user's collection", async () => {
+    mockFindFirst.mockResolvedValue(null);
+
+    const result = await toggleCollectionPin('col-1', 'user-2');
+
+    expect(result).toBeNull();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('getAllCollections', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('lists pinned collections first, then by last edit, and returns isPinned', async () => {
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([{ ...basePrismaCollection, isPinned: true }] as never);
+    vi.mocked(prisma.collection.count).mockResolvedValue(1);
+
+    const result = await getAllCollections('user-1');
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1' },
+        orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
+      })
+    );
+    expect(result.collections[0].isPinned).toBe(true);
   });
 });

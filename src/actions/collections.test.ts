@@ -13,6 +13,7 @@ vi.mock('@/lib/db/collections', () => ({
   deleteCollection: vi.fn(),
   getUserCollections: vi.fn(),
   toggleCollectionFavorite: vi.fn(),
+  toggleCollectionPin: vi.fn(),
 }));
 
 // Mock the usage module
@@ -20,7 +21,7 @@ vi.mock('@/lib/usage', () => ({
   canCreateCollection: vi.fn(),
 }));
 
-import { createCollection, updateCollection, deleteCollection, getUserCollections, toggleCollectionFavorite } from './collections';
+import { createCollection, updateCollection, deleteCollection, getUserCollections, toggleCollectionFavorite, toggleCollectionPin } from './collections';
 import { auth } from '@/auth';
 import {
   createCollection as createCollectionQuery,
@@ -28,6 +29,7 @@ import {
   deleteCollection as deleteCollectionQuery,
   getUserCollections as getUserCollectionsQuery,
   toggleCollectionFavorite as toggleCollectionFavoriteQuery,
+  toggleCollectionPin as toggleCollectionPinQuery,
 } from '@/lib/db/collections';
 import { canCreateCollection } from '@/lib/usage';
 
@@ -37,6 +39,7 @@ const mockUpdateCollectionQuery = vi.mocked(updateCollectionQuery);
 const mockDeleteCollectionQuery = vi.mocked(deleteCollectionQuery);
 const mockGetUserCollectionsQuery = vi.mocked(getUserCollectionsQuery);
 const mockToggleCollectionFavoriteQuery = vi.mocked(toggleCollectionFavoriteQuery);
+const mockToggleCollectionPinQuery = vi.mocked(toggleCollectionPinQuery);
 const mockCanCreateCollection = vi.mocked(canCreateCollection);
 
 describe('createCollection server action', () => {
@@ -128,6 +131,7 @@ describe('createCollection server action', () => {
       name: 'Test Collection',
       description: 'A test description',
       isFavorite: false,
+      isPinned: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -157,6 +161,7 @@ describe('createCollection server action', () => {
       name: 'Test Collection',
       description: null,
       isFavorite: false,
+      isPinned: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -200,6 +205,7 @@ describe('createCollection server action', () => {
       name: 'Test Collection',
       description: null,
       isFavorite: false,
+      isPinned: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -356,6 +362,7 @@ describe('updateCollection server action', () => {
       name: 'Updated Name',
       description: 'Updated description',
       isFavorite: false,
+      isPinned: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -528,5 +535,60 @@ describe('toggleCollectionFavorite server action', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual({ isFavorite: false });
+  });
+});
+
+describe('toggleCollectionPin server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const result = await toggleCollectionPin('collection-123');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Unauthorized');
+    expect(mockToggleCollectionPinQuery).not.toHaveBeenCalled();
+  });
+
+  it('returns error for empty collection ID', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+
+    const result = await toggleCollectionPin('');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid collection ID');
+  });
+
+  it('returns error when the collection is missing or not owned', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+    mockToggleCollectionPinQuery.mockResolvedValue(null);
+
+    const result = await toggleCollectionPin('collection-123');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Collection not found');
+  });
+
+  it('returns the new pin state, scoped to the session user', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+    mockToggleCollectionPinQuery.mockResolvedValue(true);
+
+    const result = await toggleCollectionPin('collection-123');
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ isPinned: true });
+    expect(mockToggleCollectionPinQuery).toHaveBeenCalledWith('collection-123', 'user-123');
   });
 });
