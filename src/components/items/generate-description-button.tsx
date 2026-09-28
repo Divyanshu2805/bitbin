@@ -4,10 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  generateDescription,
-  type GenerateDescriptionInput,
-} from "@/actions/ai";
+import { generateDescription } from "@/actions/ai";
+import type { GenerateDescriptionInput } from "@/lib/ai-description";
 
 interface GenerateDescriptionButtonProps {
   title: string;

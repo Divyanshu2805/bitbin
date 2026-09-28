@@ -135,7 +135,10 @@ async function loadCollections() {
   }
 }
 
-async function suggestTags() {
+// One click, two AI calls side by side: tags are merged into what's typed, and a
+// description fills the field unless one has been written already. Either can
+// fail without losing the other.
+async function suggestWithAi() {
   const button = $('suggest');
   const type = $('type').value;
   const content = type === 'link' ? $('url').value : $('content').value;
@@ -145,28 +148,34 @@ async function suggestTags() {
     return;
   }
 
+  const body = {
+    title: $('title').value,
+    content,
+    typeName: type,
+    language: type === 'snippet' ? $('language').value : null,
+  };
+  if (type === 'link') body.url = $('url').value;
+
   button.disabled = true;
   button.textContent = '…';
-  setStatus('');
-  try {
-    const { tags } = await api('/ai/tags', {
-      method: 'POST',
-      settings,
-      body: {
-        title: $('title').value,
-        content,
-        typeName: type,
-        language: type === 'snippet' ? $('language').value : null,
-      },
-    });
-    const merged = [...new Set([...parseTags($('tags').value), ...tags])];
+  setStatus('Suggesting tags and a description…');
+  const [tagsResult, descriptionResult] = await Promise.allSettled([
+    api('/ai/tags', { method: 'POST', settings, body }),
+    api('/ai/description', { method: 'POST', settings, body }),
+  ]);
+
+  if (tagsResult.status === 'fulfilled') {
+    const merged = [...new Set([...parseTags($('tags').value), ...tagsResult.value.tags])];
     $('tags').value = merged.join(', ');
-  } catch (error) {
-    setStatus(error.message, 'error');
-  } finally {
-    button.disabled = false;
-    button.textContent = '✦ Suggest';
   }
+  if (descriptionResult.status === 'fulfilled' && !$('description').value.trim()) {
+    $('description').value = descriptionResult.value.description;
+  }
+
+  const failed = [tagsResult, descriptionResult].find((result) => result.status === 'rejected');
+  setStatus(failed ? failed.reason.message : '', failed ? 'error' : undefined);
+  button.disabled = false;
+  button.textContent = '✦ Suggest';
 }
 
 async function save(event) {
@@ -175,12 +184,14 @@ async function save(event) {
 
   const type = $('type').value;
   const collectionId = $('collection').value;
+  const written = $('description').value.trim();
   const body = {
     typeName: type,
     title: $('title').value.trim(),
     tags: parseTags($('tags').value),
     collectionIds: collectionId ? [collectionId] : [],
   };
+  if (written) body.description = written;
 
   if (type === 'link') {
     body.url = $('url').value.trim();
@@ -189,7 +200,11 @@ async function save(event) {
     if (type === 'snippet') body.language = $('language').value;
     if (type === 'command') body.language = 'bash';
     if (page.url && /^https?:\/\//i.test(page.url)) {
-      body.description = `Saved from ${page.url}`;
+      // Where it came from goes under the description. The API caps descriptions
+      // at 1000 characters; a very long URL is cut to fit
+      body.description = [written, `Saved from ${page.url}`].filter(Boolean).join('
+
+').slice(0, 1000);
     }
   }
 
@@ -225,7 +240,7 @@ async function init() {
   $('open-options').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('open-bitbin').addEventListener('click', () => chrome.tabs.create({ url: `${settings.baseUrl}/dashboard` }));
   $('type').addEventListener('change', () => applyType($('type').value));
-  $('suggest').addEventListener('click', suggestTags);
+  $('suggest').addEventListener('click', suggestWithAi);
   $('form').addEventListener('submit', save);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !$('form').hidden) save(event);

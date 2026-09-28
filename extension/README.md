@@ -35,7 +35,7 @@ The suggested key is `Ctrl+Shift+B` (`⌘+Shift+B` on macOS). Chrome also uses t
 
 ## API
 
-It talks only to the [token API](../docs/api/token-api.md) (`/api/v1/me`, `/collections`, `/items`, `/ai/tags`) with `Authorization: Bearer bb_…`. The token is kept in `chrome.storage.local` on this device.
+It talks only to the [token API](../docs/api/token-api.md) (`/api/v1/me`, `/collections`, `/items`, `/ai/tags`, `/ai/description`) with `Authorization: Bearer bb_…`. The token is kept in `chrome.storage.local` on this device.
 
 ## Adding another site
 
