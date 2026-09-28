@@ -907,6 +907,147 @@ describe('optimizePrompt server action', () => {
     expect(result.error).toBe('AI returned an empty response')
   })
 
+  it('accepts a ```json fence around the reply', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          output_text: '```json\n' + JSON.stringify({ optimizedPrompt: 'Fenced prompt.' }) + '\n```',
+        }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(true)
+    expect(result.data).toBe('Fenced prompt.')
+  })
+
+  it('returns error when AI returns empty response', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({ output_text: '' }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('AI returned an empty response')
+  })
+
+  it('accepts a snake_case key', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          output_text: JSON.stringify({ optimized_prompt: 'Snake case prompt.' }),
+        }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(true)
+    expect(result.data).toBe('Snake case prompt.')
+  })
+
+  it('returns error when AI returns empty response', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({ output_text: '' }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('AI returned an empty response')
+  })
+
+  it('turns a sectioned prompt into markdown', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          output_text: JSON.stringify({ optimizedPrompt: { role: 'Senior engineer.', constraints: ['No Lodash', 'JSDoc'] } }),
+        }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(true)
+    expect(result.data).toBe('Role:\nSenior engineer.\n\nConstraints:\n- No Lodash\n- JSDoc')
+  })
+
+  it('keeps nested sections and drops only the title', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({
+          output_text: JSON.stringify({ optimizedPrompt: { title: 'Fetcher', task: 'Fetch users.', constraints: [{ output: 'profiles and failed IDs' }, 'No Lodash'] } }),
+        }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(true)
+    expect(result.data).toBe('Task:\nFetch users.\n\nConstraints:\n-\n  - output: profiles and failed IDs\n- No Lodash')
+  })
+
+  it('returns error when AI returns empty response', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    })
+
+    const mockClient = {
+      responses: {
+        create: vi.fn().mockResolvedValue({ output_text: '' }),
+      },
+    }
+    mockGetOpenAIClient.mockReturnValue(mockClient as unknown as ReturnType<typeof getOpenAIClient>)
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('AI returned an empty response')
+  })
+
   it('returns error when AI returns unexpected format', async () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-123', isPro: true },

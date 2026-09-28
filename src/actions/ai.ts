@@ -60,6 +60,67 @@ const optimizePromptSchema = z.object({
 
 export type OptimizePromptInput = z.infer<typeof optimizePromptSchema>
 
+/**
+ * The optimized prompt out of a model's reply. Asked for
+ * `{ "optimizedPrompt": "..." }`, models also send a bare JSON string, a
+ * ```json fence around it, another key (`optimized_prompt`, `prompt`, …) or,
+ * for a structured prompt, `optimizedPrompt` as an object of sections. The
+ * sections become markdown ("Context:" + a list); anything else is null.
+ */
+function readOptimizedPrompt(text: string): string | null {
+  const unfenced = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
+  let value: unknown
+  try {
+    value = JSON.parse(unfenced)
+  } catch {
+    return null
+  }
+  if (typeof value === 'string') return value
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+
+  const record = value as Record<string, unknown>
+  const key = ['optimizedPrompt', 'optimized_prompt', 'improvedPrompt', 'prompt'].find((k) => k in record)
+  const found = key ? record[key] : null
+  if (typeof found === 'string') return found
+  if (found && typeof found === 'object') return sectionsToMarkdown(found)
+  return null
+}
+
+function sectionsToMarkdown(value: object): string | null {
+  const blocks: string[] = []
+  for (const [name, body] of Object.entries(value)) {
+    // A title adds nothing to the prompt itself
+    if (name.toLowerCase() === 'title') continue
+    const heading = name.replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase())
+    const text = toMarkdown(body, 0)
+    if (text) blocks.push(`${heading}:\n${text}`)
+  }
+  return blocks.length ? blocks.join('\n\n') : null
+}
+
+/** Any JSON value as markdown, nothing dropped: lists become bullets, objects "key: value" bullets. */
+function toMarkdown(value: unknown, depth: number): string {
+  const indent = '  '.repeat(depth)
+  if (value === null || value === undefined) return ''
+  if (typeof value !== 'object') return String(value)
+  if (Array.isArray(value)) {
+    return value
+      .map((item) =>
+        item !== null && typeof item === 'object'
+          ? `${indent}-\n${toMarkdown(item, depth + 1)}`
+          : `${indent}- ${String(item)}`
+      )
+      .join('\n')
+  }
+  return Object.entries(value)
+    .map(([key, item]) =>
+      item !== null && typeof item === 'object'
+        ? `${indent}- ${key}:\n${toMarkdown(item, depth + 1)}`
+        : `${indent}- ${key}: ${String(item)}`
+    )
+    .join('\n')
+}
+
 export async function optimizePrompt(
   input: OptimizePromptInput
 ): Promise<ActionResult<string>> {
@@ -93,7 +154,15 @@ export async function optimizePrompt(
     const response = await client.responses.create({
       model: AI_MODEL,
       instructions:
-        'You are a prompt engineering expert. Analyze the following prompt and return an improved version. Make it clearer, more specific, and more effective while preserving the original intent. Return a JSON object with an "optimizedPrompt" key containing the improved prompt text. Only return valid JSON.',
+        [
+          'You are a prompt engineering expert. Rewrite the prompt so it is clearer and more effective, without losing anything.',
+          'Rules:',
+          '- Keep EVERY requirement, constraint, context detail, number and example from the original. Never drop, merge away or summarise one; the result must be at least as specific as the original.',
+          '- Improve structure and wording: give it a clear role and task, then sections such as Context, Requirements, Constraints and Output format, each as a markdown bullet list.',
+          '- You may add missing details that make the task unambiguous (expected output shape, edge cases to handle), but never change what is being asked.',
+          '- Do not add a title line or commentary about the changes.',
+          'Return a JSON object with one key, "optimizedPrompt", whose value is the whole rewritten prompt as a single markdown string (not an object or array). Only return valid JSON.',
+        ].join('\n'),
       input: `Optimize the following prompt. Return a JSON object with an "optimizedPrompt" key.\n\n${contextParts}`,
       text: {
         format: { type: 'json_object' },
@@ -105,15 +174,8 @@ export async function optimizePrompt(
       return { success: false, error: 'AI returned an empty response' }
     }
 
-    const parsed_response = JSON.parse(text)
-
-    // Handle both { optimizedPrompt: "..." } and plain string
-    let optimized: string
-    if (typeof parsed_response === 'string') {
-      optimized = parsed_response
-    } else if (parsed_response.optimizedPrompt && typeof parsed_response.optimizedPrompt === 'string') {
-      optimized = parsed_response.optimizedPrompt
-    } else {
+    const optimized = readOptimizedPrompt(text)
+    if (optimized === null) {
       return { success: false, error: 'AI returned an unexpected format' }
     }
 
