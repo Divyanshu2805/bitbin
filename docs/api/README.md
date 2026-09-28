@@ -30,17 +30,18 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `GET` | `/api/v1/collections` | Token, Pro | The caller's collections, for the extension's picker | [Token API](token-api.md) |
 | `POST` | `/api/v1/items` | Token, Pro | Create a text or link item | [Token API](token-api.md) |
 | `POST` | `/api/v1/ai/tags` | Token, Pro | AI tag suggestions | [Token API](token-api.md) |
+| `POST` | `/api/v1/ai/description` | Token, Pro | AI-written description | [Token API](token-api.md) |
 
 ## Server actions
 
 | File | Actions | Page |
 |---|---|---|
 | `items.ts` | `createItem`, `updateItem`, `deleteItem`, `toggleItemFavorite`, `toggleItemPin` | [Server actions](server-actions.md#items) |
-| `collections.ts` | `createCollection`, `updateCollection`, `deleteCollection`, `toggleCollectionFavorite`, `getUserCollections` | [Server actions](server-actions.md#collections) |
+| `collections.ts` | `createCollection`, `updateCollection`, `deleteCollection`, `toggleCollectionFavorite`, `toggleCollectionPin`, `getUserCollections` | [Server actions](server-actions.md#collections) |
 | `ai.ts` | `generateAutoTags`, `generateDescription`, `explainCode`, `optimizePrompt` | [Server actions](server-actions.md#ai) |
 | `import.ts`, `export.ts` | `previewImport`, `importData`, `exportData` | [Server actions](server-actions.md#import-and-export) |
 | `api-tokens.ts` | `createApiToken`, `revokeApiToken` | [Server actions](server-actions.md#api-tokens) |
-| `search.ts`, `settings.ts`, `auth.ts` | `getSearchData`, `updateEditorPreferences`, `signInWithGitHub` | [Server actions](server-actions.md#search-settings-and-sign-in) |
+| `search.ts`, `settings.ts`, `auth.ts` | `getSearchData`, `updateEditorPreferences`, `updateName`, `signInWithGitHub` | [Server actions](server-actions.md#search-settings-and-sign-in) |
 
 ## Conventions
 

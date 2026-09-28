@@ -97,6 +97,3 @@ Everything lives in [`docs/`](docs/README.md):
 | [Known gaps](docs/known-gaps/README.md) | Trade-offs, open issues and the roadmap |
 | [Deployment](docs/deployment/README.md) | Vercel, provider callbacks, smoke test |
 
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Security issues: [`SECURITY.md`](SECURITY.md).

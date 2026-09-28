@@ -22,7 +22,6 @@ Everything about how BitBin is built, run and changed. Start with the section th
 ## Contributing
 
 - [Engineering practices](practices/README.md) — conventions, security guardrails, testing, definition of done, design system, and known pitfalls.
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — the contribution workflow.
 
 ## Running in production
 

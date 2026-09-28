@@ -37,6 +37,8 @@ Limits per type are in the [file uploads flow](../architecture/flows/file-upload
 
 `/api/download/{userId}/{timestamp}-{name}` — the object key. Streams the object with `Content-Disposition: attachment` and the original content type.
 
+With `?inline=1` (the item panel's file preview) it's served `inline` instead: a PDF as `application/pdf`, anything else as `text/plain; charset=utf-8` with `Content-Security-Policy: sandbox`, and always `X-Content-Type-Options: nosniff`, so an uploaded file can't run script on the app's origin.
+
 | Status | When |
 |---|---|
 | `200` | The file |

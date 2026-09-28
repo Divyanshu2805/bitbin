@@ -31,7 +31,7 @@ The rate-limit check is a separate request the form makes voluntarily — `autho
 
 ## GitHub
 
-Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/dashboard' })` on the server. An earlier client-side `signIn` needed two clicks in production, because the redirect raced the session cookie.
+Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/sign-in?via=github' })` on the server. Back from GitHub, the sign-in form sees `via=github` and slides into `/dashboard` (`slideTo` in `lib/view-transition.ts`), holding the sign-in page on screen until the dashboard is ready so its loading screen isn't shown. An earlier client-side `signIn` needed two clicks in production, because the redirect raced the session cookie.
 
 The `signIn` callback refuses GitHub for an email that already belongs to a **password account** (or when GitHub's email doesn't match the linked user's): it deletes the account row the adapter just created and redirects to `/sign-in?error=OAuthAccountNotLinked`, where the form explains what happened. BitBin doesn't link the two sign-in methods.
 

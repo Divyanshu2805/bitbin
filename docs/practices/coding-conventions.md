@@ -5,6 +5,7 @@ The patterns the codebase already follows. Match them rather than introducing a 
 ## Layering
 
 - Pages (`src/app/**/page.tsx`) are server components: call `auth()`, redirect when signed out, load data with `Promise.all` over `lib/db` functions, render.
+- Signed-in pages live in `src/app/(app)/`, whose `layout.tsx` renders the shell (`DashboardLayout`) and loads the sidebar's data. A page there renders only its content, loads only its own data, and still checks the session itself.
 - Client components call **server actions** for writes, or `fetch` a route handler when HTTP is required (uploads, the drawer's item fetch, Stripe redirects).
 - Queries live in `src/lib/db/`. Integrations live in thin wrappers in `src/lib/`. See the [module map](../architecture/module-map.md#layering-rules).
 

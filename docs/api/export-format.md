@@ -41,12 +41,13 @@ Built by `getUserExportData` (`src/lib/db/export.ts`):
     }
   ],
   "collections": [
-    { "name": "React Patterns", "description": "…", "isFavorite": false }
+    { "name": "React Patterns", "description": "…", "isFavorite": false, "isPinned": false }
   ]
 }
 ```
 
 - No ids: items name their type, tags and collections, so an export can be imported into any account.
+- A collection's `isPinned` is optional on import (older exports don't have it) and defaults to `false`.
 - `version` is `1`. A change that older imports can't read should bump it and teach `importData` both shapes.
 
 ## The ZIP

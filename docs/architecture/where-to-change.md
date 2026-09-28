@@ -12,7 +12,7 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | The item drawer | `components/items/item-drawer.tsx`, `item-drawer-provider.tsx`, the `GET /api/items/[id]` handler |
 | Code or markdown editors | `components/items/code-editor.tsx`, `markdown-editor.tsx`, `editor-header.tsx`; defaults in `src/lib/constants/editor.ts` |
 | Collections behaviour | `src/lib/db/collections.ts`, `src/actions/collections.ts`, `components/collections/*` |
-| Dashboard sections | `src/app/dashboard/page.tsx`, `components/dashboard/*`, the dashboard queries in `src/lib/db/items.ts` and `collections.ts` |
+| Dashboard sections | `src/app/(app)/dashboard/page.tsx`, `components/dashboard/*`, the dashboard queries in `src/lib/db/items.ts` and `collections.ts` |
 
 ## Plans, billing and limits
 
@@ -42,7 +42,8 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | Task | Start here |
 |---|---|
 | Colours, fonts, motion | `src/app/globals.css`, fonts in `src/app/layout.tsx` — see [design system](../practices/design-system.md) |
-| Navigation | `components/layout/sidebar-nav.tsx` (shared by desktop and mobile), `top-bar.tsx` |
+| Navigation | `components/layout/sidebar-nav.tsx` (shared by desktop and mobile), `top-bar.tsx`, `status-bar.tsx`; the sidebar's data is loaded in `src/app/(app)/layout.tsx` |
+| Keyboard shortcuts | `lib/constants/shortcuts.ts` (the list), `hooks/use-hotkey.ts`, `layout/app-shortcuts.tsx` (G-sequences, 1–7, `[`, `?`), `top-bar.tsx`, `items/items-page-header.tsx`, `items/item-drawer.tsx` |
 | Homepage | `src/app/page.tsx`, `components/homepage/*` |
 | Logo and favicon | `components/shared/logo.tsx`, `src/app/icon.svg`, README art in `docs/assets/` |
 

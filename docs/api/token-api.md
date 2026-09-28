@@ -62,7 +62,7 @@ Creates an item. Validation and the insert are shared with the [`createItem` act
 | `url` | `http(s)` only. Required for `link` |
 | `tags` | Optional array of strings, default `[]`. Blanks are dropped |
 | `collectionIds` | Optional. Ids that aren't the caller's are silently dropped |
-| `description`, `content`, `language` | Optional strings |
+| `description`, `content`, `language` | Optional strings; `description` is at most 1000 characters (longer is a `400`). A `snippet` or `command` sent without `language` gets one detected from `content` (a command that matches nothing is `bash`) |
 | `fileUrl`, `fileName`, `fileSize` | Ignored |
 
 `201`:
@@ -85,6 +85,18 @@ Request: `{ "title": "…", "content": "…", "language": null, "typeName": "sni
 
 ```json
 { "data": { "tags": ["react", "hooks", "debounce"] } }
+```
+
+`400` for invalid input, `429` over the AI limit, `502` when the model fails or answers in an unexpected format.
+
+## `POST /api/v1/ai/description`
+
+Writes a 1–2 sentence description. Same prompt, parsing and `ai` rate limit as the [`generateDescription` action](server-actions.md#ai) (`describeItemForUser` in `src/lib/ai-description.ts`). The extension's ✦ Suggest calls it alongside `/ai/tags`, so one click uses two of the 20 AI requests an hour.
+
+Request: `{ "title": "…", "content": "…", "url": null, "language": null, "typeName": "snippet" }`. `title` and `typeName` are required.
+
+```json
+{ "data": { "description": "Caches a calculation between re-renders." } }
 ```
 
 `400` for invalid input, `429` over the AI limit, `502` when the model fails or answers in an unexpected format.

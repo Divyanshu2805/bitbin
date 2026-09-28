@@ -8,11 +8,12 @@
 | `name` | text | Not unique — two collections may share a name (imports match by name, though) |
 | `description` | text, nullable | |
 | `isFavorite` | boolean, default `false` | Favorites show in the sidebar and on `/favorites` |
+| `isPinned` | boolean, default `false` | Pinned collections are listed first |
 | `userId` | FK → `users.id`, cascade | The owner |
 | `defaultTypeId` | FK → `item_types.id`, nullable | Reserved for a per-collection default item type; not used by the app yet |
 | `createdAt`, `updatedAt` | timestamp | |
 
-Indexes: `collections(userId)`, `collections(userId, isFavorite)`, `collections(userId, updatedAt)`.
+Indexes: `collections(userId)`, `collections(userId, isFavorite)`, `collections(userId, isPinned)`, `collections(userId, updatedAt)`.
 
 A collection's colour isn't stored; it's computed from its items — see the [collections flow](../architecture/flows/collections.md#dominant-colour).
 

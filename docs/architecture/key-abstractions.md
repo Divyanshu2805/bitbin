@@ -32,11 +32,11 @@ A NextAuth JWT carrying the user's id and `isPro`. `getAuthedSession()` in actio
 
 ## Editor preferences
 
-Per-user Monaco settings — font size, tab size, word wrap, minimap, theme (`vs-dark`, `monokai`, `github-dark`) — stored as JSON in `users.editorPreferences`, merged over defaults from `src/lib/constants/editor.ts`, and provided to the editors by `EditorPreferencesProvider`.
+Per-user Monaco settings — font size, tab size, word wrap, minimap, theme (`vs-dark`, `monokai`, `github-dark`; the light app theme overrides it with `github-light`) — stored as JSON in `users.editorPreferences`, merged over defaults from `src/lib/constants/editor.ts`, and provided to the editors by `EditorPreferencesProvider`.
 
 ## The drawer
 
-The right-hand panel that shows and edits one item, opened from any card, row or search result. `ItemDrawerProvider` holds which item is open; the drawer loads the full item through `GET /api/items/[id]`.
+The panel that shows and edits one item, opened from any card, row or search result: centered over the page (content on the left; tags, collections and dates in a column on the right), full screen with the expand button or `M`, and always full screen on phones. `ItemDrawerProvider` holds which item is open; the drawer loads the full item through `GET /api/items/[id]`.
 
 ## Related
 

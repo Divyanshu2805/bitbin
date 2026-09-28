@@ -12,7 +12,7 @@ Creating, reading, editing and deleting items — the core of BitBin. The per-ty
 | Drawer (view + edit) | `src/components/items/item-drawer.tsx`, `item-drawer-provider.tsx` |
 | Create dialog | `src/components/items/new-item-dialog.tsx` |
 | Editors | `code-editor.tsx` (Monaco), `markdown-editor.tsx` |
-| Type page | `src/app/items/[type]/page.tsx` |
+| Type page | `src/app/(app)/items/[type]/page.tsx` |
 
 ## Create
 

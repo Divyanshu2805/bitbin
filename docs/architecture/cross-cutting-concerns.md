@@ -48,8 +48,8 @@ Constants in `src/lib/constants/pagination.ts`:
 |---|---|---|
 | `ITEMS_PER_PAGE` | 21 | `/items/[type]`, collection detail |
 | `COLLECTIONS_PER_PAGE` | 21 | `/collections` |
-| `DASHBOARD_COLLECTIONS_LIMIT` | 6 | Dashboard collections section |
-| `DASHBOARD_RECENT_ITEMS_LIMIT` | 10 | Dashboard recent items |
+| `DASHBOARD_COLLECTIONS_LIMIT` | 9 | Dashboard collections section |
+| `DASHBOARD_RECENT_ITEMS_LIMIT` | 9 | Dashboard recent items |
 
 Pages read `?page=` from the URL; pagination is offset-based.
 

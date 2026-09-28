@@ -4,6 +4,10 @@
 
 `src/proxy.ts` (Next 16's `middleware.ts`) builds its own NextAuth instance from `auth.config.ts`, which has no Prisma adapter and a placeholder `authorize`. Importing `src/auth.ts` there would pull Prisma and bcrypt into the proxy, which is exactly what the split exists to avoid. Keep the full provider setup in `auth.ts`, and keep `auth.config.ts` to what the proxy needs. A provider added to one file and not the other shows up in one place only.
 
+## The app shell lives in `(app)/layout.tsx`
+
+Signed-in pages sit in the `src/app/(app)/` route group. Its layout renders the sidebar and the rest of the shell once and keeps it mounted across navigations, so a page must not wrap itself in `DashboardLayout` again (it would nest a second shell). The layout doesn't re-run on client navigation, so pages keep their own `auth()` check; `router.refresh()` does re-render it, which is what keeps sidebar counts current.
+
 ## The proxy only covers `/dashboard`
 
 The matcher is `/dashboard/:path*`. Every other protected page (`/items/*`, `/collections`, `/favorites`, `/profile`, `/settings`, `/upgrade`) must call `auth()` and `redirect('/sign-in')` itself. A new page that forgets is served to signed-out users instead of redirecting them.

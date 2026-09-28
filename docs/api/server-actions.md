@@ -8,11 +8,13 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createItem` | `{ typeName, title, description?, content?, url?, language?, tags, collectionIds?, fileUrl?, fileName?, fileSize? }` | `ItemDetail` | Zod; `file` / `image` need Pro; Free cap of 50 items; `link` needs `url` |
-| `updateItem` | `itemId`, `{ title, description?, content?, url?, language?, tags, collectionIds? }` | `ItemDetail` | Zod; owned. Replaces tags and collection links |
+| `createItem` | `{ typeName, title, description?, content?, url?, language?, tags, collectionIds?, fileUrl?, fileName?, fileSize? }` | `ItemDetail` | Zod; description ≤ 1000; `file` / `image` need Pro; Free cap of 50 items; `link` needs `url`. A snippet or command without `language` gets one detected from `content` (`lib/detect-language.ts`) |
+| `updateItem` | `itemId`, `{ title, description?, content?, url?, language?, tags, collectionIds? }` | `ItemDetail` | Zod; description ≤ 1000; owned. Replaces tags and collection links |
 | `deleteItem` | `itemId` | `null` | Owned. Also deletes the R2 object named by `fileUrl` |
 | `toggleItemFavorite` | `itemId` | `{ isFavorite }` | Owned |
 | `toggleItemPin` | `itemId` | `{ isPinned }` | Owned |
+| `getItemCollections` | `itemId` | `{ id, name, inCollection }[]` | Owned item; the user's collections, each marked |
+| `setItemCollection` | `itemId`, `collectionId`, `add` | `{ collectionName, inCollection, changed }` | Item **and** collection owned. Adds or removes that one link, leaving the item's other collections alone; adding twice is a no-op (`changed: false`) |
 
 `typeName` is one of `snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`. `url` and `fileUrl` must be `http(s)`. `collectionIds` that aren't the caller's are dropped. `createItem`'s checks live in `createItemForUser` (`src/lib/item-create.ts`), which [`POST /api/v1/items`](token-api.md#post-apiv1items) shares.
 
@@ -26,6 +28,7 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `updateCollection` | `{ id, name, description? }` | The collection | Same limits; owned |
 | `deleteCollection` | `{ id }` | `null` | Owned. Items are kept |
 | `toggleCollectionFavorite` | `collectionId` | `{ isFavorite }` | Owned |
+| `toggleCollectionPin` | `collectionId` | `{ isPinned }` | Owned |
 | `getUserCollections` | — | `{ id, name }[]` for the picker | |
 
 ## AI
@@ -39,7 +42,7 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `explainCode` | `{ title, content, language?, typeName: 'snippet' \| 'command' }` | `string` (markdown) |
 | `optimizePrompt` | `{ title, content }` | `string` |
 
-`generateAutoTags` does its work in `suggestTagsForUser` (`src/lib/ai-tags.ts`), which [`POST /api/v1/ai/tags`](token-api.md#post-apiv1aitags) shares.
+`generateAutoTags` does its work in `suggestTagsForUser` (`src/lib/ai-tags.ts`), which [`POST /api/v1/ai/tags`](token-api.md#post-apiv1aitags) shares. `generateDescription` does the same with `describeItemForUser` (`src/lib/ai-description.ts`) and [`POST /api/v1/ai/description`](token-api.md#post-apiv1aidescription).
 
 ## Import and export
 
@@ -66,6 +69,7 @@ The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`):
 |---|---|---|
 | `getSearchData` (`search.ts`) | — | `{ items, collections }` — the whole ⌘K index for the user |
 | `updateEditorPreferences` (`settings.ts`) | `{ fontSize, tabSize, wordWrap, minimap, theme }` | Validated against the allowed values, saved to `users.editorPreferences` |
+| `updateName` (`settings.ts`) | `{ name }` | Trimmed, 1–50 characters (`fieldErrors.name` otherwise), saved to `users.name` for the session user; returns `{ name }`. Edited in place on `/profile` |
 | `signInWithGitHub` (`auth.ts`) | — | Redirects to GitHub; see [authentication](../architecture/flows/authentication.md#github) |
 
 ## Related

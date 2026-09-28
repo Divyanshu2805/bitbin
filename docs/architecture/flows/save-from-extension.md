@@ -22,7 +22,8 @@ Ctrl+Shift+B (or the context menu)
   → popup.js reads the selection, page title and URL from the active tab (chrome.scripting)
   → guesses the type: lone URL → link, shell line → command, code → snippet, else note
   → GET  /api/v1/collections          (picker; remembers the last one used)
-  → POST /api/v1/ai/tags              (optional, "✦ Suggest")
+  → POST /api/v1/ai/tags + /ai/description   (optional, "✦ Suggest": both at once; tags merge in,
+                                             the description fills the field if it's empty)
   → POST /api/v1/items                → createItemForUser → lib/db createItem
 ```
 

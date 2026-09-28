@@ -11,7 +11,7 @@
 | `fileUrl`, `fileName`, `fileSize` | text, text, int — nullable | The payload for `FILE` types: the public R2 URL, the original name, the size in bytes |
 | `url` | text, nullable | The payload for `URL` types (links); `http(s)` only |
 | `description` | text, nullable | |
-| `language` | text, nullable | Syntax-highlighting language for Monaco (snippets, commands) |
+| `language` | text, nullable | Syntax-highlighting language for Monaco (snippets, commands). Detected from the content on paste and, when missing, on create (`lib/detect-language.ts`) |
 | `isFavorite`, `isPinned` | boolean, default `false` | |
 | `userId` | FK → `users.id`, cascade | The owner |
 | `itemTypeId` | FK → `item_types.id` | No cascade — an item type in use can't be deleted |

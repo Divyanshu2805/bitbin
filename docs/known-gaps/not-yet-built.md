@@ -47,7 +47,7 @@ Missing features and open issues — found while deploying BitBin and while docu
 
 ## Code health
 
-32. **Medium — Most route handlers have no tests.** Only the token API has them (`src/app/api/v1/items`, `src/app/api/v1/ai/tags`, and `src/lib/api-auth.ts`). The rest are untested: register, verify, password reset, upload, download, export, Stripe checkout / portal and the webhook. The registration and webhook gaps above would have been caught by them. **Fix:** route tests with mocked Prisma, Resend and Stripe, starting with registration and the webhook.
+32. **Medium — Most route handlers have no tests.** Only the token API has them (`src/app/api/v1/items`, `src/app/api/v1/ai/tags`, `src/app/api/v1/ai/description`, and `src/lib/api-auth.ts`). The rest are untested: register, verify, password reset, upload, download, export, Stripe checkout / portal and the webhook. The registration and webhook gaps above would have been caught by them. **Fix:** route tests with mocked Prisma, Resend and Stripe, starting with registration and the webhook.
 33. **`exportData` action is unused.** The UI downloads exports through `/api/export`; `src/actions/export.ts` duplicates it and can be removed (with its test) or used.
 34. **Direct Prisma use outside `lib/db`.** Several route handlers and pages query Prisma directly ([module map](../architecture/module-map.md#layering-rules)); moving them into `lib/db` would put every ownership check in one place.
 35. **`updateItem` isn't transactional.** Its collection-link rewrite and item update are separate statements.

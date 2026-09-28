@@ -9,25 +9,27 @@ src/
 ├── app/
 │   ├── (auth)/            sign-in, register, verify-email, forgot-password, reset-password — share the split-screen layout
 │   ├── api/               route handlers: auth/*, items/[id], upload, download/[...path], export, stripe/*, webhooks/stripe, v1/* (token API), extension/download
-│   ├── dashboard/         stats, collections, pinned and recent items (+ loading.tsx, error.tsx)
-│   ├── items/[type]/      items of one type: /items/snippets, /items/prompts, …
-│   ├── collections/       paginated list and /collections/[id]
-│   ├── favorites/         starred items and collections
-│   ├── profile/, settings/, upgrade/
+│   ├── (app)/             every signed-in page; layout.tsx renders the shell (sidebar, top bar, status bar,
+│   │                      backdrop) once and keeps it mounted, loading.tsx fills only the content area
+│   │   ├── dashboard/     stats, collections, pinned and recent items (+ error.tsx)
+│   │   ├── items/[type]/  items of one type: /items/snippets, /items/prompts, …
+│   │   ├── collections/   paginated list and /collections/[id]
+│   │   ├── favorites/     starred items and collections
+│   │   └── profile/, settings/, upgrade/
 │   ├── page.tsx           marketing homepage
-│   ├── layout.tsx         fonts, <html class="dark">, Toaster, Vercel Analytics
+│   ├── layout.tsx         fonts, ThemeProvider (next-themes, dark default), Toaster, Vercel Analytics
 │   └── globals.css        design tokens and motion utilities
 ├── actions/               server actions: items, collections, ai, api-tokens, search, settings, import, export, auth
 ├── auth.ts, auth.config.ts   NextAuth — full config, and the edge-safe subset used by proxy.ts
 ├── proxy.ts               guards /dashboard/*
 ├── components/
 │   ├── ui/                shadcn/ui primitives
-│   ├── layout/            dashboard layout, top bar, sidebar, mobile sidebar, user menu
-│   ├── dashboard/         stat cards, item and collection cards, sections
-│   ├── items/             drawer, editors, new-item dialog, file upload, AI buttons, collection picker
+│   ├── layout/            dashboard layout, top bar, sidebar, mobile sidebar, status bar, user menu
+│   ├── dashboard/         bin overview, quick create, item and collection cards, sections
+│   ├── items/             drawer, item rows, editors, new-item dialog, file upload, AI buttons, collection picker
 │   ├── collections/, favorites/, settings/, profile/, auth/, search/
 │   ├── homepage/          marketing sections
-│   └── shared/            logo, empty state, page header, pagination, confirm dialogs, …
+│   └── shared/            logo, empty state, page header, panel, usage meter, pagination, confirm dialogs, …
 ├── lib/
 │   ├── db/                items, collections, users, export, api-tokens — the app's queries
 │   ├── constants/         pagination, pricing, item types, editor defaults

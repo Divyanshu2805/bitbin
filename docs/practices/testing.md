@@ -12,16 +12,18 @@ npm run test:watch   # watch mode
 | File | Focus |
 |---|---|
 | `src/actions/ai.test.ts` | Auth and Pro guards, validation, rate limiting, prompt building, OpenAI response parsing |
-| `src/actions/items.test.ts` | Create / update / delete, Pro gating for files and images, the Free item cap, tag filtering, collection links |
-| `src/actions/collections.test.ts` | CRUD, favorite toggle, the Free collection cap |
+| `src/actions/items.test.ts` | Create / update / delete, Pro gating for files and images, the Free item cap, language detection on create, tag filtering, collection links, adding to / removing from one collection |
+| `src/actions/collections.test.ts` | CRUD, favorite and pin toggles, the Free collection cap |
 | `src/actions/import.test.ts`, `export.test.ts` | Manifest format, validation, duplicate detection, Free limits |
 | `src/actions/search.test.ts` | Search data shape |
-| `src/actions/settings.test.ts` | Editor preference validation |
+| `src/actions/settings.test.ts` | Editor preference validation; name updates (auth, trimming, length, scoped save) |
 | `src/actions/api-tokens.test.ts` | Pro guard, token limit, hash-only storage, scoped revoke |
 | `src/lib/api-tokens.test.ts`, `api-auth.test.ts` | Token format and hashing, Bearer parsing; `401` / `403` / `429` and the per-request Pro check |
-| `src/app/api/v1/items/route.test.ts`, `ai/tags/route.test.ts` | Token API status codes, rejected file types, dropped file fields, shared validation |
+| `src/app/api/v1/items/route.test.ts`, `ai/tags/route.test.ts`, `ai/description/route.test.ts` | Token API status codes, rejected file types, dropped file fields, shared validation |
 | `src/lib/extension-package.test.ts`, `src/app/api/extension/download/route.test.ts` | The extension ZIP: contents, localhost stripped in production, Pro-only download |
-| `src/lib/db/items.test.ts`, `collections.test.ts` | Query shaping, ownership (including foreign collection ids), dominant colour |
+| `src/app/api/download/[...path]/route.test.ts` | File download: `401` / `403` (another user's file), attachment headers, and the `?inline=1` preview (PDF kept, everything else sandboxed plain text) |
+| `src/lib/db/items.test.ts`, `collections.test.ts` | Query shaping, ownership (including foreign collection ids), dominant colour, pinned-first ordering |
+| `src/lib/detect-language.test.ts` | Language detection for each picker language, commands, the shell fallback, TS vs JS |
 | `src/lib/r2.test.ts` | File validation, size formatting, key parsing |
 | `src/lib/rate-limit.test.ts` | Failing open with unset, placeholder and invalid Upstash config |
 | `src/lib/usage.test.ts` | Free / Pro limits |

@@ -72,4 +72,3 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 
 - [Authentication flow](flows/authentication.md)
 - [Security guardrails](../practices/security-guardrails.md)
-- [`SECURITY.md`](../../SECURITY.md) — reporting a vulnerability.
