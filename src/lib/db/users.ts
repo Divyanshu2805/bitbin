@@ -58,6 +58,23 @@ export async function getUserWithSettings(userId: string): Promise<UserWithSetti
 }
 
 /**
+ * Rename the user. Returns the saved name, or null when the user no longer
+ * exists (a JWT can outlive its account).
+ */
+export async function updateUserName(userId: string, name: string): Promise<string | null> {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { name },
+      select: { name: true },
+    });
+    return user.name ?? name;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Update user's editor preferences
  */
 export async function updateEditorPreferences(
