@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, X, Trash2 } from "lucide-react";
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -120,6 +120,7 @@ export default function DeleteAccountDialog({
               onClick={handleClose}
               disabled={isLoading}
             >
+              <X className="h-4 w-4" />
               Cancel
             </Button>
             <Button
@@ -127,7 +128,7 @@ export default function DeleteAccountDialog({
               onClick={handleDelete}
               disabled={isLoading || confirmation !== "DELETE"}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Delete Account
             </Button>
           </div>

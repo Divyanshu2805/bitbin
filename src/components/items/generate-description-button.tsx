@@ -67,7 +67,7 @@ export default function GenerateDescriptionButton({
       size="sm"
       onClick={handleGenerate}
       disabled={disabled || isLoading}
-      className="h-7 px-2 text-xs text-muted-foreground"
+      className="ai-action h-7 px-2 text-xs"
       title="Generate description with AI"
     >
       {isLoading ? (

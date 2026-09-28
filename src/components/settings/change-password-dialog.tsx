@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, KeyRound } from "lucide-react";
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -140,10 +140,11 @@ export default function ChangePasswordDialog({
               onClick={handleClose}
               disabled={isLoading}
             >
+              <X className="h-4 w-4" />
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
               Change Password
             </Button>
           </div>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import SortableSection from "@/components/shared/sortable-section";
-import FavoriteItemRow from "@/components/favorites/favorite-item-row";
+import { ItemsView } from "@/components/shared/list-views";
 import type { ItemWithType } from "@/lib/db/items";
 
 type SortKey = "name-asc" | "name-desc" | "date-desc" | "date-asc" | "type";
@@ -49,10 +49,9 @@ export default function FavoritesItemList({ items }: FavoritesItemListProps) {
       sort={sort}
       onSortChange={(v) => setSort(v as SortKey)}
       options={SORT_OPTIONS}
+      bare
     >
-      {sorted.map((item) => (
-        <FavoriteItemRow key={item.id} item={item} />
-      ))}
+      <ItemsView items={sorted} />
     </SortableSection>
   );
 }

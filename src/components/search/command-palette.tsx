@@ -10,11 +10,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
+import { ItemTypeIcon } from "@/components/shared/item-type-icon";
+import { AgentSpinner } from "@/components/shared/agent-spinner";
+import { readableColor } from "@/lib/utils/color";
 import { useSearch } from "@/components/search/search-provider";
 import { useItemDrawer } from "@/components/items/item-drawer-provider";
-import { getItemTypeIcon } from "@/lib/constants/item-types";
 
 /**
  * Stricter search filter - requires search term to appear as contiguous substring
@@ -54,74 +55,74 @@ export default function CommandPalette() {
       description="Search items and collections"
       showCloseButton={false}
       filter={strictFilter}
+      className="gap-0 border-border bg-popover shadow-[var(--shadow-lift)] sm:max-w-xl [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-normal [&_[cmdk-item][data-selected=true]]:bg-lime/[0.07] [&_[cmdk-item]]:rounded-md"
     >
-      <CommandInput placeholder="Search items and collections..." />
-      <CommandList>
+      <CommandInput
+        placeholder="search items and collections"
+        className="font-mono text-base lg:text-[13px]"
+        icon={
+          <span aria-hidden className="font-mono text-sm font-semibold text-lime">
+            &gt;
+          </span>
+        }
+      />
+      <CommandList className="thin-scrollbar max-h-[min(420px,60vh)] py-1">
         {isLoading ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            Loading...
+          <div className="flex justify-center py-8">
+            <AgentSpinner verb={["Indexing", "Grepping"]} className="text-xs" />
           </div>
         ) : (
           <>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>
+              <span className="font-mono text-xs text-muted-foreground">
+                no matches <span className="text-muted-foreground">· try fewer letters</span>
+              </span>
+            </CommandEmpty>
 
-            {/* Items Section */}
             {searchData && searchData.items.length > 0 && (
-              <CommandGroup heading="Items">
-                {searchData.items.map((item) => {
-                  const IconComponent = getItemTypeIcon(item.typeIcon);
-                  return (
-                    <CommandItem
-                      key={item.id}
-                      value={`item-${item.title}-${item.contentPreview || ""}`}
-                      onSelect={() => handleItemSelect(item.id)}
-                      className="cursor-pointer"
+              <CommandGroup heading="// items">
+                {searchData.items.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    value={`item-${item.title}-${item.contentPreview || ""}`}
+                    onSelect={() => handleItemSelect(item.id)}
+                    className="group cursor-pointer gap-3"
+                  >
+                    <span
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                      style={{ backgroundColor: `color-mix(in srgb, ${item.typeColor} 14%, transparent)` }}
                     >
-                      <div
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded"
-                        style={{ backgroundColor: `${item.typeColor}20` }}
-                      >
-                        <IconComponent
-                          className="h-4 w-4"
-                          style={{ color: item.typeColor }}
-                        />
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="truncate">{item.title}</span>
-                        {item.contentPreview && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {item.contentPreview}
-                          </span>
-                        )}
-                      </div>
-                      <span className="ml-auto text-xs text-muted-foreground capitalize">
-                        {item.typeName}
-                      </span>
-                    </CommandItem>
-                  );
-                })}
+                      <ItemTypeIcon icon={item.typeIcon} className="!h-3.5 !w-3.5" style={{ color: readableColor(item.typeColor) }} />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm">{item.title}</span>
+                      {item.contentPreview && (
+                        <span className="truncate font-mono text-[11px] text-muted-foreground">{item.contentPreview}</span>
+                      )}
+                    </span>
+                    <span className="ml-auto shrink-0 font-mono text-[11px]" style={{ color: readableColor(item.typeColor) }}>
+                      {item.typeName}
+                    </span>
+                  </CommandItem>
+                ))}
               </CommandGroup>
             )}
 
-            {searchData &&
-              searchData.items.length > 0 &&
-              searchData.collections.length > 0 && <CommandSeparator />}
-
-            {/* Collections Section */}
             {searchData && searchData.collections.length > 0 && (
-              <CommandGroup heading="Collections">
+              <CommandGroup heading="// collections">
                 {searchData.collections.map((collection) => (
                   <CommandItem
                     key={collection.id}
                     value={`collection-${collection.name}`}
                     onSelect={() => handleCollectionSelect(collection.id)}
-                    className="cursor-pointer"
+                    className="cursor-pointer gap-3"
                   >
-                    <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{collection.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {collection.itemCount}{" "}
-                      {collection.itemCount === 1 ? "item" : "items"}
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan/10">
+                      <FolderOpen className="!h-3.5 !w-3.5 text-cyan" />
+                    </span>
+                    <span className="truncate text-sm">{collection.name}</span>
+                    <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">
+                      {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
                     </span>
                   </CommandItem>
                 ))}
@@ -130,6 +131,20 @@ export default function CommandPalette() {
           </>
         )}
       </CommandList>
+
+      {/* Key hints, like a TUI's footer */}
+      <div className="flex items-center gap-4 border-t border-border bg-surface/60 px-3 py-2 font-mono text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span className="kbd">↑</span>
+          <span className="kbd">↓</span> move
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="kbd">⏎</span> open
+        </span>
+        <span className="ml-auto flex items-center gap-1">
+          <span className="kbd">esc</span> close
+        </span>
+      </div>
     </CommandDialog>
   );
 }

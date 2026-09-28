@@ -43,7 +43,7 @@ export default function ProAiButton({
       type="button"
       onClick={onClick}
       disabled={isLoading}
-      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+      className="ai-action flex items-center gap-1.5 rounded px-1.5 py-0.5 text-sm transition-colors disabled:opacity-50"
       title={label}
     >
       {isLoading ? (

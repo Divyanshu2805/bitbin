@@ -5,7 +5,9 @@ import { createElement } from 'react';
 import { useItemDrawer } from '@/components/items/item-drawer-provider';
 import { formatRelativeDate } from '@/lib/utils/date';
 import { formatFileSize } from '@/lib/r2';
+import { readableColor } from "@/lib/utils/color";
 import type { ItemWithType } from '@/lib/db/items';
+import { itemDragProps } from './item-drag';
 
 interface FileListRowProps {
   item: ItemWithType;
@@ -59,7 +61,7 @@ function getFileIcon(fileName: string | null) {
 
 export default function FileListRow({ item }: FileListRowProps) {
   const { openDrawer } = useItemDrawer();
-  const iconColor = item.itemType.color;
+  const iconColor = readableColor(item.itemType.color);
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,78 +82,61 @@ export default function FileListRow({ item }: FileListRowProps) {
 
   return (
     <div
-      className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+      role="button"
+      tabIndex={0}
+      {...itemDragProps(item.id, item.title, item.itemType.name, iconColor)}
+      aria-label={`Open ${item.title}`}
+      className="icon-anim-off group relative flex cursor-pointer items-center gap-4 px-4 py-3 outline-none transition-colors hover:bg-lime/[0.05] focus-visible:bg-lime/[0.07]"
       onClick={() => openDrawer(item.id)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDrawer(item.id);
+        }
+      }}
     >
-      {/* File Icon */}
+      <span
+        aria-hidden
+        className="absolute inset-y-2 left-0 w-[2px] scale-y-0 rounded-r-full bg-lime transition-transform duration-300 group-hover:scale-y-100 group-focus-visible:scale-y-100"
+      />
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-        style={{ backgroundColor: `${iconColor}20` }}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+        style={{ backgroundColor: `color-mix(in srgb, ${iconColor} 14%, transparent)` }}
       >
-        {createElement(getFileIcon(item.fileName), { className: "h-5 w-5", style: { color: iconColor } })}
+        {createElement(getFileIcon(item.fileName), { className: "h-4 w-4", style: { color: iconColor } })}
       </div>
 
-      {/* File Info - Desktop */}
-      <div className="hidden sm:flex flex-1 items-center gap-4 min-w-0">
-        {/* File Name */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground truncate">
-              {item.title}
-            </span>
-            {item.isFavorite && (
-              <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
-            )}
-            {item.isPinned && (
-              <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )}
-          </div>
-          {item.fileName && (
-            <p className="text-sm text-muted-foreground truncate">
-              {item.fileName}
-            </p>
-          )}
-        </div>
-
-        {/* File Size */}
-        <div className="w-24 text-sm text-muted-foreground text-right shrink-0">
-          {item.fileSize ? formatFileSize(item.fileSize) : '—'}
-        </div>
-
-        {/* Upload Date */}
-        <div className="w-28 text-sm text-muted-foreground text-right shrink-0">
-          {formatRelativeDate(item.createdAt)}
-        </div>
-      </div>
-
-      {/* File Info - Mobile (stacked) */}
-      <div className="flex sm:hidden flex-1 flex-col min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-foreground truncate">
-            {item.title}
+          <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
+          {item.isPinned && <Pin className="h-3 w-3 shrink-0 text-destructive" aria-label="Pinned" />}
+          {item.isFavorite && <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-500 dark:text-amber-400" aria-label="Favorite" />}
+        </div>
+        <p className="truncate font-mono text-[11px] text-muted-foreground">
+          {item.fileName ?? 'unnamed'}
+          <span className="sm:hidden">
+            {item.fileSize ? ` · ${formatFileSize(item.fileSize)}` : ''} · {formatRelativeDate(item.createdAt)}
           </span>
-          {item.isFavorite && (
-            <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
-          )}
-          {item.isPinned && (
-            <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {item.fileSize && <span>{formatFileSize(item.fileSize)}</span>}
-          {item.fileSize && <span>•</span>}
-          <span>{formatRelativeDate(item.createdAt)}</span>
-        </div>
+        </p>
       </div>
 
-      {/* Download Button */}
+      <span className="hidden w-20 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground sm:block">
+        {item.fileSize ? formatFileSize(item.fileSize) : '—'}
+      </span>
+      <span className="hidden w-24 shrink-0 text-right font-mono text-[11px] text-muted-foreground sm:block">
+        {formatRelativeDate(item.createdAt)}
+      </span>
+
       {item.fileUrl && (
         <button
+          type="button"
           onClick={handleDownload}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md hover:bg-muted transition-colors"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-lime"
+          aria-label="Download file"
           title="Download file"
         >
-          <Download className="h-4 w-4 text-muted-foreground" />
+          <Download className="h-4 w-4" />
         </button>
       )}
     </div>

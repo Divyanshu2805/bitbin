@@ -76,24 +76,24 @@ export default function Pagination({
         <Link
           href={buildUrl(currentPage - 1)}
           className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors',
-            'hover:bg-accent hover:text-accent-foreground'
+            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs transition-colors',
+            'hover:border-lime/40 hover:text-lime'
           )}
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Prev</span>
+          <span className="hidden sm:inline">prev</span>
         </Link>
       ) : (
         <span
           className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-background px-3 text-sm font-medium',
+            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs',
             'cursor-not-allowed opacity-50'
           )}
           aria-disabled="true"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Prev</span>
+          <span className="hidden sm:inline">prev</span>
         </span>
       )}
 
@@ -112,10 +112,10 @@ export default function Pagination({
               key={page}
               href={buildUrl(page)}
               className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors',
+                'flex h-9 w-9 items-center justify-center rounded-md border font-mono text-xs tabular-nums transition-colors',
                 page === currentPage
-                  ? 'bg-primary text-primary-foreground'
-                  : 'border border-border bg-background hover:bg-accent hover:text-accent-foreground'
+                  ? 'border-lime/50 bg-lime/10 text-lime'
+                  : 'border-border bg-card text-muted-foreground hover:border-lime/40 hover:text-lime'
               )}
               aria-current={page === currentPage ? 'page' : undefined}
             >
@@ -130,23 +130,23 @@ export default function Pagination({
         <Link
           href={buildUrl(currentPage + 1)}
           className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors',
-            'hover:bg-accent hover:text-accent-foreground'
+            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs transition-colors',
+            'hover:border-lime/40 hover:text-lime'
           )}
           aria-label="Next page"
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">next</span>
           <ChevronRight className="h-4 w-4" />
         </Link>
       ) : (
         <span
           className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-background px-3 text-sm font-medium',
+            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs',
             'cursor-not-allowed opacity-50'
           )}
           aria-disabled="true"
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">next</span>
           <ChevronRight className="h-4 w-4" />
         </span>
       )}

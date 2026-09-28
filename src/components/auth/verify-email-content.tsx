@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, Mail, LogIn, UserPlus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -89,17 +89,26 @@ export function VerifyEmailContent() {
       <CardFooter className="flex flex-col gap-3">
         {status === 'success' && (
           <Button asChild className="w-full">
-            <Link href="/sign-in">Sign in to your account</Link>
+            <Link href="/sign-in">
+              <LogIn className="h-4 w-4" />
+              Sign in to your account
+            </Link>
           </Button>
         )}
         {status === 'error' && (
           <Button asChild variant="outline" className="w-full">
-            <Link href="/register">Try registering again</Link>
+            <Link href="/register">
+              <UserPlus className="h-4 w-4" />
+              Try registering again
+            </Link>
           </Button>
         )}
         {status === 'no-token' && (
           <Button asChild variant="outline" className="w-full">
-            <Link href="/sign-in">Back to sign in</Link>
+            <Link href="/sign-in">
+              <ArrowLeft className="h-4 w-4" />
+              Back to sign in
+            </Link>
           </Button>
         )}
       </CardFooter>

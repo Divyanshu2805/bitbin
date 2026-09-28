@@ -3,18 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { KeyRound, Lock, Mail, User } from "lucide-react";
+import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 import FormError from "@/components/shared/form-error";
 import GitHubAuthSection from "@/components/shared/github-auth-section";
 
@@ -68,80 +58,78 @@ export function RegisterForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Create an account</CardTitle>
-        <CardDescription>
-          Enter your details to create your BitBin account
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="w-full space-y-7">
+      <AuthHeader
+        path="register"
+        title={<>Start your <AuthAccent>bin.</AuthAccent></>}
+        description="Free for your first 50 items. No card needed."
+      />
+
+      <div className="space-y-5">
         <FormError message={error} />
 
+        <GitHubAuthSection />
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
+          <AuthField
+            id="name"
+            label="Name"
+            icon={User}
+            type="text"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isLoading}
+          />
+          <AuthField
+            id="email"
+            label="Email"
+            icon={Mail}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AuthField
               id="password"
+              label="Password"
+              icon={Lock}
               type="password"
-              placeholder="••••••••"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
+            <AuthField
               id="confirmPassword"
+              label="Confirm"
+              icon={KeyRound}
               type="password"
-              placeholder="••••••••"
+              autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create account
-          </Button>
+          <div className="pt-1">
+            <AuthSubmit loading={isLoading} loadingText="Creating account">
+              Create account
+            </AuthSubmit>
+          </div>
         </form>
+      </div>
 
-        <GitHubAuthSection />
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/sign-in" className="text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+      <AuthSwitch>
+        Already have an account?{" "}
+        <Link href="/sign-in" className="font-medium text-lime hover:underline">
+          Sign in
+        </Link>
+      </AuthSwitch>
+    </div>
   );
 }

@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -23,25 +15,17 @@ import {
   Copy,
   Pencil,
   Trash2,
-  Tag,
   FolderOpen,
-  Info,
   X,
   Save,
+  Command,
   Download,
-  File,
+  Check,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
-import { formatFileSize } from "@/lib/r2";
-import { formatLongDate } from "@/lib/utils/date";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { formatLongDate, formatRelativeDate } from "@/lib/utils/date";
 import { getItemTypeIcon } from "@/lib/constants/item-types";
-import { LANGUAGES } from "@/lib/constants/editor";
 import { useItemDrawer } from "./item-drawer-provider";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { toast } from "sonner";
@@ -50,13 +34,23 @@ import { getUserCollections } from "@/actions/collections";
 import DeleteItemDialog from "./delete-item-dialog";
 import CodeEditor from "./code-editor";
 import MarkdownEditor from "./markdown-editor";
+import ImageViewer from "./image-viewer";
+import FileViewer from "./file-viewer";
 import CollectionPicker, { type CollectionOption } from "./collection-picker";
 import SuggestTagsButton from "./suggest-tags-button";
 import GenerateDescriptionButton from "./generate-description-button";
+import { Kbd } from "@/components/shared/kbd";
+import LanguagePicker from "./language-picker";
+import { detectLanguage } from "@/lib/detect-language";
+import { readableColor } from "@/lib/utils/color";
+import { isTyping } from "@/hooks/use-hotkey";
+import { cn } from "@/lib/utils";
+import { MAX_DESCRIPTION_LENGTH } from "@/lib/validation";
+import { DescriptionCount } from "./description-count";
 
 function DrawerSkeleton() {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 sm:p-8">
       {/* Header skeleton */}
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -84,6 +78,130 @@ function DrawerSkeleton() {
   );
 }
 
+/**
+ * An edit field's label in the same `// label` voice as the section labels,
+ * still tied to its field (`htmlFor`) for screen readers and clicks.
+ */
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <Label htmlFor={htmlFor} className="gap-0 font-mono text-[11px] font-normal text-muted-foreground">
+      <span className="mr-[1ch] text-muted-foreground/50">{"//"}</span>
+      {children}
+    </Label>
+  );
+}
+
+/** `// description`: the drawer's section labels, in the app's code-comment voice. */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2 font-mono text-[11px] text-muted-foreground">
+      <span className="text-muted-foreground/50">{"// "}</span>
+      {children}
+    </p>
+  );
+}
+
+/**
+ * The description, clamped to four lines so a long one can't push the content
+ * out of view; "Show more" opens it in full. Unbroken strings (URLs, hashes)
+ * wrap anywhere instead of running past the column.
+ */
+function Description({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const { copied, copy } = useClipboard();
+  const [open, setOpen] = useState(false);
+  const [clamped, setClamped] = useState(false);
+
+  // Whether the clamp cuts anything off; measured while clamped, and again on resize
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const measure = () => setClamped(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text, open]);
+
+  return (
+    <div>
+      {/* The section label, with a copy button for the description */}
+      <div className="mb-2 flex items-center gap-2">
+        <p className="font-mono text-[11px] text-muted-foreground">
+          <span className="text-muted-foreground/50">{"// "}</span>
+          description
+        </p>
+        <button
+          type="button"
+          onClick={() => copy(text)}
+          className={cn(
+            "flex items-center gap-1 rounded px-1 font-mono text-[11px] transition-colors",
+            copied ? "text-lime" : "text-muted-foreground/60 hover:text-(--grid-color)"
+          )}
+          aria-label="Copy description"
+          title="Copy description"
+        >
+          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+          {copied ? "copied" : "copy"}
+        </button>
+      </div>
+      <p
+        ref={ref}
+        className={cn(
+          "text-desc text-[15px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]",
+          !open && "line-clamp-4"
+        )}
+      >
+        {text}
+      </p>
+      {(clamped || open) && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="mt-1.5 font-mono text-xs text-(--grid-color) underline-offset-4 hover:underline"
+        >
+          {open ? "show less" : "show more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A button in the item's action bar. It takes its colour (`color`) on hover,
+ * while pressed, and for as long as it's on (`active`: favorited, pinned, just
+ * copied), with a tinted fill and border.
+ */
+function ToolButton({
+  color,
+  active = false,
+  className,
+  style,
+  ...props
+}: React.ComponentProps<"button"> & { color: string; active?: boolean }) {
+  return (
+    <button
+      type="button"
+      data-anim-icons
+      aria-pressed={active}
+      className={cn(
+        "group/tool flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-xs outline-none",
+        "transition-[color,background-color,border-color,scale] duration-150 active:scale-95",
+        "focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--tool)_45%,transparent)]",
+        "hover:border-[color-mix(in_srgb,var(--tool)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--tool)_12%,transparent)] hover:text-(--tool)",
+        "active:bg-[color-mix(in_srgb,var(--tool)_20%,transparent)]",
+        active
+          ? "border-[color-mix(in_srgb,var(--tool)_32%,transparent)] bg-[color-mix(in_srgb,var(--tool)_14%,transparent)] text-(--tool)"
+          : "border-transparent text-muted-foreground",
+        className
+      )}
+      style={{ "--tool": color, ...style } as React.CSSProperties}
+      {...props}
+    />
+  );
+}
+
 // Types that have content field
 const TEXT_TYPES = ["snippet", "prompt", "command", "note"];
 // Types that have language field
@@ -96,12 +214,18 @@ const FILE_TYPES = ["file", "image"];
 export default function ItemDrawer() {
   const router = useRouter();
   const { isOpen, item, isLoading, isPro, closeDrawer, setItem } = useItemDrawer();
-  const { copy } = useClipboard();
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  // Centered panel, or the whole window (M). Kept between items.
+  const [expanded, setExpanded] = useState(false);
+  // Explain needs room for a second window: go full screen first (M shrinks
+  // back, where code and explanation become tabs)
+  const onExplanationToggle = (open: boolean) => {
+    if (open) setExpanded(true);
+  };
 
   // Form state
   const [title, setTitle] = useState("");
@@ -109,6 +233,8 @@ export default function ItemDrawer() {
   const [content, setContent] = useState("");
   const [url, setUrl] = useState("");
   const [language, setLanguage] = useState("");
+  // A paste re-detects the language from the whole content until the user picks one
+  const [languageSource, setLanguageSource] = useState<"none" | "auto" | "user">("none");
   const [tags, setTags] = useState("");
   const [collections, setCollections] = useState<CollectionOption[]>([]);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
@@ -121,6 +247,7 @@ export default function ItemDrawer() {
       setContent(item.content || "");
       setUrl(item.url || "");
       setLanguage(item.language || "");
+      setLanguageSource("none");
       setTags(item.tags.join(", "));
       setSelectedCollectionIds(item.collections.map((c) => c.id));
     }
@@ -162,12 +289,6 @@ export default function ItemDrawer() {
     }
   };
 
-  const handleCopy = () => {
-    if (!item) return;
-    const textToCopy = item.content || item.url || item.title;
-    copy(textToCopy);
-  };
-
   const handleEdit = async () => {
     // Fetch collections for the picker
     const result = await getUserCollections();
@@ -185,10 +306,25 @@ export default function ItemDrawer() {
       setContent(item.content || "");
       setUrl(item.url || "");
       setLanguage(item.language || "");
+      setLanguageSource("none");
       setTags(item.tags.join(", "));
       setSelectedCollectionIds(item.collections.map((c) => c.id));
     }
     setIsEditing(false);
+  };
+
+  const pickLanguage = (value: string) => {
+    setLanguage(value);
+    setLanguageSource("user");
+  };
+
+  const detectPastedLanguage = (value: string) => {
+    if (!item || languageSource === "user") return;
+    const detected = detectLanguage(value, item.itemType.name);
+    if (detected) {
+      setLanguage(detected);
+      setLanguageSource("auto");
+    }
   };
 
   const handleSave = async () => {
@@ -241,7 +377,7 @@ export default function ItemDrawer() {
   };
 
   const handleAcceptOptimized = async (optimizedContent: string) => {
-    if (!item) return;
+    if (!item) return false;
 
     const result = await updateItem(item.id, {
       title: item.title,
@@ -257,13 +393,14 @@ export default function ItemDrawer() {
       setItem(result.data);
       toast.success("Prompt updated with optimized version");
       router.refresh();
-    } else {
-      toast.error(result.error || "Failed to save optimized prompt");
+      return true;
     }
+    toast.error(result.error || "Failed to save optimized prompt");
+    return false;
   };
 
   const IconComponent = item ? getItemTypeIcon(item.itemType.icon) : null;
-  const iconColor = item?.itemType.color;
+  const iconColor = item ? readableColor(item.itemType.color) : undefined;
   const typeName = item?.itemType.name || "";
   const showContent = TEXT_TYPES.includes(typeName);
   const showLanguage = LANGUAGE_TYPES.includes(typeName);
@@ -272,6 +409,39 @@ export default function ItemDrawer() {
   const showFileContent = FILE_TYPES.includes(typeName);
   const isImage = typeName === "image";
   const canSave = title.trim().length > 0;
+
+  // Keys while the item is open: E edit, F favorite, P pin, M full screen,
+  // ⌫ delete;
+  // while editing, ⌘S / Ctrl+S saves. Re-bound each render so the handlers are current.
+  useEffect(() => {
+    if (!isOpen || !item) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.repeat || event.altKey) return;
+      if (isEditing) {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+          event.preventDefault();
+          if (canSave && !isSaving) handleSave();
+        }
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || showDeleteDialog || isTyping(event.target)) return;
+      if (document.querySelector('[role="alertdialog"], [role="menu"], [role="listbox"]')) return;
+      const actions: Record<string, () => void> = {
+        e: handleEdit,
+        f: handleToggleFavorite,
+        p: handleTogglePin,
+        delete: () => setShowDeleteDialog(true),
+        backspace: () => setShowDeleteDialog(true),
+        m: () => setExpanded((v) => !v),
+      };
+      const action = actions[event.key.toLowerCase()];
+      if (!action) return;
+      event.preventDefault();
+      action();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   const handleDownload = () => {
     if (!item?.fileUrl) return;
@@ -289,83 +459,140 @@ export default function ItemDrawer() {
     }
   };
 
+  const details = item ? (
+    <div>
+      <SectionLabel>details</SectionLabel>
+      <dl className="space-y-2 rounded-lg border border-border bg-card/60 px-3 py-2.5 font-mono text-xs">
+        <div>
+          <dt className="text-muted-foreground">created</dt>
+          <dd className="mt-0.5 text-foreground">{formatLongDate(item.createdAt)}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">updated</dt>
+          <dd className="mt-0.5 text-foreground">{formatLongDate(item.updatedAt)}</dd>
+        </div>
+      </dl>
+    </div>
+  ) : null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && closeDrawer()}>
-      <SheetContent
-        side="right"
-        className="w-full overflow-y-auto sm:max-w-xl p-0"
+    <Dialog open={isOpen} onOpenChange={(open) => !open && closeDrawer()}>
+      {/* A centered panel over the page, or the whole window when expanded (M).
+          On phones it always fills the screen. Content on the left; tags,
+          collections and dates in a narrow column on the right. */}
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          "flex max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.6)]",
+          "transition-[width,height,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-none",
+          "max-sm:h-dvh max-sm:w-screen max-sm:rounded-none max-sm:border-0",
+          expanded
+            ? "sm:h-[calc(100dvh-1.5rem)] sm:w-[calc(100vw-1.5rem)] sm:rounded-xl"
+            : "sm:h-[min(88dvh,880px)] sm:w-[min(calc(100vw-3rem),960px)] sm:rounded-2xl"
+        )}
+        style={
+          // The app's lime for the panel's accents; only the type icon and label wear the type's colour
+          item ? ({ "--grid-color": "var(--brand-lime)", "--ring": "var(--brand-lime)" } as React.CSSProperties) : undefined
+        }
       >
+        {/* Window controls: full screen and close */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="panel-close max-sm:hidden"
+            aria-label={expanded ? "Exit full screen" : "Full screen"}
+            title={expanded ? "Exit full screen  M" : "Full screen  M"}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+          <DialogClose className="panel-close" aria-label="Close" title="Close  Esc">
+            <X className="h-4 w-4" />
+          </DialogClose>
+        </div>
+
         {isLoading || !item ? (
           <>
-            <SheetHeader className="sr-only">
-              <SheetTitle>Loading item</SheetTitle>
-              <SheetDescription>Loading item details</SheetDescription>
-            </SheetHeader>
+            <DialogTitle className="sr-only">Loading item</DialogTitle>
+            <DialogDescription className="sr-only">Loading item details</DialogDescription>
             <DrawerSkeleton />
           </>
         ) : (
           <>
             {/* Header */}
-            <SheetHeader className="p-6 pb-0">
-              <div className="flex items-center gap-3">
+            <div className="relative shrink-0 px-6 pt-5 sm:px-8">
+              {/* Lime along the top edge, and a soft wash behind the title */}
+              <span
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-[2px]"
+                style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 75%)" }}
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-32"
+                style={{ background: "radial-gradient(80% 100% at 0% 0%, color-mix(in srgb, var(--brand-lime) 8%, transparent), transparent 70%)" }}
+              />
+              <p className="relative mb-4 pr-20 font-mono text-[11px] text-muted-foreground">
+                <span className="text-lime">~/</span>items/{item.itemType.name}s
+              </p>
+              <div data-anim-icons className="relative flex items-center gap-3.5 pr-16">
                 <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: `${iconColor}20` }}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
+                    borderColor: `color-mix(in srgb, ${iconColor} 30%, transparent)`,
+                  }}
                 >
-                  {IconComponent && (
-                    <IconComponent
-                      className="h-5 w-5"
-                      style={{ color: iconColor }}
-                    />
-                  )}
+                  {IconComponent && <IconComponent className="h-5 w-5" style={{ color: iconColor }} />}
                 </div>
                 <div className="min-w-0 flex-1">
                   {isEditing ? (
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Title"
-                      className="text-lg font-semibold"
-                    />
+                    <>
+                      <DialogTitle className="sr-only">Editing {item.title}</DialogTitle>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Title"
+                        aria-label="Title"
+                        className="text-lg font-semibold"
+                      />
+                    </>
                   ) : (
-                    <SheetTitle className="text-lg truncate">
+                    <DialogTitle className="truncate font-display text-xl font-bold tracking-[-0.03em] sm:text-2xl">
                       {item.title}
-                    </SheetTitle>
+                    </DialogTitle>
                   )}
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant="secondary"
-                      className="text-xs capitalize"
-                      style={{
-                        backgroundColor: `${iconColor}20`,
-                        color: iconColor,
-                      }}
-                    >
-                      {item.itemType.name}s
-                    </Badge>
+                  <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
+                    <span style={{ color: iconColor }}>{item.itemType.name}</span>
                     {!isEditing && item.language && (
-                      <Badge variant="secondary" className="text-xs">
-                        {item.language}
-                      </Badge>
+                      <>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-muted-foreground">{item.language}</span>
+                      </>
                     )}
+                    <span className="text-muted-foreground/40">·</span>
+                    <span className="text-muted-foreground">updated {formatRelativeDate(item.updatedAt)}</span>
                   </div>
                 </div>
               </div>
-              <SheetDescription className="sr-only">
+              <DialogDescription className="sr-only">
                 {isEditing ? `Editing ${item.title}` : `Details for ${item.title}`}
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </div>
 
             {/* Action Bar */}
             {isEditing ? (
-              <div className="flex items-center gap-2 px-6 py-3">
+              <div className="flex items-center gap-2 px-6 py-3 sm:px-8">
                 <Button
                   onClick={handleSave}
                   disabled={!canSave || isSaving}
                   size="sm"
                 >
-                  <Save className="h-4 w-4 mr-1.5" />
-                  {isSaving ? "Saving..." : "Save"}
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "Saving…" : "Save"}
+                  <span aria-hidden className="btn-kbd">
+                    <Command className="size-2.5" strokeWidth={2.5} />S
+                  </span>
                 </Button>
                 <Button
                   onClick={handleCancel}
@@ -373,87 +600,62 @@ export default function ItemDrawer() {
                   size="sm"
                   disabled={isSaving}
                 >
-                  <X className="h-4 w-4 mr-1.5" />
+                  <X className="h-4 w-4" />
                   Cancel
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-1 px-6 py-3">
-                <button
-                  onClick={handleToggleFavorite}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                  style={
-                    item.isFavorite
-                      ? { color: "#eab308" }
-                      : { color: "var(--color-muted-foreground)" }
-                  }
-                >
-                  <Star
-                    className="h-4 w-4"
-                    fill={item.isFavorite ? "#eab308" : "none"}
-                  />
-                  Favorite
-                </button>
-                <button
-                  onClick={handleTogglePin}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-                  style={
-                    item.isPinned
-                      ? { color: "#3b82f6" }
-                      : { color: "var(--color-muted-foreground)" }
-                  }
-                >
-                  <Pin
-                    className="h-4 w-4"
-                    fill={item.isPinned ? "#3b82f6" : "none"}
-                  />
-                  Pin
-                </button>
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </button>
+              <div className="flex flex-wrap items-center gap-1 px-5 py-3 sm:px-7">
+                <ToolButton color="light-dark(#d97706, #eab308)" active={item.isFavorite} onClick={handleToggleFavorite}>
+                  <Star className="h-4 w-4" fill={item.isFavorite ? "currentColor" : "none"} />
+                  {item.isFavorite ? "favorited" : "favorite"}
+                  <Kbd keys={["F"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                </ToolButton>
+                <ToolButton color="var(--destructive)" active={item.isPinned} onClick={handleTogglePin}>
+                  <Pin className="h-4 w-4" fill={item.isPinned ? "currentColor" : "none"} />
+                  {item.isPinned ? "pinned" : "pin"}
+                  <Kbd keys={["P"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                </ToolButton>
                 {showFileContent && item.fileUrl && (
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
-                  >
+                  <ToolButton color="var(--brand-cyan)" onClick={handleDownload}>
                     <Download className="h-4 w-4" />
-                    Download
-                  </button>
+                    download
+                  </ToolButton>
                 )}
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
-                >
+                <ToolButton color="var(--brand-lime)" onClick={handleEdit}>
                   <Pencil className="h-4 w-4" />
-                  Edit
-                </button>
+                  edit
+                  <Kbd keys={["E"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                </ToolButton>
                 <div className="flex-1" />
-                <button
+                <ToolButton
+                  color="var(--destructive)"
                   onClick={() => setShowDeleteDialog(true)}
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-red-500"
+                  aria-label="Delete item"
+                  title="Delete  ⌫"
+                  className="text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </ToolButton>
               </div>
             )}
 
             <Separator />
 
-            {/* Content Sections */}
-            <div className="space-y-6 p-6">
-              {isEditing ? (
-                <>
-                  {/* Edit Form */}
-                  <div className="space-y-4">
+            {/* Body: content on the left, metadata on the right */}
+            {/* The grid is at least as tall as the body, so the content section can
+                stretch to the bottom (its editor scrolls inside) whatever its length */}
+            <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto">
+              <div className="grid min-h-full grid-rows-[1fr_auto] gap-8 p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_220px] md:grid-rows-1">
+                {isEditing ? (
+                  <>
+                    <div className="flex min-h-0 min-w-0 flex-col">
+                  {/* Edit Form: the content field takes whatever height is left */}
+                  <div className="flex min-h-0 flex-1 flex-col gap-4">
                     {/* Description */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="description">Description</Label>
+                        <FieldLabel htmlFor="description">description</FieldLabel>
                         {isPro && (
                           <GenerateDescriptionButton
                             title={title}
@@ -470,53 +672,56 @@ export default function ItemDrawer() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Optional description..."
-                        rows={2}
+                        rows={3}
+                        maxLength={MAX_DESCRIPTION_LENGTH}
                       />
+                      <DescriptionCount length={description.length} />
                     </div>
 
                     {/* Language (snippet/command) */}
                     {showLanguage && (
                       <div className="space-y-2">
-                        <Label htmlFor="language">Language</Label>
-                        <Select value={language || "plaintext"} onValueChange={setLanguage}>
-                          <SelectTrigger id="language">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {LANGUAGES.map((lang) => (
-                              <SelectItem key={lang.value} value={lang.value}>
-                                {lang.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FieldLabel htmlFor="language">language</FieldLabel>
+                        <div>
+                          <LanguagePicker
+                            value={language}
+                            onChange={pickLanguage}
+                            detected={languageSource === "auto"}
+                            disabled={isSaving}
+                          />
+                        </div>
                       </div>
                     )}
 
                     {/* Content (text types) */}
                     {showContent && (
-                      <div className="space-y-2">
-                        <Label htmlFor="content">Content</Label>
+                      <div className="flex min-h-[440px] flex-1 flex-col gap-2">
+                        <FieldLabel htmlFor="content">content</FieldLabel>
+                        <div className="min-h-0 flex-1">
                         {showLanguage ? (
                           <CodeEditor
                             value={content}
                             onChange={setContent}
+                            onPaste={detectPastedLanguage}
                             language={language || "plaintext"}
+                            fill
                           />
                         ) : (
                           <MarkdownEditor
                             value={content}
                             onChange={setContent}
                             placeholder="Write your content in Markdown..."
+                            fill
                           />
                         )}
+                        </div>
                       </div>
                     )}
 
                     {/* URL (link types) */}
                     {showUrl && (
                       <div className="space-y-2">
-                        <Label htmlFor="url">URL</Label>
+                        <FieldLabel htmlFor="url">url</FieldLabel>
                         <Input
                           id="url"
                           type="url"
@@ -527,10 +732,14 @@ export default function ItemDrawer() {
                       </div>
                     )}
 
+                  </div>
+
+                    </div>
+                    <aside className="space-y-6 md:sticky md:top-8 md:self-start">
                     {/* Tags */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="tags">Tags</Label>
+                        <FieldLabel htmlFor="tags">tags</FieldLabel>
                         {isPro && (
                           <SuggestTagsButton
                             title={title}
@@ -559,12 +768,11 @@ export default function ItemDrawer() {
                         Separate tags with commas
                       </p>
                     </div>
-                  </div>
 
                   {/* Collections (editable) */}
                   {collections.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Collections</Label>
+                      <FieldLabel>collections</FieldLabel>
                       <CollectionPicker
                         collections={collections}
                         selectedIds={selectedCollectionIds}
@@ -574,58 +782,29 @@ export default function ItemDrawer() {
                     </div>
                   )}
 
-                  {/* Non-editable info in edit mode */}
-                  <Separator />
-
-                  {/* Details (display only) */}
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Details
-                      </p>
-                    </div>
-                    <div className="space-y-1.5 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created</span>
-                        <span className="text-foreground">
-                          {formatLongDate(item.createdAt)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Updated</span>
-                        <span className="text-foreground">
-                          {formatLongDate(item.updatedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
+                      {details}
+                    </aside>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex min-h-0 min-w-0 flex-col gap-6">
                   {/* View Mode Content */}
                   {/* Description */}
-                  {item.description && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">
-                        Description
-                      </p>
-                      <p className="text-base text-foreground">{item.description}</p>
-                    </div>
-                  )}
+                  {item.description && <Description key={item.id} text={item.description} />}
 
                   {/* Content (text types) */}
                   {item.content && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">
-                        Content
-                      </p>
+                    <div className="flex min-h-[440px] flex-1 flex-col">
+                      <SectionLabel>content</SectionLabel>
+                      <div className="min-h-0 flex-1">
                       {showLanguage ? (
                         <CodeEditor
                           value={item.content}
                           language={item.language || "plaintext"}
+                          fill
                           readOnly
                           showExplain
+                          onExplanationToggle={onExplanationToggle}
                           isPro={isPro}
                           title={item.title}
                           typeName={typeName}
@@ -634,26 +813,26 @@ export default function ItemDrawer() {
                         <MarkdownEditor
                           value={item.content}
                           readOnly
+                          fill
                           showOptimize={showOptimize}
                           isPro={isPro}
                           title={item.title}
                           onAcceptOptimized={handleAcceptOptimized}
                         />
                       )}
+                      </div>
                     </div>
                   )}
 
                   {/* URL (link types) */}
                   {item.url && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">
-                        URL
-                      </p>
+                      <SectionLabel>url</SectionLabel>
                       <a
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-base text-blue-400 hover:underline break-all"
+                        className="break-all font-mono text-sm text-tok-path underline-offset-4 hover:underline"
                       >
                         {item.url}
                       </a>
@@ -662,125 +841,86 @@ export default function ItemDrawer() {
 
                   {/* File/Image content */}
                   {showFileContent && item.fileUrl && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">
-                        {isImage ? "Image" : "File"}
-                      </p>
+                    // A preview fills the height left, like the content editor does
+                    <div className="flex min-h-[440px] flex-1 flex-col">
+                      <SectionLabel>{isImage ? "image" : "file"}</SectionLabel>
                       {isImage ? (
-                        <div className="rounded-lg border border-border overflow-hidden bg-muted/30 relative h-80">
-                          <Image
+                        <div className="min-h-0 flex-1">
+                          <ImageViewer
                             src={item.fileUrl}
                             alt={item.fileName || item.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 500px"
-                            className="object-contain"
+                            fileName={item.fileName}
+                            fileSize={item.fileSize}
                           />
                         </div>
                       ) : (
-                        <div className="rounded-lg border border-border p-4 bg-muted/30">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-                              <File className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm truncate">
-                                {item.fileName}
-                              </p>
-                              {item.fileSize && (
-                                <p className="text-muted-foreground text-xs">
-                                  {formatFileSize(item.fileSize)}
-                                </p>
-                              )}
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleDownload}
-                            >
-                              <Download className="h-4 w-4 mr-1.5" />
-                              Download
-                            </Button>
-                          </div>
+                        <div className="min-h-0 flex-1">
+                          <FileViewer
+                            fileUrl={item.fileUrl}
+                            fileName={item.fileName}
+                            fileSize={item.fileSize}
+                            onDownload={handleDownload}
+                          />
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Tags */}
-                  {item.tags.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Tags
-                        </p>
-                      </div>
+                    </div>
+                    <aside className="space-y-6 md:sticky md:top-8 md:self-start">
+                  {/* Tags: always shown; without any, a shortcut into editing them */}
+                  <div>
+                    <SectionLabel>tags</SectionLabel>
+                    {item.tags.length === 0 ? (
+                      <button
+                        type="button"
+                        onClick={handleEdit}
+                        className="rounded-md border border-dashed border-border px-2 py-1 font-mono text-xs text-muted-foreground transition-colors hover:border-(--grid-color) hover:text-(--grid-color)"
+                      >
+                        + add tags
+                      </button>
+                    ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {item.tags.map((tag) => (
-                          <Badge
+                          <span
                             key={tag}
-                            variant="secondary"
-                            className="text-xs bg-muted text-muted-foreground"
+                            className="max-w-full rounded-md border border-border bg-card px-2 py-0.5 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]"
                           >
+                            <span className="text-muted-foreground/50">#</span>
                             {tag}
-                          </Badge>
+                          </span>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Collections */}
                   {item.collections.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Collections
-                        </p>
-                      </div>
+                      <SectionLabel>collections</SectionLabel>
                       <div className="flex flex-wrap gap-1.5">
                         {item.collections.map((collection) => (
-                          <Badge
+                          <span
                             key={collection.id}
-                            variant="secondary"
-                            className="text-xs"
+                            className="inline-flex items-center gap-1.5 rounded-md border border-cyan/25 bg-cyan/[0.06] px-2 py-0.5 text-xs text-foreground/90"
                           >
+                            <FolderOpen className="h-3 w-3 text-cyan" />
                             {collection.name}
-                          </Badge>
+                          </span>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Details */}
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Details
-                      </p>
-                    </div>
-                    <div className="space-y-1.5 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created</span>
-                        <span className="text-foreground">
-                          {formatLongDate(item.createdAt)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Updated</span>
-                        <span className="text-foreground">
-                          {formatLongDate(item.updatedAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+                      {details}
+                    </aside>
+                  </>
+                )}
+              </div>
             </div>
           </>
         )}
-      </SheetContent>
+      </DialogContent>
 
       {item && (
         <DeleteItemDialog
@@ -790,6 +930,6 @@ export default function ItemDrawer() {
           onConfirm={handleDelete}
         />
       )}
-    </Sheet>
+    </Dialog>
   );
 }

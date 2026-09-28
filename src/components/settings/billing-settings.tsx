@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Panel from '@/components/shared/panel';
+import UsageMeter from '@/components/shared/usage-meter';
+import { MAX_COLLECTIONS, MAX_ITEMS } from '@/lib/constants/plan';
+import { CreditCard, Loader2, Sparkles, CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { startCheckout } from '@/lib/stripe-client';
 
@@ -59,62 +60,55 @@ export default function BillingSettings({ isPro, itemCount, collectionCount }: B
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          <CardTitle>Billing</CardTitle>
-        </div>
-        <CardDescription>Manage your subscription and billing</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Current plan:</span>
+    <Panel
+      id="billing"
+      icon={<CreditCard />}
+      title="Billing"
+      description="Your plan, and your subscription if you have one."
+    >
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-center gap-3">
           {isPro ? (
-            <Badge className="bg-blue-600 hover:bg-blue-700 text-white">Pro</Badge>
+            <span className="rounded-md border border-lime/35 bg-lime/10 px-2 py-0.5 font-mono text-xs text-lime">● pro</span>
           ) : (
-            <Badge variant="secondary">Free</Badge>
+            <span className="rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">free</span>
           )}
+          <p className="text-desc text-sm">
+            {isPro
+              ? 'Unlimited items and collections, files, AI and the extension.'
+              : 'Upgrade when your bin gets full. Cancel whenever you like.'}
+          </p>
         </div>
 
         {!isPro && (
           <>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>{itemCount}/50 items</p>
-              <p>{collectionCount}/3 collections</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <UsageMeter label="items" used={itemCount} limit={MAX_ITEMS} />
+              <UsageMeter label="collections" used={collectionCount} limit={MAX_COLLECTIONS} />
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => handleUpgrade('monthly')}
-                disabled={loading !== null}
-              >
-                {loading === 'monthly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Upgrade $8/mo
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => handleUpgrade('monthly')} disabled={loading !== null}>
+                {loading !== 'monthly' && <Sparkles className="h-4 w-4" />}
+                {loading === 'monthly' && <Loader2 className="h-4 w-4 animate-spin" />}
+                Go Pro · $8/mo
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleUpgrade('yearly')}
-                disabled={loading !== null}
-              >
-                {loading === 'yearly' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Upgrade $72/yr (save 25%)
+              <Button variant="outline" onClick={() => handleUpgrade('yearly')} disabled={loading !== null}>
+                {loading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />}
+                $72/yr
+                <span className="rounded bg-lime/15 px-1.5 font-mono text-[10.5px] font-bold text-lime">-25%</span>
               </Button>
             </div>
           </>
         )}
 
         {isPro && (
-          <Button
-            variant="outline"
-            onClick={handleManageBilling}
-            disabled={loading !== null}
-          >
-            {loading === 'portal' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Manage Billing
+          <Button variant="outline" onClick={handleManageBilling} disabled={loading !== null}>
+            {loading === 'portal' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+            Manage billing
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Code2 } from "lucide-react";
+import Panel from "@/components/shared/panel";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -23,19 +18,18 @@ export default function EditorSettings() {
   const { preferences, updatePreference, isSaving } = useEditorPreferences();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Editor</CardTitle>
-        <CardDescription>
-          Customize your code editor appearance and behavior
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Panel
+      id="editor"
+      icon={<Code2 />}
+      title="Editor"
+      description="How code looks and behaves in the editor."
+    >
+      <div className="-my-3">
         {/* Font Size */}
-        <div className="flex items-center justify-between py-3 border-b border-border">
+        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
           <div>
             <Label htmlFor="font-size">Font Size</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-desc text-sm">
               Size of text in the code editor
             </p>
           </div>
@@ -46,7 +40,7 @@ export default function EditorSettings() {
             }
             disabled={isSaving}
           >
-            <SelectTrigger id="font-size" className="w-24">
+            <SelectTrigger id="font-size" className="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -60,10 +54,10 @@ export default function EditorSettings() {
         </div>
 
         {/* Tab Size */}
-        <div className="flex items-center justify-between py-3 border-b border-border">
+        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
           <div>
             <Label htmlFor="tab-size">Tab Size</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-desc text-sm">
               Number of spaces for each tab
             </p>
           </div>
@@ -74,7 +68,7 @@ export default function EditorSettings() {
             }
             disabled={isSaving}
           >
-            <SelectTrigger id="tab-size" className="w-24">
+            <SelectTrigger id="tab-size" className="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -88,10 +82,10 @@ export default function EditorSettings() {
         </div>
 
         {/* Theme */}
-        <div className="flex items-center justify-between py-3 border-b border-border">
+        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
           <div>
             <Label htmlFor="theme">Theme</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-desc text-sm">
               Color theme for the code editor
             </p>
           </div>
@@ -116,10 +110,10 @@ export default function EditorSettings() {
         </div>
 
         {/* Word Wrap */}
-        <div className="flex items-center justify-between py-3 border-b border-border">
+        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
           <div>
             <Label htmlFor="word-wrap">Word Wrap</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-desc text-sm">
               Wrap long lines to fit the editor width
             </p>
           </div>
@@ -132,10 +126,10 @@ export default function EditorSettings() {
         </div>
 
         {/* Minimap */}
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between gap-4 py-3.5">
           <div>
             <Label htmlFor="minimap">Minimap</Label>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-desc text-sm">
               Show code overview on the right side
             </p>
           </div>
@@ -146,7 +140,7 @@ export default function EditorSettings() {
             disabled={isSaving}
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

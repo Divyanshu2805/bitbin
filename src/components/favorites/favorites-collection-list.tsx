@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import SortableSection from "@/components/shared/sortable-section";
-import FavoriteCollectionRow from "@/components/favorites/favorite-collection-row";
-import type { FavoriteCollection } from "@/lib/db/collections";
+import { CollectionsView } from "@/components/shared/list-views";
+import type { CollectionWithTypes } from "@/lib/db/collections";
 
 type SortKey = "name-asc" | "name-desc" | "date-desc" | "date-asc";
 
@@ -15,13 +15,13 @@ const SORT_OPTIONS = [
 ];
 
 interface FavoritesCollectionListProps {
-  collections: FavoriteCollection[];
+  collections: CollectionWithTypes[];
 }
 
 function sortCollections(
-  collections: FavoriteCollection[],
+  collections: CollectionWithTypes[],
   sort: SortKey
-): FavoriteCollection[] {
+): CollectionWithTypes[] {
   return [...collections].sort((a, b) => {
     switch (sort) {
       case "name-asc":
@@ -54,10 +54,9 @@ export default function FavoritesCollectionList({
       sort={sort}
       onSortChange={(v) => setSort(v as SortKey)}
       options={SORT_OPTIONS}
+      bare
     >
-      {sorted.map((collection) => (
-        <FavoriteCollectionRow key={collection.id} collection={collection} />
-      ))}
+      <CollectionsView collections={sorted} />
     </SortableSection>
   );
 }

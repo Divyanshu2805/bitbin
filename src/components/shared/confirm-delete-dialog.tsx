@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, X, Trash2 } from "lucide-react";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -70,6 +70,7 @@ export default function ConfirmDeleteDialog({
               onClick={handleClose}
               disabled={isLoading}
             >
+              <X className="h-4 w-4" />
               Cancel
             </Button>
             <Button
@@ -77,7 +78,7 @@ export default function ConfirmDeleteDialog({
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Delete
             </Button>
           </div>

@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Pencil } from "lucide-react";
+import { Pencil, Save } from "lucide-react";
 import DialogFormFooter from "@/components/shared/dialog-form-footer";
 import { toast } from "sonner";
 import { updateCollection, type UpdateCollectionInput } from "@/actions/collections";
@@ -120,7 +120,7 @@ export default function EditCollectionDialog({
             />
           </div>
 
-          <DialogFormFooter isLoading={isLoading} onCancel={handleClose} submitLabel="Save" />
+          <DialogFormFooter isLoading={isLoading} onCancel={handleClose} submitLabel="Save" submitIcon={Save} />
         </form>
       </DialogContent>
     </Dialog>

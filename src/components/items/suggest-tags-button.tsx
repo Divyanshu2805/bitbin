@@ -88,7 +88,7 @@ export default function SuggestTagsButton({
         size="sm"
         onClick={handleSuggest}
         disabled={disabled || isLoading}
-        className="h-7 px-2 text-xs text-muted-foreground"
+        className="ai-action h-7 px-2 text-xs"
       >
         {isLoading ? (
           <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -104,7 +104,7 @@ export default function SuggestTagsButton({
             <Badge
               key={tag}
               variant="outline"
-              className="text-xs gap-1 pr-1 border-blue-500/30 text-blue-400"
+              className="gap-1 pr-1 font-mono text-xs border-[color-mix(in_srgb,var(--grid-color,var(--brand-lime))_40%,transparent)] text-[color-mix(in_srgb,var(--grid-color,var(--brand-lime))_80%,white)]"
             >
               {tag}
               <button
@@ -118,7 +118,7 @@ export default function SuggestTagsButton({
               <button
                 type="button"
                 onClick={() => handleReject(tag)}
-                className="rounded-sm p-0.5 hover:bg-red-500/20 text-red-400"
+                className="rounded-sm p-0.5 hover:bg-red-500/20 text-red-600 dark:text-red-400"
                 title="Reject tag"
               >
                 <X className="h-3 w-3" />

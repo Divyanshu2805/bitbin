@@ -582,33 +582,52 @@ export interface FavoriteCollection {
 }
 
 /**
- * Get all favorite collections for a user (sorted by updatedAt desc)
+ * Get all favorite collections for a user (sorted by updatedAt desc), in the
+ * same shape as the collections page so they render as cards or rows
  */
 export async function getFavoriteCollections(
   userId: string
-): Promise<FavoriteCollection[]> {
+): Promise<CollectionWithTypes[]> {
   const collections = await prisma.collection.findMany({
     where: {
       userId,
       isFavorite: true,
     },
-    orderBy: { updatedAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      updatedAt: true,
+    orderBy: PINNED_FIRST,
+    include: {
       _count: {
         select: { items: true },
+      },
+      items: {
+        take: MAX_ITEMS_FOR_TYPE_SAMPLE,
+        include: {
+          item: {
+            select: {
+              itemType: {
+                select: { id: true, name: true, icon: true, color: true },
+              },
+            },
+          },
+        },
       },
     },
   });
 
-  return collections.map((c) => ({
-    id: c.id,
-    name: c.name,
-    itemCount: c._count.items,
-    updatedAt: c.updatedAt,
-  }));
+  return collections.map((collection) => {
+    const itemTypes = countItemTypes(collection.items);
+    return {
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      isFavorite: collection.isFavorite,
+      isPinned: collection.isPinned,
+      itemCount: collection._count.items,
+      itemTypes,
+      dominantColor: itemTypes.length > 0 ? itemTypes[0].color : null,
+      createdAt: collection.createdAt,
+      updatedAt: collection.updatedAt,
+    };
+  });
 }
 
 export interface SearchableCollection {

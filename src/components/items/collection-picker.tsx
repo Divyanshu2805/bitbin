@@ -52,7 +52,9 @@ export default function CollectionPicker({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // modal: the picker opens inside dialogs and the drawer, whose scroll lock
+    // would otherwise cancel wheel scrolling in the portaled list
+    <Popover modal open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

@@ -1,23 +1,40 @@
 import Navbar from "@/components/homepage/Navbar";
-import HeroSection from "@/components/homepage/HeroSection";
-import TypeMarquee from "@/components/homepage/TypeMarquee";
-import FeaturesSection from "@/components/homepage/FeaturesSection";
-import AISection from "@/components/homepage/AISection";
+import Hero from "@/components/homepage/Hero";
+import OrganizeSection from "@/components/homepage/OrganizeSection";
+import TypesGrid from "@/components/homepage/TypesGrid";
+import AgentSection from "@/components/homepage/AgentSection";
+import AiSection from "@/components/homepage/AiSection";
+import ExtensionSection from "@/components/homepage/ExtensionSection";
+import ShortcutsSection from "@/components/homepage/ShortcutsSection";
 import PricingSection from "@/components/homepage/PricingSection";
-import CTASection from "@/components/homepage/CTASection";
+import FaqSection from "@/components/homepage/FaqSection";
+import BackToTop from "@/components/homepage/BackToTop";
 import Footer from "@/components/homepage/Footer";
+import { LandingRoot } from "@/components/homepage/ui";
 
 export default function Home() {
   return (
-    <main className="overflow-x-hidden bg-background text-foreground">
+    <LandingRoot>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2"
+      >
+        Skip to content
+      </a>
       <Navbar />
-      <HeroSection />
-      <TypeMarquee />
-      <FeaturesSection />
-      <AISection />
-      <PricingSection />
-      <CTASection />
+      <main id="main">
+        <Hero />
+        <OrganizeSection />
+        <TypesGrid />
+        <AgentSection />
+        <AiSection />
+        <ExtensionSection />
+        <ShortcutsSection />
+        <PricingSection />
+        <FaqSection />
+      </main>
       <Footer />
-    </main>
+      <BackToTop />
+    </LandingRoot>
   );
 }

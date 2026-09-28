@@ -1,12 +1,13 @@
-import { Clock } from 'lucide-react';
-import ItemCard from './item-card';
+import { History } from 'lucide-react';
 import SectionHeader from './section-header';
+import { ItemsView } from '@/components/shared/list-views';
 import type { ItemWithType } from '@/lib/db/items';
 
 interface RecentItemsProps {
   items: ItemWithType[];
 }
 
+/** The latest changes in the bin, as cards or rows by the shared grid / list choice. */
 export default function RecentItems({ items }: RecentItemsProps) {
   if (items.length === 0) {
     return null;
@@ -14,12 +15,8 @@ export default function RecentItems({ items }: RecentItemsProps) {
 
   return (
     <section>
-      <SectionHeader icon={<Clock className="h-4 w-4" />} title="Recent items" />
-      <div className="grid grid-cols-1 gap-4 stagger md:grid-cols-2">
-        {items.map((item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
-      </div>
+      <SectionHeader icon={<History className="h-4 w-4" />} title="Recent" count={items.length} />
+      <ItemsView items={items} />
     </section>
   );
 }

@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Panel, { ProTag } from '@/components/shared/panel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Database, Download, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,15 +55,13 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            <CardTitle>Data</CardTitle>
-          </div>
-          <CardDescription>Export your data or import from a previous export.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <Panel
+        id="data"
+        icon={<Database />}
+        title="Data"
+        description="Export your bin, or import from a previous export."
+      >
+        <div className="space-y-5">
           <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
@@ -92,7 +89,7 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
                 Export ZIP
               </Button>
               {!isPro && (
-                <Badge variant="secondary" className="text-xs">PRO</Badge>
+                <ProTag />
               )}
             </div>
           </div>
@@ -106,8 +103,8 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
             <Upload className="mr-2 h-4 w-4" />
             Import from JSON
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </Panel>
 
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </>

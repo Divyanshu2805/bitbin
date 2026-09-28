@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, FileJson, Loader2 } from 'lucide-react';
+import { Upload, FileJson, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { previewImport, importData, type ImportPreview } from '@/actions/import';
@@ -204,10 +204,11 @@ export default function ImportDialog({ open, onOpenChange }: ImportDialogProps) 
 
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => reset()}>
+                <RotateCcw className="h-4 w-4" />
                 Choose Different File
               </Button>
               <Button onClick={handleImport} disabled={importing}>
-                {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 Import
               </Button>
             </div>

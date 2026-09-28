@@ -1,63 +1,64 @@
-import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
+import { TransitionLink } from "@/components/shared/transition-link";
+import FooterWordmark from "./FooterWordmark";
 
-const FOOTER_LINKS = {
-  Product: [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Changelog", href: "#" },
-  ],
-  Resources: [
-    { label: "Documentation", href: "#" },
-    { label: "API", href: "#" },
-    { label: "Blog", href: "#" },
-  ],
-  Company: [
-    { label: "About", href: "#" },
-    { label: "Privacy", href: "#" },
-    { label: "Terms", href: "#" },
-  ],
-};
+const COLUMNS = [
+  {
+    title: "Product",
+    links: [
+      { href: "#types", label: "Features" },
+      { href: "#ai", label: "AI" },
+      { href: "#pricing", label: "Pricing" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { href: "#extension", label: "Browser extension" },
+      { href: "#keys", label: "Shortcuts" },
+      { href: "#faq", label: "FAQ" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-surface pb-8 pt-16">
-      <div className="mx-auto max-w-[1120px] px-6">
-        <div className="mb-14 grid grid-cols-[2fr_1fr_1fr_1fr] gap-12 max-md:grid-cols-2 max-md:gap-8 max-sm:grid-cols-1">
-          <div className="max-md:col-span-2 max-sm:col-span-1">
-            <Link href="/" className="mb-4 inline-block">
-              <Logo />
-            </Link>
-            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
-              One bin for snippets, prompts, commands, notes, files and links.
-            </p>
-          </div>
-
-          {Object.entries(FOOTER_LINKS).map(([title, links]) => (
-            <div key={title} className="flex flex-col gap-2.5">
-              <h4 className="mb-1 font-mono text-xs uppercase tracking-widest text-muted-foreground/70">
-                {title}
-              </h4>
-              {links.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="w-fit text-sm text-muted-foreground transition-colors hover:text-lime"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          ))}
+    <footer>
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div>
+          <Logo />
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            One bin for snippets, prompts, commands, notes, files and links.
+          </p>
         </div>
+        {COLUMNS.map((col) => (
+          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-1">
+            <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground/70">{col.title}</p>
+            {col.links.map((link) => (
+              <a key={link.label} href={link.href} className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        ))}
+        <nav aria-label="Account" className="flex flex-col gap-1">
+          <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground/70">Account</p>
+          <TransitionLink href="/sign-in" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
+            Sign in
+          </TransitionLink>
+          <TransitionLink href="/register" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
+            Create account
+          </TransitionLink>
+        </nav>
+      </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} BitBin. All rights reserved.
-          </p>
-          <p className="font-mono text-xs text-muted-foreground/70">
-            made for developers who hoard snippets
-          </p>
+      {/* The wordmark, huge and outlined; lights up once you reach the bottom */}
+      <FooterWordmark />
+
+      <div>
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 py-5 font-mono text-xs text-muted-foreground sm:px-8">
+          <span>© {new Date().getFullYear()} BitBin</span>
+          <span>{"// made for developers who hoard snippets"}</span>
         </div>
       </div>
     </footer>

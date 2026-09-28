@@ -2,35 +2,38 @@ import { cn } from "@/lib/utils";
 
 interface LogoMarkProps {
   className?: string;
-  /** Animate the falling "bit" into the bin */
+  /** Loop the bin opening, the bit dropping in and the lid closing (on by default) */
   animated?: boolean;
 }
 
 /**
  * BitBin logo mark — a lime bin with a coral "bit" dropping into it.
- * Pure SVG so it scales cleanly and inherits no external assets.
+ * Pure SVG so it scales cleanly and inherits no external assets. Animated, the
+ * lid swings open on its left hinge, the bit falls in behind the body, and the
+ * lid closes with a bounce (`.logo-mark` in globals.css; still under reduced motion).
  */
-export function LogoMark({ className, animated = false }: LogoMarkProps) {
+export function LogoMark({ className, animated = true }: LogoMarkProps) {
   return (
     <svg
       viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
-      className={cn("h-7 w-7 shrink-0", className)}
+      data-animated={animated || undefined}
+      className={cn("logo-mark h-7 w-7 shrink-0 overflow-visible", className)}
     >
-      {/* falling bit */}
+      {/* falling bit (drawn first, so the body hides it as it drops in) */}
       <rect
         x="13.5"
         y="1.5"
         width="5"
         height="5"
         rx="1.2"
-        className={cn(animated && "animate-bit-drop")}
-        style={{ fill: "var(--brand-coral)", transformBox: "fill-box" }}
+        className="logo-bit"
+        style={{ fill: "var(--brand-coral)" }}
       />
-      {/* rim */}
-      <rect x="3.5" y="9" width="25" height="3.4" rx="1.7" style={{ fill: "var(--brand-lime)" }} />
+      {/* rim: the lid, hinged at its left end */}
+      <rect x="3.5" y="9" width="25" height="3.4" rx="1.7" className="logo-lid" style={{ fill: "var(--brand-lime)" }} />
       {/* body */}
       <path
         d="M6 14h20l-1.7 13.1a2.4 2.4 0 0 1-2.38 2.1H10.08a2.4 2.4 0 0 1-2.38-2.1L6 14Z"

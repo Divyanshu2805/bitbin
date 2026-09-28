@@ -1,11 +1,9 @@
 "use client";
 
 import { Copy, Check } from "lucide-react";
+import { SegmentedTabs, type SegmentedTab } from "@/components/shared/segmented-tabs";
 
-interface Tab {
-  id: string;
-  label: string;
-}
+type Tab = SegmentedTab;
 
 interface EditorHeaderProps {
   label: string;
@@ -40,38 +38,23 @@ export default function EditorHeader({
   const hasTabs = tabs && tabs.length > 0;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-border">
+    <div className="flex items-center justify-between px-4 py-2 bg-[var(--editor-chrome)] border-b border-border">
       {/* Left side: macOS dots or tabs */}
       <div className="flex items-center gap-2">
         {hasTabs ? (
-          <div className="flex items-center gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => onTabChange?.(tab.id)}
-                className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-[#1e1e1e] text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedTabs tabs={tabs} active={activeTab ?? tabs[0].id} onChange={(id) => onTabChange?.(id)} />
         ) : showDots ? (
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-            <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-            <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+            <div className="editor-dot w-3 h-3 rounded-full bg-[#ff5f57]" />
+            <div className="editor-dot w-3 h-3 rounded-full bg-[#febc2e]" />
+            <div className="editor-dot w-3 h-3 rounded-full bg-[#28c840]" />
           </div>
         ) : null}
       </div>
 
       {/* Right side: label, extra buttons, and copy button */}
       <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground uppercase tracking-wide">
+        <span className="editor-lang text-sm text-muted-foreground uppercase tracking-wide">
           {label}
         </span>
         {extraButtons}

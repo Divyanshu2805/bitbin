@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Panel, { ProTag } from '@/components/shared/panel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import ConfirmDeleteDialog from '@/components/shared/confirm-delete-dialog';
-import { Check, Copy, Download, KeyRound, Loader2, Plus, Puzzle, Trash2 } from 'lucide-react';
+import { Check, Copy, Download, KeyRound, Loader2, Plus, Puzzle, Trash2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { createApiToken, revokeApiToken } from '@/actions/api-tokens';
 import { formatRelativeDate } from '@/lib/utils/date';
@@ -74,26 +73,29 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Puzzle className="h-5 w-5" />
-            <CardTitle>Browser extension</CardTitle>
-            {!isPro && <Badge variant="secondary" className="text-xs">PRO</Badge>}
-          </div>
-          <CardDescription>
+      <Panel
+        id="extension"
+        icon={<Puzzle />}
+        title="Browser extension"
+        badge={!isPro ? <ProTag /> : undefined}
+        description={
+          <>
             Save selected text from any page with a shortcut. Create a token here and paste it into the
             extension&apos;s options.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+          </>
+        }
+      >
+        <div className="space-y-6">
           {!isPro ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-desc text-sm">
                 The browser extension is part of BitBin Pro.
               </p>
               <Button asChild size="sm">
-                <Link href="/upgrade">Upgrade to Pro</Link>
+                <Link href="/upgrade">
+                  <Sparkles className="h-4 w-4" />
+                  Upgrade to Pro
+                </Link>
               </Button>
             </div>
           ) : (
@@ -135,9 +137,9 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
               </div>
               <Button type="submit" disabled={creating || name.trim().length === 0}>
                 {creating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 )}
                 Create token
               </Button>
@@ -151,7 +153,7 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                 Your new token. Copy it now; it won&apos;t be shown again.
               </p>
               <div className="flex gap-2">
-                <Input readOnly value={newToken} className="font-mono text-xs" onFocus={(e) => e.target.select()} />
+                <Input readOnly value={newToken} className="font-mono text-base lg:text-xs" onFocus={(e) => e.target.select()} />
                 <Button type="button" variant="outline" size="icon" onClick={handleCopy} aria-label="Copy token">
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
@@ -181,6 +183,7 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                       size="icon"
                       onClick={() => setRevoking(token)}
                       aria-label={`Revoke ${token.name}`}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -189,8 +192,8 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
               </ul>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </Panel>
 
       <ConfirmDeleteDialog
         open={revoking !== null}

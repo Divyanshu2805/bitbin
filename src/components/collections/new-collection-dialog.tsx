@@ -110,7 +110,7 @@ export default function NewCollectionDialog({ open, onOpenChange }: NewCollectio
             />
           </div>
 
-          <DialogFormFooter isLoading={isLoading} onCancel={handleClose} submitLabel="Create" />
+          <DialogFormFooter isLoading={isLoading} onCancel={handleClose} submitLabel="Create" submitIcon={FolderPlus} />
         </form>
       </DialogContent>
     </Dialog>

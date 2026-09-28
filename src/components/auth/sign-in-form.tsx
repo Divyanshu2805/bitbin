@@ -4,21 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 import FormError from "@/components/shared/form-error";
 import GitHubAuthSection from "@/components/shared/github-auth-section";
+import { slideTo } from "@/lib/view-transition";
 
 export function SignInForm() {
   const router = useRouter();
@@ -26,6 +17,7 @@ export function SignInForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const error = searchParams.get("error");
   const registered = searchParams.get("registered");
+  const viaGitHub = searchParams.get("via") === "github";
 
   const [email, setEmail] = useState("");
   const toastShown = useRef(false);
@@ -37,6 +29,15 @@ export function SignInForm() {
       router.replace("/sign-in", { scroll: false });
     }
   }, [registered, router]);
+
+  // Back from GitHub, signed in: slide on into the dashboard. The sign-in page
+  // stays pictured until the dashboard is ready, so its loading screen never shows.
+  const slid = useRef(false);
+  useEffect(() => {
+    if (!viaGitHub || slid.current) return;
+    slid.current = true;
+    slideTo(() => router.replace("/dashboard"), "/dashboard");
+  }, [viaGitHub, router]);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -83,7 +84,7 @@ export function SignInForm() {
       }
       setIsLoading(false);
     } else {
-      router.push(callbackUrl);
+      slideTo(() => router.push(callbackUrl), callbackUrl);
     }
   }
 
@@ -113,14 +114,14 @@ export function SignInForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Sign in to BitBin</CardTitle>
-        <CardDescription>
-          Enter your credentials or use GitHub to sign in
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="w-full space-y-7">
+      <AuthHeader
+        path="sign-in"
+        title={<>Welcome <AuthAccent>back.</AuthAccent></>}
+        description="Your snippets, prompts and commands are right where you left them."
+      />
+
+      <div className="space-y-5">
         <FormError
           message={
             formError ||
@@ -143,55 +144,53 @@ export function SignInForm() {
           )}
         </FormError>
 
+        <GitHubAuthSection />
+
         <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+          <AuthField
+            id="email"
+            label="Email"
+            icon={Mail}
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+          <AuthField
+            id="password"
+            label="Password"
+            icon={Lock}
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoading}
+            aside={
               <Link
                 href="/forgot-password"
-                className="text-sm text-muted-foreground hover:text-primary"
+                className="text-xs text-muted-foreground transition-colors hover:text-lime"
               >
                 Forgot password?
               </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+            }
+          />
+          <div className="pt-1">
+            <AuthSubmit loading={isLoading} loadingText="Signing in">
+              Sign in
+            </AuthSubmit>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
-          </Button>
         </form>
+      </div>
 
-        <GitHubAuthSection />
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-primary hover:underline">
-            Register
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+      <AuthSwitch>
+        New to BitBin?{" "}
+        <Link href="/register" className="font-medium text-lime hover:underline">
+          Create an account
+        </Link>
+      </AuthSwitch>
+    </div>
   );
 }

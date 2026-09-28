@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LogoMark } from '@/components/shared/logo';
 
@@ -19,7 +19,10 @@ export default function NotFound() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild>
-            <Link href="/dashboard">Go to dashboard</Link>
+            <Link href="/dashboard">
+              <LayoutGrid className="h-4 w-4" />
+              Go to dashboard
+            </Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/">

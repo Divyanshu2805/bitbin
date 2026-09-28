@@ -14,6 +14,7 @@ import { ChevronsUpDown } from "lucide-react";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Logo } from "@/components/shared/logo";
 import SidebarNav from "./sidebar-nav";
+import SidebarUsage from "./sidebar-usage";
 import UserMenuContent from "./user-menu";
 import type { ItemTypeWithCount } from "@/lib/db/items";
 import type { SidebarCollections } from "@/lib/db/collections";
@@ -31,6 +32,7 @@ interface MobileSidebarProps {
   itemTypes: ItemTypeWithCount[];
   sidebarCollections: SidebarCollections;
   user: User | null;
+  isPro?: boolean;
 }
 
 export default function MobileSidebar({
@@ -39,16 +41,20 @@ export default function MobileSidebar({
   itemTypes,
   sidebarCollections,
   user,
+  isPro,
 }: MobileSidebarProps) {
+  const itemCount = itemTypes.reduce((sum, type) => sum + type.count, 0);
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0">
         <div className="flex h-full flex-col">
           {/* Header */}
-          <SheetHeader className="border-b border-sidebar-border px-5 py-4">
+          <SheetHeader className="flex-row items-center justify-between border-b border-sidebar-border px-5 py-4">
             <SheetTitle className="text-left">
               <Logo />
             </SheetTitle>
+            <span className="mr-8 font-mono text-[11px] text-muted-foreground">~/bin</span>
           </SheetHeader>
 
           {/* Scrollable content */}
@@ -60,24 +66,31 @@ export default function MobileSidebar({
             />
           </nav>
 
+          {!isPro && <SidebarUsage itemCount={itemCount} />}
+
           {/* User section at bottom */}
           <div className="border-t border-sidebar-border p-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-sidebar-accent">
+                <button className="flex w-full items-center gap-3 rounded-md p-1.5 text-left hover:bg-sidebar-accent">
                   <UserAvatar name={user?.name} image={user?.image} />
                   <div className="flex-1 overflow-hidden">
-                    <p className="truncate text-sm font-medium">
-                      {user?.name || "Guest"}
+                    <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                      <span className="truncate">{user?.name || "Guest"}</span>
+                      {isPro && (
+                        <span className="shrink-0 rounded-sm border border-lime/40 px-1 font-mono text-[9px] uppercase tracking-wide text-lime">
+                          pro
+                        </span>
+                      )}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p className="truncate font-mono text-[11px] text-muted-foreground">
                       {user?.email || ""}
                     </p>
                   </div>
                   <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <UserMenuContent onNavigate={onClose} />
+              <UserMenuContent isPro={isPro} onNavigate={onClose} />
             </DropdownMenu>
           </div>
         </div>
