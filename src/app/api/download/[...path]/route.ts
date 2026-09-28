@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
@@ -47,6 +47,24 @@ export async function GET(
     const fileName = filePath.split('/').pop() || 'download';
     // Remove timestamp prefix if present (format: timestamp-filename)
     const cleanFileName = fileName.replace(/^\d+-/, '');
+
+    // `?inline=1`: shown in the item panel's preview instead of downloaded. Only
+    // a PDF keeps its type; everything else goes out as plain text, and nothing
+    // may be sniffed or run scripts on our origin (an uploaded .xml or .md is
+    // user content).
+    const inline = new URL(request.url).searchParams.get('inline') === '1';
+    if (inline) {
+      const isPdf = contentType.startsWith('application/pdf');
+      return new NextResponse(data, {
+        headers: {
+          'Content-Type': isPdf ? 'application/pdf' : 'text/plain; charset=utf-8',
+          'Content-Disposition': `inline; filename="${cleanFileName}"`,
+          'X-Content-Type-Options': 'nosniff',
+          ...(isPdf ? {} : { 'Content-Security-Policy': "sandbox; default-src 'none'" }),
+          'Cache-Control': 'private, max-age=3600',
+        },
+      });
+    }
 
     return new NextResponse(data, {
       headers: {
