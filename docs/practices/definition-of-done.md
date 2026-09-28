@@ -26,4 +26,3 @@ A change is ready to merge when every line that applies is true.
 
 - [ ] Any page in `docs/` the change makes inaccurate is updated in the same change — including the [API reference](../api/README.md), [data model](../schema/README.md) and [known gaps](../known-gaps/README.md).
 - [ ] New environment variables are in `.env.example` and the [configuration](../local-development/configuration.md) page.
-- [ ] User-visible changes are noted in `CHANGELOG.md`.
