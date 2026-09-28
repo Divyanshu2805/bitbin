@@ -752,3 +752,69 @@ export async function createItem(
     updatedAt: created.updatedAt,
   };
 }
+
+export interface ItemCollectionOption {
+  id: string;
+  name: string;
+  /** Whether the item is already in this collection */
+  inCollection: boolean;
+}
+
+/**
+ * The user's collections, each marked with whether the item is in it (for the
+ * card's "Add to" menu). Null when the item isn't the user's.
+ */
+export async function getCollectionsForItem(
+  userId: string,
+  itemId: string
+): Promise<ItemCollectionOption[] | null> {
+  const item = await prisma.item.findFirst({
+    where: { id: itemId, userId },
+    select: { collections: { select: { collectionId: true } } },
+  });
+  if (!item) return null;
+
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  });
+  const current = new Set(item.collections.map((c) => c.collectionId));
+  return collections.map((c) => ({ ...c, inCollection: current.has(c.id) }));
+}
+
+export interface ItemCollectionChange {
+  collectionName: string;
+  inCollection: boolean;
+  /** False when it was already that way (added twice, removed when absent) */
+  changed: boolean;
+}
+
+/**
+ * Puts an item in a collection (`add`) or takes it out, leaving its other
+ * collections alone. Both the item and the collection must be the user's;
+ * otherwise null.
+ */
+export async function setItemInCollection(
+  userId: string,
+  itemId: string,
+  collectionId: string,
+  add: boolean
+): Promise<ItemCollectionChange | null> {
+  const [item, collection] = await Promise.all([
+    prisma.item.findFirst({ where: { id: itemId, userId }, select: { id: true } }),
+    prisma.collection.findFirst({ where: { id: collectionId, userId }, select: { name: true } }),
+  ]);
+  if (!item || !collection) return null;
+
+  if (add) {
+    const { count } = await prisma.itemCollection.createMany({
+      data: [{ itemId, collectionId }],
+      skipDuplicates: true,
+    });
+    return { collectionName: collection.name, inCollection: true, changed: count > 0 };
+  }
+
+  const { count } = await prisma.itemCollection.deleteMany({ where: { itemId, collectionId } });
+  return { collectionName: collection.name, inCollection: false, changed: count > 0 };
+}

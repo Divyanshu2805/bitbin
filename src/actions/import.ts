@@ -5,13 +5,20 @@ import { prisma } from '@/lib/prisma';
 import { VALID_ITEM_TYPES } from '@/lib/db/items';
 import { MAX_ITEMS, MAX_COLLECTIONS } from '@/lib/usage';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { MAX_DESCRIPTION_LENGTH } from '@/lib/validation';
 
 const importItemSchema = z.object({
   title: z.string().min(1),
   type: z.enum(VALID_ITEM_TYPES),
   content: z.string().nullable().optional().default(null),
   language: z.string().nullable().optional().default(null),
-  description: z.string().nullable().optional().default(null),
+  // Older exports may hold longer descriptions: cut to the cap rather than fail the import
+  description: z
+    .string()
+    .nullable()
+    .optional()
+    .default(null)
+    .transform((val) => (val ? val.slice(0, MAX_DESCRIPTION_LENGTH) : val)),
   url: z.string().nullable().optional().default(null),
   fileName: z.string().nullable().optional().default(null),
   fileSize: z.number().nullable().optional().default(null),

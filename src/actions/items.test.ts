@@ -13,6 +13,8 @@ vi.mock('@/lib/db/items', () => ({
   createItem: vi.fn(),
   toggleItemFavorite: vi.fn(),
   toggleItemPin: vi.fn(),
+  getCollectionsForItem: vi.fn(),
+  setItemInCollection: vi.fn(),
   VALID_ITEM_TYPES: ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'] as const,
 }));
 
@@ -21,9 +23,9 @@ vi.mock('@/lib/usage', () => ({
   canCreateItem: vi.fn(),
 }));
 
-import { updateItem, deleteItem, createItem, toggleItemFavorite, toggleItemPin } from './items';
+import { updateItem, deleteItem, createItem, toggleItemFavorite, toggleItemPin, getItemCollections, setItemCollection } from './items';
 import { auth } from '@/auth';
-import { updateItem as updateItemQuery, deleteItem as deleteItemQuery, createItem as createItemQuery, toggleItemFavorite as toggleItemFavoriteQuery, toggleItemPin as toggleItemPinQuery } from '@/lib/db/items';
+import { updateItem as updateItemQuery, deleteItem as deleteItemQuery, createItem as createItemQuery, toggleItemFavorite as toggleItemFavoriteQuery, toggleItemPin as toggleItemPinQuery, getCollectionsForItem, setItemInCollection } from '@/lib/db/items';
 import { canCreateItem } from '@/lib/usage';
 
 const mockAuth = auth as unknown as Mock<() => Promise<Session | null>>;
@@ -73,6 +75,26 @@ describe('updateItem server action', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe('Validation failed');
     expect(result.fieldErrors?.title).toBeDefined();
+  });
+
+  it('returns validation error for a description over the cap', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+
+    const result = await updateItem('item-123', {
+      title: 'Test',
+      description: 'a'.repeat(1001),
+      content: null,
+      url: null,
+      language: null,
+      tags: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Validation failed');
+    expect(result.fieldErrors?.description).toBeDefined();
   });
 
   it('returns validation error for invalid URL', async () => {
@@ -360,6 +382,30 @@ describe('createItem server action', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe('Validation failed');
     expect(result.fieldErrors?.title).toBeDefined();
+  });
+
+  it('returns validation error for a description over the cap', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+
+    const result = await createItem({
+      typeName: 'snippet',
+      title: 'Test',
+      description: 'a'.repeat(1001),
+      content: null,
+      url: null,
+      language: null,
+      tags: [],
+      fileUrl: null,
+      fileName: null,
+      fileSize: null,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Validation failed');
+    expect(result.fieldErrors?.description).toBeDefined();
   });
 
   it('returns validation error for invalid URL', async () => {
@@ -802,5 +848,108 @@ describe('toggleItemPin server action', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toEqual({ isPinned: false });
+  });
+});
+
+describe('getItemCollections server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await getItemCollections('item-123');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Unauthorized');
+  });
+
+  it("returns not found for someone else's item", async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    vi.mocked(getCollectionsForItem).mockResolvedValue(null);
+    const result = await getItemCollections('item-123');
+    expect(result.success).toBe(false);
+    expect(vi.mocked(getCollectionsForItem)).toHaveBeenCalledWith('user-123', 'item-123');
+  });
+
+  it('returns the collections with their in/out flag', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    const options = [{ id: 'col-1', name: 'React', inCollection: true }];
+    vi.mocked(getCollectionsForItem).mockResolvedValue(options);
+    const result = await getItemCollections('item-123');
+    expect(result).toEqual({ success: true, data: options });
+  });
+});
+
+describe('setItemCollection server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await setItemCollection('item-123', 'col-1', true);
+    expect(result.success).toBe(false);
+    expect(vi.mocked(setItemInCollection)).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty collection ID', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    const result = await setItemCollection('item-123', '  ', true);
+    expect(result.success).toBe(false);
+    expect(vi.mocked(setItemInCollection)).not.toHaveBeenCalled();
+  });
+
+  it("returns not found when the item or collection isn't the user's", async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    vi.mocked(setItemInCollection).mockResolvedValue(null);
+    const result = await setItemCollection('item-123', 'col-other', true);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Item or collection not found or access denied');
+    expect(vi.mocked(setItemInCollection)).toHaveBeenCalledWith('user-123', 'item-123', 'col-other', true);
+  });
+
+  it('adds the item and reports the change', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    vi.mocked(setItemInCollection).mockResolvedValue({ collectionName: 'React', inCollection: true, changed: true });
+    const result = await setItemCollection('item-123', 'col-1', true);
+    expect(result).toEqual({ success: true, data: { collectionName: 'React', inCollection: true, changed: true } });
+  });
+});
+
+describe('createItem language detection', () => {
+  const base = { title: 'Test', description: null, url: null, tags: [], fileUrl: null, fileName: null, fileSize: null };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: false },
+      expires: new Date().toISOString(),
+    });
+    mockCanCreateItem.mockResolvedValue(true);
+    mockCreateItemQuery.mockResolvedValue({ id: 'item-123' } as never);
+  });
+
+  it('guesses the language of a snippet saved without one', async () => {
+    await createItem({ ...base, typeName: 'snippet', content: 'def add(a, b):\n    return a + b', language: null });
+
+    expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ language: 'python' }));
+  });
+
+  it('treats an unrecognised command as shell', async () => {
+    await createItem({ ...base, typeName: 'command', content: 'terraform plan', language: null });
+
+    expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ language: 'bash' }));
+  });
+
+  it('keeps a language the user chose, including plain text', async () => {
+    await createItem({ ...base, typeName: 'snippet', content: 'def add(a, b):\n    return a + b', language: 'plaintext' });
+
+    expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ language: 'plaintext' }));
+  });
+
+  it('leaves other types without a language', async () => {
+    await createItem({ ...base, typeName: 'note', content: '```python\nprint(1)\n```', language: null });
+
+    expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ language: null }));
   });
 });

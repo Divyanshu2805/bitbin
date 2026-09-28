@@ -1,19 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getItemById, deleteItem, createItem } from './items';
+import { getItemById, deleteItem, createItem, setItemInCollection, getCollectionsForItem } from './items';
 
 // Mock Prisma client
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     item: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       delete: vi.fn(),
       create: vi.fn(),
+    },
+    itemCollection: {
+      createMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     itemType: {
       findFirst: vi.fn(),
     },
     collection: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -242,5 +248,81 @@ describe('createItem', () => {
     });
     const createArgs = vi.mocked(prisma.item.create).mock.calls[0][0];
     expect(createArgs.data.collections).toEqual({ create: [{ collectionId: 'mine' }] });
+  });
+});
+
+describe('setItemInCollection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("does nothing when the collection isn't the user's", async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue({ id: 'item-1' } as never);
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+
+    const result = await setItemInCollection('user-1', 'item-1', 'col-2', true);
+
+    expect(result).toBeNull();
+    expect(prisma.collection.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'col-2', userId: 'user-1' } }));
+    expect(prisma.itemCollection.createMany).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when the item isn't the user's", async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({ name: 'React' } as never);
+
+    expect(await setItemInCollection('user-1', 'item-9', 'col-1', true)).toBeNull();
+    expect(prisma.itemCollection.createMany).not.toHaveBeenCalled();
+  });
+
+  it('adds without duplicating, and says whether anything changed', async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue({ id: 'item-1' } as never);
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({ name: 'React' } as never);
+    vi.mocked(prisma.itemCollection.createMany).mockResolvedValue({ count: 0 });
+
+    const result = await setItemInCollection('user-1', 'item-1', 'col-1', true);
+
+    expect(prisma.itemCollection.createMany).toHaveBeenCalledWith({
+      data: [{ itemId: 'item-1', collectionId: 'col-1' }],
+      skipDuplicates: true,
+    });
+    expect(result).toEqual({ collectionName: 'React', inCollection: true, changed: false });
+  });
+
+  it('removes only that one link', async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue({ id: 'item-1' } as never);
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({ name: 'React' } as never);
+    vi.mocked(prisma.itemCollection.deleteMany).mockResolvedValue({ count: 1 });
+
+    const result = await setItemInCollection('user-1', 'item-1', 'col-1', false);
+
+    expect(prisma.itemCollection.deleteMany).toHaveBeenCalledWith({ where: { itemId: 'item-1', collectionId: 'col-1' } });
+    expect(result).toEqual({ collectionName: 'React', inCollection: false, changed: true });
+  });
+});
+
+describe('getCollectionsForItem', () => {
+  it("returns null for someone else's item", async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue(null);
+    expect(await getCollectionsForItem('user-1', 'item-9')).toBeNull();
+  });
+
+  it("marks the collections the item is in", async () => {
+    const { prisma } = await import('@/lib/prisma');
+    vi.mocked(prisma.item.findFirst).mockResolvedValue({ collections: [{ collectionId: 'col-2' }] } as never);
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([
+      { id: 'col-1', name: 'Infra' },
+      { id: 'col-2', name: 'React' },
+    ] as never);
+
+    expect(await getCollectionsForItem('user-1', 'item-1')).toEqual([
+      { id: 'col-1', name: 'Infra', inCollection: false },
+      { id: 'col-2', name: 'React', inCollection: true },
+    ]);
   });
 });

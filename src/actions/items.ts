@@ -6,15 +6,19 @@ import {
   deleteItem as deleteItemQuery,
   toggleItemFavorite as toggleItemFavoriteQuery,
   toggleItemPin as toggleItemPinQuery,
-  type ItemDetail
+  getCollectionsForItem as getCollectionsForItemQuery,
+  setItemInCollection as setItemInCollectionQuery,
+  type ItemDetail,
+  type ItemCollectionOption,
+  type ItemCollectionChange,
 } from '@/lib/db/items';
-import { parseZodErrors, safeUrlSchema, validateId } from '@/lib/validation';
+import { descriptionSchema, parseZodErrors, safeUrlSchema, validateId } from '@/lib/validation';
 import { createItemForUser, type CreateItemInput } from '@/lib/item-create';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
 
 const updateItemSchema = z.object({
   title: z.string().trim().min(1, 'Title is required'),
-  description: z.string().trim().nullable().optional().transform((val) => val || null),
+  description: descriptionSchema,
   content: z.string().nullable().optional().transform((val) => val || null),
   url: safeUrlSchema,
   language: z.string().trim().nullable().optional().transform((val) => val || null),
@@ -109,4 +113,42 @@ export async function createItem(
   if (unauthorized) return unauthorized;
 
   return createItemForUser(session.user.id, session.user.isPro ?? false, input);
+}
+
+/** The user's collections, each marked with whether the item is in it. */
+export async function getItemCollections(
+  itemId: string
+): Promise<ActionResult<ItemCollectionOption[]>> {
+  const { session, unauthorized } = await getAuthedSession();
+  if (unauthorized) return unauthorized;
+
+  const idError = validateId(itemId, 'item ID');
+  if (idError) return idError;
+
+  const collections = await getCollectionsForItemQuery(session.user.id, itemId);
+  if (!collections) return { success: false, error: 'Item not found or access denied' };
+
+  return { success: true, data: collections };
+}
+
+/**
+ * Adds an item to one collection (`add: true`, from drag and drop or the
+ * card menu) or removes it, without touching its other collections.
+ */
+export async function setItemCollection(
+  itemId: string,
+  collectionId: string,
+  add: boolean
+): Promise<ActionResult<ItemCollectionChange>> {
+  const { session, unauthorized } = await getAuthedSession();
+  if (unauthorized) return unauthorized;
+
+  const idError = validateId(itemId, 'item ID') ?? validateId(collectionId, 'collection ID');
+  if (idError) return idError;
+  if (typeof add !== 'boolean') return { success: false, error: 'Validation failed' };
+
+  const result = await setItemInCollectionQuery(session.user.id, itemId, collectionId, add);
+  if (!result) return { success: false, error: 'Item or collection not found or access denied' };
+
+  return { success: true, data: result };
 }

@@ -51,3 +51,18 @@ export function validateId(
   }
   return null;
 }
+
+/** The longest an item description may be; longer text belongs in the content */
+export const MAX_DESCRIPTION_LENGTH = 1000;
+
+/**
+ * An item's description: trimmed, at most MAX_DESCRIPTION_LENGTH characters,
+ * blank → null. Shared by the create and update actions and `POST /api/v1/items`.
+ */
+export const descriptionSchema = z
+  .string()
+  .trim()
+  .max(MAX_DESCRIPTION_LENGTH, `Description must be ${MAX_DESCRIPTION_LENGTH} characters or fewer`)
+  .nullable()
+  .optional()
+  .transform((val) => val || null);

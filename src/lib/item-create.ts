@@ -1,8 +1,11 @@
 import { z } from 'zod';
 import { createItem as createItemQuery, VALID_ITEM_TYPES, type ItemDetail } from '@/lib/db/items';
-import { parseZodErrors, safeUrlSchema } from '@/lib/validation';
+import { descriptionSchema, parseZodErrors, safeUrlSchema } from '@/lib/validation';
 import { canCreateItem } from '@/lib/usage';
 import type { ActionResult } from '@/lib/action-utils';
+import { detectLanguage } from '@/lib/detect-language';
+
+const LANGUAGE_TYPES: string[] = ['snippet', 'command'];
 
 /**
  * Item creation shared by the `createItem` server action and
@@ -14,7 +17,7 @@ import type { ActionResult } from '@/lib/action-utils';
 export const createItemSchema = z.object({
   typeName: z.enum(VALID_ITEM_TYPES, { message: 'Invalid item type' }),
   title: z.string().trim().min(1, 'Title is required'),
-  description: z.string().trim().nullable().optional().transform((val) => val || null),
+  description: descriptionSchema,
   content: z.string().nullable().optional().transform((val) => val || null),
   url: safeUrlSchema,
   language: z.string().trim().nullable().optional().transform((val) => val || null),
@@ -56,7 +59,14 @@ export async function createItemForUser(
     return { success: false, error: 'URL is required for links', fieldErrors: { url: ['URL is required'] } };
   }
 
-  const created = await createItemQuery(userId, parsed.data);
+  // Snippets and commands saved without a language get one guessed from the
+  // content. An explicit choice, including 'plaintext', is kept.
+  const data = parsed.data;
+  if (!data.language && data.content && LANGUAGE_TYPES.includes(data.typeName)) {
+    data.language = detectLanguage(data.content, data.typeName);
+  }
+
+  const created = await createItemQuery(userId, data);
 
   if (!created) {
     return { success: false, error: 'Failed to create item' };
