@@ -23,11 +23,10 @@ How an account is created and verified, and how both sign-in methods end in the 
 
 ## Signing in with email and password
 
-1. The sign-in form first calls `POST /api/auth/check-login-limit` with the email. The `login` limit is 5 attempts / 15 minutes per IP + email; over it, the form shows the `429` message and stops.
-2. It then calls `signIn('credentials', { redirect: false })`.
-3. `authorize()` in `src/auth.ts` loads the user by email, compares the password with bcrypt, and throws `EmailNotVerified` for an unverified account (unless verification is skipped). A missing user and a wrong password both return `null`, so the form can't tell them apart.
+1. The sign-in form calls `signIn('credentials', { redirect: false })`.
+2. `authorize()` in `src/auth.ts` first counts the attempt against the `login` limit (5 attempts / 15 minutes per IP + email; over it, it throws a `rate_limited` error and the form shows a try-again message), then loads the user by email, compares the password with bcrypt, and throws `EmailNotVerified` for an unverified account (unless verification is skipped). A missing user and a wrong password both return `null`, so the form can't tell them apart.
 
-The rate-limit check is a separate request the form makes voluntarily — `authorize()` doesn't check it itself. See [known gaps](../../known-gaps/not-yet-built.md#security).
+The limit is enforced in `authorize()`, so it applies to direct posts to the NextAuth callback too. It still fails open when Upstash is unset or down ([ADR 0005](../decisions/0005-rate-limits-fail-open.md)).
 
 ## GitHub
 

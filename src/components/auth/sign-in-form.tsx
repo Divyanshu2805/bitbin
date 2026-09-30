@@ -49,25 +49,6 @@ export function SignInForm() {
     setIsLoading(true);
     setFormError(null);
 
-    // Check rate limit before attempting login
-    try {
-      const rateLimitResponse = await fetch("/api/auth/check-login-limit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (rateLimitResponse.status === 429) {
-        const data = await rateLimitResponse.json();
-        setFormError(data.error || "Too many login attempts. Please try again later.");
-        setNeedsVerification(false);
-        setIsLoading(false);
-        return;
-      }
-    } catch {
-      // Continue with login if rate limit check fails (fail open)
-    }
-
     const result = await signIn("credentials", {
       email,
       password,
@@ -75,7 +56,10 @@ export function SignInForm() {
     });
 
     if (result?.error) {
-      if (result.code === "credentials" && result.error.includes("EmailNotVerified")) {
+      if (result.code === "rate_limited") {
+        setFormError("Too many sign-in attempts. Please try again in a few minutes.");
+        setNeedsVerification(false);
+      } else if (result.code === "credentials" && result.error.includes("EmailNotVerified")) {
         setFormError("Please verify your email before signing in.");
         setNeedsVerification(true);
       } else {

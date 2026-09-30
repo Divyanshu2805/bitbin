@@ -953,3 +953,50 @@ describe('createItem language detection', () => {
     expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ language: null }));
   });
 });
+
+describe('createItem file ownership', () => {
+  const base = { title: 'Test', description: null, url: null, content: null, language: null, tags: [], fileName: 'a.png', fileSize: 10 };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv('R2_PUBLIC_URL', 'https://pub-test.r2.dev');
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-123', isPro: true },
+      expires: new Date().toISOString(),
+    });
+    mockCanCreateItem.mockResolvedValue(true);
+    mockCreateItemQuery.mockResolvedValue({ id: 'item-123' } as never);
+  });
+
+  it("rejects a file URL in another user's folder", async () => {
+    const result = await createItem({ ...base, typeName: 'image', fileUrl: 'https://pub-test.r2.dev/other-user/1-a.png' });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid file reference');
+    expect(mockCreateItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('rejects a file URL on another host', async () => {
+    const result = await createItem({ ...base, typeName: 'file', fileUrl: 'http://169.254.169.254/user-123/x' });
+
+    expect(result.success).toBe(false);
+    expect(mockCreateItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('accepts a file in the caller folder', async () => {
+    const fileUrl = 'https://pub-test.r2.dev/user-123/1-a.png';
+    const result = await createItem({ ...base, typeName: 'image', fileUrl });
+
+    expect(result.success).toBe(true);
+    expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', expect.objectContaining({ fileUrl }));
+  });
+
+  it('drops file fields from types that have no file', async () => {
+    await createItem({ ...base, typeName: 'note', fileUrl: 'https://pub-test.r2.dev/other-user/1-a.png' });
+
+    expect(mockCreateItemQuery).toHaveBeenCalledWith(
+      'user-123',
+      expect.objectContaining({ fileUrl: null, fileName: null, fileSize: null })
+    );
+  });
+});

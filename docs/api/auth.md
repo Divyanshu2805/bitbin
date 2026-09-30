@@ -28,10 +28,6 @@ Route handlers under `src/app/api/auth/`. Sign-in itself goes through NextAuth (
 
 `{ "email": "…" }`. `400` without an email; `429` over the `resendVerification` limit (3 / 15 min per IP + email). Otherwise `200` — with the same message whether or not the account exists, or "Email is already verified" for a verified one.
 
-## `POST /api/auth/check-login-limit`
-
-`{ "email": "…" }`. Counts one attempt against the `login` limit (5 / 15 min per IP + email). `200` if allowed, `429` with `Retry-After` if not, `400` without an email. The sign-in form calls it before `signIn('credentials')`.
-
 ## `POST /api/auth/forgot-password`
 
 `{ "email": "…" }`. Always `200` with "If an account exists with this email, a password reset link has been sent." — it never reveals whether an account exists. `400` without an email, `429` over the `forgotPassword` limit (3 / hour per IP).
@@ -63,7 +59,7 @@ Not rate limited.
 
 ## `DELETE /api/auth/delete-account`
 
-Session required. Deletes the user; items, collections, accounts and sessions cascade. `200` with `{ success: true }`, `401` without a session, `500` on failure. R2 files and an active Stripe subscription are left behind — see [known gaps](../known-gaps/not-yet-built.md).
+Session required. `{ "password": "…" }` in the body — required, and checked with bcrypt, for accounts that have a password (GitHub-only accounts send nothing). Cancels the Stripe subscription first (the account is kept if that fails), deletes the user's `{userId}/` files from R2 (best effort, logged on failure), then deletes the user; items, collections, accounts and sessions cascade. `200` with `{ success: true }`, `400` for a wrong or missing password, `401` without a session, `404` if the account is gone, `500` on failure.
 
 ## Related
 

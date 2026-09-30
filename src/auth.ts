@@ -1,9 +1,15 @@
-import NextAuth from 'next-auth'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import GitHub from 'next-auth/providers/github'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/rate-limit'
+
+/** Too many sign-in attempts; the form reads `code === 'rate_limited'`. */
+class RateLimitedSignin extends CredentialsSignin {
+  code = 'rate_limited'
+}
 
 /**
  * Full NextAuth configuration with Prisma adapter.
@@ -35,6 +41,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const email = credentials.email as string
         const password = credentials.password as string
+
+        // Enforced here, not in a pre-check the client may skip (5 per 15 min, per IP + email)
+        const rateLimit = await checkRateLimit('login', email.toLowerCase())
+        if (!rateLimit.success) {
+          throw new RateLimitedSignin()
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },

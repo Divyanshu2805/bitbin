@@ -38,7 +38,7 @@ Actions never throw to the client. They return:
 
 | Name | Limit | Keyed by | Applied in |
 |---|---|---|---|
-| `login` | 5 / 15 min | IP + email | `POST /api/auth/check-login-limit` |
+| `login` | 5 / 15 min | IP + email | `authorize()` in `src/auth.ts` (every credentials sign-in; lowercased email) |
 | `register` | 3 / hour | IP | `POST /api/auth/register` |
 | `forgotPassword` | 3 / hour | IP | `POST /api/auth/forgot-password` |
 | `resetPassword` | 5 / 15 min | IP | `POST /api/auth/reset-password` |
@@ -57,7 +57,7 @@ Route handlers answer `429` through `rateLimitResponse(retryAfter)`:
 
 with `Retry-After` in seconds. AI actions return "Too many AI requests. Please try again in …" as their `error`.
 
-Not rate limited: the NextAuth endpoints themselves (credentials sign-in relies on the form calling `check-login-limit` first), change-password, export, checkout and portal, and every server action other than the AI ones.
+Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`), change-password, export, checkout and portal, and every server action other than the AI ones.
 
 ### Failure mode
 

@@ -2,6 +2,8 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 
 // File constraints from spec
@@ -134,6 +136,58 @@ export async function uploadToR2(
 
   const fileUrl = `${publicUrl}/${key}`;
   return { fileUrl, key };
+}
+
+const DOT_SEGMENT = /(^|[\\/])\.\.?($|[\\/])/;
+
+/**
+ * Whether `fileUrl` points at an object inside the user's own `{userId}/`
+ * folder of our bucket. Client-supplied file URLs must pass this before they
+ * are stored, fetched or deleted: anything else could be another user's file
+ * or an arbitrary host.
+ */
+export function isOwnedFileUrl(userId: string, fileUrl: string | null | undefined): boolean {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (!publicUrl || !userId || !fileUrl) return false;
+
+  const prefix = `${publicUrl.replace(/\/+$/, '')}/${userId}/`;
+  if (!fileUrl.startsWith(prefix)) return false;
+
+  // The key must be a plain path under the prefix: no dot segments, encoded or not
+  const key = fileUrl.slice(prefix.length);
+  if (!key || DOT_SEGMENT.test(key)) return false;
+  try {
+    return !DOT_SEGMENT.test(decodeURIComponent(key));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Delete every object under a user's `{userId}/` folder (account deletion).
+ */
+export async function deleteUserFilesFromR2(userId: string): Promise<void> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+  if (!bucketName) throw new Error('R2 bucket configuration missing');
+
+  let continuationToken: string | undefined;
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: `${userId}/`,
+        ContinuationToken: continuationToken,
+      })
+    );
+    const objects = (listed.Contents ?? []).flatMap((o) => (o.Key ? [{ Key: o.Key }] : []));
+    if (objects.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({ Bucket: bucketName, Delete: { Objects: objects, Quiet: true } })
+      );
+    }
+    continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while (continuationToken);
 }
 
 /**

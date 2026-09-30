@@ -6,6 +6,7 @@ import { VALID_ITEM_TYPES } from '@/lib/db/items';
 import { MAX_ITEMS, MAX_COLLECTIONS } from '@/lib/usage';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
 import { MAX_DESCRIPTION_LENGTH } from '@/lib/validation';
+import { isOwnedFileUrl } from '@/lib/r2';
 
 const importItemSchema = z.object({
   title: z.string().min(1),
@@ -292,7 +293,7 @@ export async function importData(
           contentType,
           isFavorite: item.isFavorite,
           isPinned: item.isPinned,
-          fileUrl: isFileType ? item.fileUrl : null,
+          fileUrl: isFileType && isOwnedFileUrl(userId, item.fileUrl) ? item.fileUrl : null,
           fileName: isFileType ? item.fileName : null,
           fileSize: isFileType ? item.fileSize : null,
           tags: {

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { validateFile, formatFileSize, FILE_CONSTRAINTS } from './r2';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { validateFile, formatFileSize, isOwnedFileUrl, FILE_CONSTRAINTS } from './r2';
 
 describe('validateFile', () => {
   describe('image validation', () => {
@@ -214,5 +214,35 @@ describe('FILE_CONSTRAINTS', () => {
     expect(FILE_CONSTRAINTS.file.extensions).toContain('.json');
     expect(FILE_CONSTRAINTS.file.mimeTypes).toContain('application/pdf');
     expect(FILE_CONSTRAINTS.file.mimeTypes).toContain('text/plain');
+  });
+});
+
+describe('isOwnedFileUrl', () => {
+  beforeEach(() => {
+    vi.stubEnv('R2_PUBLIC_URL', 'https://pub-test.r2.dev');
+  });
+
+  it("accepts a file in the user's folder", () => {
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/123-a.png')).toBe(true);
+  });
+
+  it("rejects another user's folder, other hosts and look-alike ids", () => {
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u2/123-a.png')).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u10/123-a.png')).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://evil.example/u1/123-a.png')).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev.evil.example/u1/a.png')).toBe(false);
+  });
+
+  it('rejects dot segments, encoded or not', () => {
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/../u2/a.png')).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/%2e%2e/u2/a.png')).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/..%2Fu2/a.png')).toBe(false);
+  });
+
+  it('rejects empty input and a missing public URL', () => {
+    expect(isOwnedFileUrl('u1', null)).toBe(false);
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/')).toBe(false);
+    vi.stubEnv('R2_PUBLIC_URL', '');
+    expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/a.png')).toBe(false);
   });
 });

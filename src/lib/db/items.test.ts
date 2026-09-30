@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getItemById, deleteItem, createItem, setItemInCollection, getCollectionsForItem } from './items';
 
 // Mock Prisma client
+const mockDeleteFromR2 = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/r2', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/r2')>()),
+  deleteFromR2: mockDeleteFromR2,
+}));
+
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     item: {
@@ -210,6 +216,20 @@ describe('deleteItem', () => {
 
     expect(result).toBe(true);
     expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+  });
+
+  it('only deletes the R2 object when it is in the owner folder', async () => {
+    vi.stubEnv('R2_PUBLIC_URL', 'https://pub-test.r2.dev');
+    mockDelete.mockResolvedValue({} as never);
+
+    mockFindUnique.mockResolvedValue({ userId: 'user-1', fileUrl: 'https://pub-test.r2.dev/user-2/1-a.png' } as never);
+    await deleteItem('user-1', 'item-1');
+    expect(mockDeleteFromR2).not.toHaveBeenCalled();
+    expect(mockDelete).toHaveBeenCalled();
+
+    mockFindUnique.mockResolvedValue({ userId: 'user-1', fileUrl: 'https://pub-test.r2.dev/user-1/1-a.png' } as never);
+    await deleteItem('user-1', 'item-1');
+    expect(mockDeleteFromR2).toHaveBeenCalledWith('https://pub-test.r2.dev/user-1/1-a.png');
   });
 });
 

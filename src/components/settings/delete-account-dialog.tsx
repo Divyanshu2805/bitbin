@@ -17,18 +17,22 @@ import { Loader2, AlertTriangle, X, Trash2 } from "lucide-react";
 interface DeleteAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  hasPassword: boolean;
 }
 
 export default function DeleteAccountDialog({
   open,
   onOpenChange,
+  hasPassword,
 }: DeleteAccountDialogProps) {
   const [confirmation, setConfirmation] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const resetForm = () => {
     setConfirmation("");
+    setPassword("");
     setError("");
   };
 
@@ -49,6 +53,8 @@ export default function DeleteAccountDialog({
     try {
       const response = await fetch("/api/auth/delete-account", {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
       });
 
       if (!response.ok) {
@@ -91,7 +97,9 @@ export default function DeleteAccountDialog({
             <ul className="mt-2 list-inside list-disc text-sm text-muted-foreground">
               <li>All your items (snippets, prompts, commands, etc.)</li>
               <li>All your collections</li>
+              <li>Your uploaded files and images</li>
               <li>Your profile and account data</li>
+              <li>Any active Pro subscription (cancelled immediately)</li>
             </ul>
           </div>
 
@@ -108,6 +116,20 @@ export default function DeleteAccountDialog({
               disabled={isLoading}
             />
           </div>
+
+          {hasPassword && (
+            <div className="space-y-2">
+              <Label htmlFor="delete-password">Your password</Label>
+              <Input
+                id="delete-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
           {error && (
             <p className="text-sm text-destructive">{error}</p>
@@ -126,7 +148,7 @@ export default function DeleteAccountDialog({
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={isLoading || confirmation !== "DELETE"}
+              disabled={isLoading || confirmation !== "DELETE" || (hasPassword && !password)}
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Delete Account

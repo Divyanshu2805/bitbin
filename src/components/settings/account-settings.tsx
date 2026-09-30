@@ -71,6 +71,7 @@ export default function AccountSettings({ hasPassword }: AccountSettingsProps) {
       <DeleteAccountDialog
         open={showDeleteAccount}
         onOpenChange={setShowDeleteAccount}
+        hasPassword={hasPassword}
       />
     </>
   );

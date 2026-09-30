@@ -501,11 +501,15 @@ export async function deleteItem(
     return false;
   }
 
-  // Delete file from R2 if present
+  // Delete file from R2 if present, and only ever from the owner's own folder
   if (existing.fileUrl) {
     try {
-      const { deleteFromR2 } = await import('@/lib/r2');
-      await deleteFromR2(existing.fileUrl);
+      const { deleteFromR2, isOwnedFileUrl } = await import('@/lib/r2');
+      if (isOwnedFileUrl(userId, existing.fileUrl)) {
+        await deleteFromR2(existing.fileUrl);
+      } else {
+        console.warn('Skipped R2 delete: file URL is outside the owner folder', { itemId });
+      }
     } catch (error) {
       // Log but don't fail - the DB record should still be deleted
       console.error('Failed to delete file from R2:', error);

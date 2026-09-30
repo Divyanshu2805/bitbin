@@ -13,11 +13,10 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `POST` | `/api/auth/register` | Public | Create an account | [Auth](auth.md) |
 | `GET` | `/api/auth/verify` | Public | Verify an email with a token | [Auth](auth.md) |
 | `POST` | `/api/auth/resend-verification` | Public | Send a fresh verification link | [Auth](auth.md) |
-| `POST` | `/api/auth/check-login-limit` | Public | Check the sign-in rate limit before calling NextAuth | [Auth](auth.md) |
 | `POST` | `/api/auth/forgot-password` | Public | Email a password-reset link | [Auth](auth.md) |
 | `POST` | `/api/auth/reset-password` | Public | Set a new password with a reset token | [Auth](auth.md) |
 | `POST` | `/api/auth/change-password` | Session | Change the password | [Auth](auth.md) |
-| `DELETE` | `/api/auth/delete-account` | Session | Delete the account | [Auth](auth.md) |
+| `DELETE` | `/api/auth/delete-account` | Session | Delete the account (password required for password accounts) | [Auth](auth.md) |
 | `GET` | `/api/items/[id]` | Session | Full item for the drawer | [Items and files](items-and-files.md) |
 | `POST` | `/api/upload` | Session, Pro | Upload a file or image to R2 | [Items and files](items-and-files.md) |
 | `GET` | `/api/download/[...path]` | Session, owner | Download a file with its name | [Items and files](items-and-files.md) |

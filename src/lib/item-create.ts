@@ -4,6 +4,7 @@ import { descriptionSchema, parseZodErrors, safeUrlSchema } from '@/lib/validati
 import { canCreateItem } from '@/lib/usage';
 import type { ActionResult } from '@/lib/action-utils';
 import { detectLanguage } from '@/lib/detect-language';
+import { isOwnedFileUrl } from '@/lib/r2';
 
 const LANGUAGE_TYPES: string[] = ['snippet', 'command'];
 
@@ -46,6 +47,16 @@ export async function createItemForUser(
   // Pro type check: file/image require Pro
   if ((parsed.data.typeName === 'file' || parsed.data.typeName === 'image') && !isPro) {
     return { success: false, error: 'File and image uploads require a Pro subscription' };
+  }
+
+  // Only files and images carry a file, and it must be one this user uploaded
+  const isFileType = parsed.data.typeName === 'file' || parsed.data.typeName === 'image';
+  if (!isFileType) {
+    parsed.data.fileUrl = null;
+    parsed.data.fileName = null;
+    parsed.data.fileSize = null;
+  } else if (parsed.data.fileUrl && !isOwnedFileUrl(userId, parsed.data.fileUrl)) {
+    return { success: false, error: 'Invalid file reference', fieldErrors: { fileUrl: ['Invalid file URL'] } };
   }
 
   // Usage limit check
