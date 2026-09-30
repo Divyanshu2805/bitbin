@@ -7,7 +7,7 @@ Press <kbd>⌘</kbd>+<kbd>K</kbd> (macOS) or <kbd>Ctrl</kbd>+<kbd>K</kbd> (Windo
 ```
 SearchProvider (mounted by the dashboard layout)
    └── getSearchData()  — server action
-          ├── getSearchableItems(userId)        id, title, type, icon, colour, preview
+          ├── getSearchableItems(userId)        id, title, type, icon, colour, preview, tags
           └── getSearchableCollections(userId)  id, name, itemCount
    └── keeps the result in context
 

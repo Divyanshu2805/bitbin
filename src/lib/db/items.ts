@@ -543,6 +543,7 @@ export interface SearchableItem {
   typeIcon: string;
   typeColor: string;
   contentPreview: string | null;
+  tags: string[];
 }
 
 /**
@@ -560,6 +561,7 @@ export async function getSearchableItems(
       content: true,
       description: true,
       url: true,
+      tags: { select: { name: true } },
       itemType: {
         select: {
           name: true,
@@ -584,6 +586,7 @@ export async function getSearchableItems(
       typeIcon: item.itemType.icon,
       typeColor: item.itemType.color,
       contentPreview,
+      tags: item.tags.map((tag) => tag.name),
     };
   });
 }

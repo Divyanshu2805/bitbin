@@ -59,6 +59,7 @@ describe('getSearchData server action', () => {
         typeIcon: 'Code',
         typeColor: '#3b82f6',
         contentPreview: 'function test() {}',
+        tags: ['react', 'hooks'],
       },
       {
         id: 'item-2',
@@ -67,6 +68,7 @@ describe('getSearchData server action', () => {
         typeIcon: 'StickyNote',
         typeColor: '#fde047',
         contentPreview: null,
+        tags: [],
       },
     ];
 

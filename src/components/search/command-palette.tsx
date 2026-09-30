@@ -52,13 +52,13 @@ export default function CommandPalette() {
       open={isOpen}
       onOpenChange={(open) => !open && closeSearch()}
       title="Search"
-      description="Search items and collections"
+      description="Search items, tags and collections"
       showCloseButton={false}
       filter={strictFilter}
       className="gap-0 border-border bg-popover shadow-[var(--shadow-lift)] sm:max-w-xl [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-normal [&_[cmdk-item][data-selected=true]]:bg-lime/[0.07] [&_[cmdk-item]]:rounded-md"
     >
       <CommandInput
-        placeholder="search items and collections"
+        placeholder="search items, #tags and collections"
         className="font-mono text-base lg:text-[13px]"
         icon={
           <span aria-hidden className="font-mono text-sm font-semibold text-lime">
@@ -84,7 +84,7 @@ export default function CommandPalette() {
                 {searchData.items.map((item) => (
                   <CommandItem
                     key={item.id}
-                    value={`item-${item.title}-${item.contentPreview || ""}`}
+                    value={`item-${item.title}-${item.contentPreview || ""} ${item.tags.map((tag) => `#${tag}`).join(" ")}`}
                     onSelect={() => handleItemSelect(item.id)}
                     className="group cursor-pointer gap-3"
                   >
@@ -98,6 +98,11 @@ export default function CommandPalette() {
                       <span className="truncate text-sm">{item.title}</span>
                       {item.contentPreview && (
                         <span className="truncate font-mono text-[11px] text-muted-foreground">{item.contentPreview}</span>
+                      )}
+                      {item.tags.length > 0 && (
+                        <span className="truncate font-mono text-[11px] text-cyan">
+                          {item.tags.map((tag) => `#${tag}`).join(" ")}
+                        </span>
                       )}
                     </span>
                     <span className="ml-auto shrink-0 font-mono text-[11px]" style={{ color: readableColor(item.typeColor) }}>
