@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { getPasswordResetToken, deletePasswordResetToken } from '@/lib/tokens'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { MAX_PASSWORD_LENGTH } from '@/lib/validation'
 
 export async function POST(request: Request) {
   try {
@@ -15,14 +16,14 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { token, password, confirmPassword } = body
 
-    if (!token) {
+    if (typeof token !== 'string' || !token) {
       return NextResponse.json(
         { error: 'Reset token is required' },
         { status: 400 }
       )
     }
 
-    if (!password || !confirmPassword) {
+    if (typeof password !== 'string' || typeof confirmPassword !== 'string' || !password || !confirmPassword) {
       return NextResponse.json(
         { error: 'Password and confirm password are required' },
         { status: 400 }
@@ -39,6 +40,13 @@ export async function POST(request: Request) {
     if (password.length < 8) {
       return NextResponse.json(
         { error: 'Password must be at least 8 characters' },
+        { status: 400 }
+      )
+    }
+
+    if (password.length > MAX_PASSWORD_LENGTH) {
+      return NextResponse.json(
+        { error: `Password must be at most ${MAX_PASSWORD_LENGTH} characters` },
         { status: 400 }
       )
     }
@@ -80,7 +88,8 @@ export async function POST(request: Request) {
     // Update user's password
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword },
+      // Bumping sessionVersion ends every session issued before the reset
+      data: { password: hashedPassword, sessionVersion: { increment: 1 } },
     })
 
     // Delete the used token

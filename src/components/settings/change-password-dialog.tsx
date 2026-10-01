@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -71,8 +72,10 @@ export default function ChangePasswordDialog({
         return;
       }
 
-      toast.success("Password changed successfully");
+      // The server ended every session, this one included
+      toast.success("Password changed. Please sign in again.");
       handleClose();
+      await signOut({ callbackUrl: "/sign-in" });
     } catch {
       setError("An error occurred. Please try again.");
     } finally {

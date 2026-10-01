@@ -61,6 +61,11 @@ export const rateLimitConfigs = {
     limiter: Ratelimit.slidingWindow(3, '15 m'),
     prefix: 'ratelimit:resend-verification',
   },
+  // Change password: 5 attempts per 15 minutes (keyed by IP + user ID)
+  changePassword: {
+    limiter: Ratelimit.slidingWindow(5, '15 m'),
+    prefix: 'ratelimit:change-password',
+  },
   // File upload: 10 uploads per hour (keyed by user ID)
   upload: {
     limiter: Ratelimit.slidingWindow(10, '1 h'),
@@ -79,6 +84,20 @@ export const rateLimitConfigs = {
 } as const
 
 export type RateLimitType = keyof typeof rateLimitConfigs
+
+/**
+ * Limits that guard credentials. If Redis errors out they refuse the request
+ * instead of waving it through: an outage must not switch off brute-force
+ * protection. (Unset config still fails open, so local development works.)
+ */
+const FAIL_CLOSED: ReadonlySet<RateLimitType> = new Set([
+  'login',
+  'register',
+  'forgotPassword',
+  'resetPassword',
+  'resendVerification',
+  'changePassword',
+])
 
 interface RateLimitResult {
   success: boolean
@@ -151,8 +170,12 @@ export async function checkRateLimit(
       retryAfter: result.success ? 0 : Math.ceil((result.reset - Date.now()) / 1000),
     }
   } catch (error) {
-    // Fail open on errors
     console.error('Rate limit check failed:', error)
+    if (FAIL_CLOSED.has(type)) {
+      // Ask the caller to retry in a minute
+      return { success: false, remaining: 0, reset: Date.now() + 60_000, retryAfter: 60 }
+    }
+    // Fail open for everything else (AI, uploads, token API)
     return {
       success: true,
       remaining: -1,

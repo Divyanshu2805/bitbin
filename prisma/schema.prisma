@@ -23,6 +23,7 @@ model User {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   editorPreferences    Json?     // User's Monaco editor preferences
+  sessionVersion       Int       @default(0) // Bumped on password change/reset; sessions issued earlier stop working
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

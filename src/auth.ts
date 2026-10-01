@@ -104,13 +104,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) {
         token.id = user.id
       }
-      // Sync isPro from database on every token refresh
       if (token.id) {
+        // One read per evaluation: the plan stays live (isPro) and the session
+        // can be revoked (sessionVersion)
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { isPro: true },
+          select: { isPro: true, sessionVersion: true },
         })
-        token.isPro = dbUser?.isPro ?? false
+        // Account deleted: end the session instead of serving a ghost user
+        if (!dbUser) return null
+        if (user?.id) {
+          token.sessionVersion = dbUser.sessionVersion
+        } else if (((token.sessionVersion as number | undefined) ?? 0) !== dbUser.sessionVersion) {
+          // Password changed or reset since this token was issued
+          return null
+        }
+        token.isPro = dbUser.isPro
       }
       return token
     },
