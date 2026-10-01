@@ -31,8 +31,16 @@ export async function POST(request: Request) {
     // Find or create Stripe customer
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { stripeCustomerId: true, email: true },
+      select: { stripeCustomerId: true, email: true, isPro: true },
     })
+
+    // A second subscription would bill them twice; point them at the portal instead
+    if (user?.isPro) {
+      return NextResponse.json(
+        { error: 'You already have a Pro subscription. Manage it from Settings.' },
+        { status: 409 }
+      )
+    }
 
     let customerId = user?.stripeCustomerId
 

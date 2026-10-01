@@ -3,6 +3,38 @@ import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import type Stripe from 'stripe'
 
+type CustomerRef = string | { id: string } | null | undefined
+
+function customerIdOf(customer: CustomerRef): string | null {
+  if (!customer) return null
+  return typeof customer === 'string' ? customer : customer.id
+}
+
+const ACTIVE_STATUSES: ReadonlySet<string> = new Set(['active', 'trialing'])
+
+/**
+ * Sets a customer's plan from their subscriptions as Stripe has them right
+ * now, not from the event that woke us. Events can arrive twice or out of
+ * order (a late invoice.paid after a cancellation); reading the current state
+ * makes every handler idempotent and order-independent.
+ */
+async function syncPlanFromStripe(customerId: string) {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customerId,
+    status: 'all',
+    limit: 20,
+  })
+  const active = subscriptions.data.find((sub) => ACTIVE_STATUSES.has(sub.status))
+
+  await prisma.user.updateMany({
+    where: { stripeCustomerId: customerId },
+    data: {
+      isPro: Boolean(active),
+      stripeSubscriptionId: active?.id ?? null,
+    },
+  })
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // The Stripe account may be shared with other apps. Their checkouts reach
   // this endpoint too; skip them instead of failing, or Stripe keeps retrying
@@ -17,83 +49,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
-  const customerId =
-    typeof session.customer === 'string'
-      ? session.customer
-      : session.customer?.id
-  const subscriptionId =
-    typeof session.subscription === 'string'
-      ? session.subscription
-      : session.subscription?.id
+  const customerId = customerIdOf(session.customer)
+  if (!customerId) {
+    console.warn('checkout.session.completed: missing customer')
+    return
+  }
 
-  await prisma.user.update({
+  // updateMany: the user may have deleted their account between paying and
+  // this event, and a thrown error would make Stripe retry for days
+  await prisma.user.updateMany({
     where: { id: userId },
-    data: {
-      isPro: true,
-      stripeCustomerId: customerId ?? undefined,
-      stripeSubscriptionId: subscriptionId ?? undefined,
-    },
+    data: { stripeCustomerId: customerId },
   })
+  await syncPlanFromStripe(customerId)
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  const customerId =
-    typeof invoice.customer === 'string'
-      ? invoice.customer
-      : invoice.customer?.id
-
-  if (!customerId) return
-
-  await prisma.user.updateMany({
-    where: { stripeCustomerId: customerId },
-    data: { isPro: true },
-  })
+  const customerId = customerIdOf(invoice.customer)
+  if (customerId) await syncPlanFromStripe(customerId)
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const customerId =
-    typeof invoice.customer === 'string'
-      ? invoice.customer
-      : invoice.customer?.id
-
   console.warn(
-    `invoice.payment_failed for customer ${customerId ?? 'unknown'}`
+    `invoice.payment_failed for customer ${customerIdOf(invoice.customer) ?? 'unknown'}`
   )
 }
 
-async function handleSubscriptionUpdated(
-  subscription: Stripe.Subscription
-) {
-  const customerId =
-    typeof subscription.customer === 'string'
-      ? subscription.customer
-      : subscription.customer?.id
-
-  if (!customerId) return
-
-  const isActive =
-    subscription.status === 'active' || subscription.status === 'trialing'
-
-  await prisma.user.updateMany({
-    where: { stripeCustomerId: customerId },
-    data: { isPro: isActive },
-  })
-}
-
-async function handleSubscriptionDeleted(
-  subscription: Stripe.Subscription
-) {
-  const customerId =
-    typeof subscription.customer === 'string'
-      ? subscription.customer
-      : subscription.customer?.id
-
-  if (!customerId) return
-
-  await prisma.user.updateMany({
-    where: { stripeCustomerId: customerId },
-    data: { isPro: false, stripeSubscriptionId: null },
-  })
+async function handleSubscriptionChanged(subscription: Stripe.Subscription) {
+  const customerId = customerIdOf(subscription.customer)
+  if (customerId) await syncPlanFromStripe(customerId)
 }
 
 export async function POST(request: Request) {
@@ -137,12 +121,12 @@ export async function POST(request: Request) {
         await handlePaymentFailed(event.data.object as Stripe.Invoice)
         break
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(
+        await handleSubscriptionChanged(
           event.data.object as Stripe.Subscription
         )
         break
       case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(
+        await handleSubscriptionChanged(
           event.data.object as Stripe.Subscription
         )
         break
