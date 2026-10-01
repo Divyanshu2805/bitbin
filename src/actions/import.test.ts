@@ -235,12 +235,15 @@ describe('importData server action', () => {
     // Mock transaction to execute the callback
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
       const txClient = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
         collection: {
           findMany: vi.fn().mockResolvedValue([]),
           create: vi.fn().mockResolvedValue({ id: 'new-coll', name: 'Test' }),
+          count: (...args: Parameters<typeof prisma.collection.count>) => prisma.collection.count(...args),
         },
         item: {
           create: vi.fn().mockResolvedValue({ id: 'new-item' }),
+          count: (...args: Parameters<typeof prisma.item.count>) => prisma.item.count(...args),
         },
       };
       return (fn as (tx: typeof txClient) => Promise<void>)(txClient);
@@ -279,12 +282,15 @@ describe('importData server action', () => {
 
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
       const txClient = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
         collection: {
           findMany: vi.fn().mockResolvedValue([]),
           create: vi.fn().mockResolvedValue({ id: 'new-coll', name: 'Test' }),
+          count: (...args: Parameters<typeof prisma.collection.count>) => prisma.collection.count(...args),
         },
         item: {
           create: vi.fn().mockResolvedValue({ id: 'new-item' }),
+          count: (...args: Parameters<typeof prisma.item.count>) => prisma.item.count(...args),
         },
       };
       return (fn as (tx: typeof txClient) => Promise<void>)(txClient);
@@ -316,12 +322,15 @@ describe('importData server action', () => {
 
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
       const txClient = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
         collection: {
           findMany: vi.fn().mockResolvedValue([]),
           create: vi.fn().mockResolvedValue({ id: 'new-coll', name: 'Test' }),
+          count: (...args: Parameters<typeof prisma.collection.count>) => prisma.collection.count(...args),
         },
         item: {
           create: vi.fn().mockResolvedValue({ id: 'new-item' }),
+          count: (...args: Parameters<typeof prisma.item.count>) => prisma.item.count(...args),
         },
       };
       return (fn as (tx: typeof txClient) => Promise<void>)(txClient);
@@ -354,12 +363,15 @@ describe('importData server action', () => {
 
     vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
       const txClient = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
         collection: {
           findMany: vi.fn().mockResolvedValue([]),
           create: vi.fn().mockResolvedValue({ id: 'new-coll', name: 'Test' }),
+          count: (...args: Parameters<typeof prisma.collection.count>) => prisma.collection.count(...args),
         },
         item: {
           create: vi.fn().mockResolvedValue({ id: 'new-item' }),
+          count: (...args: Parameters<typeof prisma.item.count>) => prisma.item.count(...args),
         },
       };
       return (fn as (tx: typeof txClient) => Promise<void>)(txClient);

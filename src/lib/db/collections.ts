@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 
 // Maximum allowed limit for queries to prevent abuse
 const MAX_QUERY_LIMIT = 100;
@@ -254,6 +255,8 @@ export async function getSidebarCollections(
 export interface CreateCollectionData {
   name: string;
   description: string | null;
+  /** Free plan cap, enforced atomically; a full account throws LimitReachedError */
+  maxCollections?: number;
 }
 
 export interface CreatedCollection {
@@ -438,13 +441,24 @@ export async function createCollection(
   userId: string,
   data: CreateCollectionData
 ): Promise<CreatedCollection> {
-  const created = await prisma.collection.create({
+  const insert = {
     data: {
       userId,
       name: data.name,
       description: data.description,
     },
-  });
+  };
+
+  const maxCollections = data.maxCollections;
+  const created =
+    maxCollections === undefined
+      ? await prisma.collection.create(insert)
+      : await prisma.$transaction(async (tx) => {
+          await lockUserForLimit(tx, userId);
+          const count = await tx.collection.count({ where: { userId } });
+          if (count >= maxCollections) throw new LimitReachedError('collections');
+          return tx.collection.create(insert);
+        });
 
   return {
     id: created.id,

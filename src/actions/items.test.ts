@@ -21,6 +21,7 @@ vi.mock('@/lib/db/items', () => ({
 // Mock the usage module
 vi.mock('@/lib/usage', () => ({
   canCreateItem: vi.fn(),
+  MAX_ITEMS: 50,
 }));
 
 import { updateItem, deleteItem, createItem, toggleItemFavorite, toggleItemPin, getItemCollections, setItemCollection } from './items';
@@ -593,6 +594,7 @@ describe('createItem server action', () => {
     expect(result.success).toBe(true);
     expect(result.data).toEqual(mockItem);
     expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', {
+      maxItems: 50,
       typeName: 'snippet',
       title: 'New Snippet',
       description: 'A test snippet',
@@ -647,6 +649,7 @@ describe('createItem server action', () => {
     });
 
     expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', {
+      maxItems: 50,
       typeName: 'snippet',
       title: 'Test',
       description: null,
@@ -702,6 +705,7 @@ describe('createItem server action', () => {
     });
 
     expect(mockCreateItemQuery).toHaveBeenCalledWith('user-123', {
+      maxItems: 50,
       typeName: 'snippet',
       title: 'Test',
       description: null,
@@ -1042,5 +1046,32 @@ describe('item field limits', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe('createItem when the cap is hit during the insert', () => {
+  it('reports the free tier limit instead of failing', async () => {
+    const { LimitReachedError } = await import('@/lib/limit-error');
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    mockCanCreateItem.mockResolvedValue(true);
+    mockCreateItemQuery.mockRejectedValue(new LimitReachedError('items'));
+
+    const result = await createItem({
+      typeName: 'note', title: 'Test', description: null, content: null, url: null, language: null, tags: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('free tier limit of 50 items');
+  });
+
+  it('does not cap Pro users', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+    mockCreateItemQuery.mockResolvedValue({ id: 'item-123' } as never);
+
+    await createItem({
+      typeName: 'note', title: 'Test', description: null, content: null, url: null, language: null, tags: [],
+    });
+
+    expect(mockCreateItemQuery.mock.calls.at(-1)?.[1]).not.toHaveProperty('maxItems');
   });
 });

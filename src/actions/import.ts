@@ -19,6 +19,7 @@ import {
 /** Most items or collections one import file may hold */
 const MAX_IMPORT_ENTRIES = 5000;
 import { isOwnedFileUrl } from '@/lib/r2';
+import { lockUserForLimit } from '@/lib/limit-error';
 
 const importItemSchema = z.object({
   title: z.string().min(1).max(MAX_TITLE_LENGTH),
@@ -220,6 +221,19 @@ export async function importData(
   let collectionsSkipped = 0;
 
   await prisma.$transaction(async (tx) => {
+    // A Free account's room is counted again under a lock on the user row, so a
+    // concurrent create or import can't push it past the cap between the count
+    // above and these inserts
+    if (!isPro) {
+      await lockUserForLimit(tx, userId);
+      const [lockedItemCount, lockedCollectionCount] = await Promise.all([
+        tx.item.count({ where: { userId } }),
+        tx.collection.count({ where: { userId } }),
+      ]);
+      itemLimit = Math.min(importableItems.length, Math.max(0, MAX_ITEMS - lockedItemCount));
+      collectionLimit = Math.min(data.collections.length, Math.max(0, MAX_COLLECTIONS - lockedCollectionCount));
+    }
+
     // 1. Create collections first
     const collectionNameToId = new Map<string, string>();
 

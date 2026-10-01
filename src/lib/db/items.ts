@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 
 // Maximum allowed limit for queries to prevent abuse
 const MAX_QUERY_LIMIT = 100;
@@ -535,6 +536,11 @@ export interface CreateItemData {
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
+  /**
+   * Free plan cap. When set, the count and the insert run in one transaction
+   * under a lock on the user's row, and a full account throws LimitReachedError.
+   */
+  maxItems?: number;
 }
 
 /**
@@ -692,45 +698,57 @@ export async function createItem(
     contentType = 'FILE';
   }
 
-  const created = await prisma.item.create({
-    data: {
-      userId,
-      itemTypeId: itemType.id,
-      title: data.title,
-      description: data.description,
-      content: data.content,
-      url: data.url,
-      language: data.language,
-      contentType,
-      fileUrl: data.fileUrl ?? null,
-      fileName: data.fileName ?? null,
-      fileSize: data.fileSize ?? null,
-      tags: {
-        connectOrCreate: data.tags.map((tagName) => ({
-          where: { name: tagName },
-          create: { name: tagName },
-        })),
+  const insert = (db: Pick<typeof prisma, 'item'>) =>
+    db.item.create({
+      data: {
+        userId,
+        itemTypeId: itemType.id,
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        url: data.url,
+        language: data.language,
+        contentType,
+        fileUrl: data.fileUrl ?? null,
+        fileName: data.fileName ?? null,
+        fileSize: data.fileSize ?? null,
+        tags: {
+          connectOrCreate: data.tags.map((tagName) => ({
+            where: { name: tagName },
+            create: { name: tagName },
+          })),
+        },
+        collections: collectionIds.length
+          ? {
+              create: collectionIds.map((collectionId) => ({
+                collectionId,
+              })),
+            }
+          : undefined,
       },
-      collections: collectionIds.length
-        ? {
-            create: collectionIds.map((collectionId) => ({
-              collectionId,
-            })),
-          }
-        : undefined,
-    },
-    include: {
-      itemType: true,
-      tags: true,
-      collections: {
-        include: {
-          collection: {
-            select: { id: true, name: true },
+      include: {
+        itemType: true,
+        tags: true,
+        collections: {
+          include: {
+            collection: {
+              select: { id: true, name: true },
+            },
           },
         },
       },
-    },
-  });
+    });
+
+  const maxItems = data.maxItems;
+  const created =
+    maxItems === undefined
+      ? await insert(prisma)
+      : await prisma.$transaction(async (tx) => {
+          await lockUserForLimit(tx, userId);
+          const count = await tx.item.count({ where: { userId } });
+          if (count >= maxItems) throw new LimitReachedError('items');
+          return insert(tx);
+        });
 
   return {
     id: created.id,

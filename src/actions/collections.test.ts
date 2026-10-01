@@ -19,6 +19,7 @@ vi.mock('@/lib/db/collections', () => ({
 // Mock the usage module
 vi.mock('@/lib/usage', () => ({
   canCreateCollection: vi.fn(),
+  MAX_COLLECTIONS: 3,
 }));
 
 import { createCollection, updateCollection, deleteCollection, getUserCollections, toggleCollectionFavorite, toggleCollectionPin } from './collections';
@@ -150,6 +151,7 @@ describe('createCollection server action', () => {
     expect(result.success).toBe(true);
     expect(result.data).toEqual(mockCollection);
     expect(mockCreateCollectionQuery).toHaveBeenCalledWith('user-123', {
+      maxCollections: 3,
       name: 'Test Collection',
       description: 'A test description',
     });
@@ -178,6 +180,7 @@ describe('createCollection server action', () => {
     });
 
     expect(mockCreateCollectionQuery).toHaveBeenCalledWith('user-123', {
+      maxCollections: 3,
       name: 'Test Collection',
       description: null,
     });
@@ -222,6 +225,7 @@ describe('createCollection server action', () => {
     });
 
     expect(mockCreateCollectionQuery).toHaveBeenCalledWith('user-123', {
+      maxCollections: 3,
       name: 'Test Collection',
       description: null,
     });
@@ -590,5 +594,19 @@ describe('toggleCollectionPin server action', () => {
     expect(result.success).toBe(true);
     expect(result.data).toEqual({ isPinned: true });
     expect(mockToggleCollectionPinQuery).toHaveBeenCalledWith('collection-123', 'user-123');
+  });
+});
+
+describe('createCollection when the cap is hit during the insert', () => {
+  it('reports the free tier limit instead of a generic failure', async () => {
+    const { LimitReachedError } = await import('@/lib/limit-error');
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    vi.mocked(canCreateCollection).mockResolvedValue(true);
+    mockCreateCollectionQuery.mockRejectedValue(new LimitReachedError('collections'));
+
+    const result = await createCollection({ name: 'React', description: null });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('free tier limit of 3 collections');
   });
 });

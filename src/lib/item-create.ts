@@ -11,12 +11,16 @@ import {
   tagsSchema,
   titleSchema,
 } from '@/lib/validation';
-import { canCreateItem } from '@/lib/usage';
+import { canCreateItem, MAX_ITEMS } from '@/lib/usage';
+import { LimitReachedError } from '@/lib/limit-error';
 import type { ActionResult } from '@/lib/action-utils';
 import { detectLanguage } from '@/lib/detect-language';
 import { isOwnedFileUrl } from '@/lib/r2';
 
 const LANGUAGE_TYPES: string[] = ['snippet', 'command'];
+
+const ITEM_LIMIT_MESSAGE =
+  'You have reached the free tier limit of 50 items. Upgrade to Pro for unlimited items.';
 
 /**
  * Item creation shared by the `createItem` server action and
@@ -70,7 +74,7 @@ export async function createItemForUser(
   // Usage limit check
   const allowed = await canCreateItem(userId, isPro);
   if (!allowed) {
-    return { success: false, error: 'You have reached the free tier limit of 50 items. Upgrade to Pro for unlimited items.' };
+    return { success: false, error: ITEM_LIMIT_MESSAGE };
   }
 
   // Validate URL is required for link type
@@ -85,7 +89,15 @@ export async function createItemForUser(
     data.language = detectLanguage(data.content, data.typeName);
   }
 
-  const created = await createItemQuery(userId, data);
+  // The pre-check above gives a quick answer; for a Free account the insert re-checks
+  // the cap under a lock, so concurrent requests can't overshoot it
+  let created: ItemDetail | null;
+  try {
+    created = await createItemQuery(userId, isPro ? data : { ...data, maxItems: MAX_ITEMS });
+  } catch (error) {
+    if (error instanceof LimitReachedError) return { success: false, error: ITEM_LIMIT_MESSAGE };
+    throw error;
+  }
 
   if (!created) {
     return { success: false, error: 'Failed to create item' };
