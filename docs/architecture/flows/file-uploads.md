@@ -11,7 +11,7 @@ Defined in `FILE_CONSTRAINTS` (`src/lib/r2.ts`):
 | `image` | 5 MB | png, jpg, jpeg, gif, webp, svg |
 | `file` | 10 MB | pdf, txt, md, json, yaml / yml, xml, csv, toml, ini |
 
-Both the extension and the MIME type are checked.
+The extension and the declared MIME type are checked, then the file's bytes (`validateFileContent` in `lib/r2.ts`): image and PDF signatures, valid UTF-8 for text formats, no script in SVGs. The object is stored with a content type derived from the extension, never the one the client sent.
 
 ## Upload
 

@@ -15,6 +15,10 @@ Things that look like bugs but are intended — or at least known and accepted.
 | An import stops part-way through a Free account's items | Free limits apply to imports; the result reports how many were skipped |
 | Imported file and image items for a Free user are missing | They're skipped — files and images are Pro |
 | Rate limits don't apply locally | Without the `UPSTASH_*` variables, rate limiting is disabled (fails open) |
+| Registering an email that's already taken looks like it worked | Deliberate: the answer is the same for every address so it can't reveal who has an account. No email arrives for a verified account; an unverified one gets a new verification email and the newly chosen password |
+| Changing your password signs you out | Deliberate: it bumps `sessionVersion`, which ends every session, this one included |
+| A Pro user gets "already subscribed" starting a checkout | Deliberate: checkout answers `409` for a Pro user so they can't be billed twice |
+| An upload is refused although the type looks right | The bytes are checked against the extension (a `.png` must be a PNG, a `.svg` can't hold script) |
 | Deleting a collection keeps its items | Collections are groupings; items belong to the user, not the collection |
 | Only test cards work when upgrading on the live site | Production runs on Stripe test-mode keys until the account can go live — [known gaps](not-yet-built.md#accounts-and-billing) |
 | Verification emails reach you but nobody else | `FROM_EMAIL` is unset, so Resend's sandbox sender is used; it only delivers to the Resend account owner |

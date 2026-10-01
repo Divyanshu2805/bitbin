@@ -9,20 +9,20 @@ Missing features and open issues — found while deploying BitBin and while docu
 3. ~~**Medium — Collection ids aren't checked for ownership.**~~ **Fixed:** `createItem` and `updateItem` in `lib/db/items.ts` now drop any `collectionIds` that aren't the caller's. (Kept here so the numbering of other items doesn't change.)
 4. ~~**Medium — Credentials sign-in isn't rate limited on the server.**~~ **Fixed:** the `login` limit now runs inside `authorize()`.
 5. **Medium — The auth library is a beta.** `next-auth@5.0.0-beta.30`. GitHub sign-in only works because of the `issuer` override in `auth.ts` / `auth.config.ts`; upgrading within the beta line didn't fix it. Re-test GitHub sign-in after every upgrade, and drop the override once Auth.js handles GitHub's `iss` itself.
-6. **Medium — No session invalidation.** Resetting or changing a password, or deleting the account, leaves existing JWTs valid until they expire.
-7. **Low — Change-password isn't rate limited**, so the current-password check can be brute-forced from a stolen session.
+6. ~~**Medium — No session invalidation.**~~ **Fixed:** `users.sessionVersion` is bumped on password change and reset, and the `jwt` callback ends sessions with an older value. (Still no per-device list or "sign out everywhere".)
+7. ~~**Low — Change-password isn't rate limited**~~ **Fixed:** 5 attempts per 15 minutes per IP + user.
 8. **Low — `sslmode=require` will change meaning.** Every connection logs that `pg` treats `sslmode=require` as `verify-full` today, but v9 switches to libpq's weaker semantics. **Fix:** use `sslmode=verify-full` explicitly in `DATABASE_URL`, locally and on Vercel.
 
 ## Accounts and billing
 
-9. **Medium — A failed verification email leaves a stuck account.** `POST /api/auth/register` creates the user **before** sending the email. If sending fails, the user sees *"An error occurred during registration"*, and retrying says *"User with this email already exists"*; the way out (sign in, then *Resend verification email*) isn't obvious. **Fix:** delete the user when the send fails, or make "already exists but unverified" re-send the email instead of erroring.
+9. ~~**Medium — A failed verification email leaves a stuck account.**~~ **Fixed:** registration deletes the new account when the email can't be sent, and registering an unverified address again replaces its password and resends the email.
 10. ~~**Medium — Deleting an account leaves its files and subscription.**~~ **Fixed:** deletion cancels the Stripe subscription, removes the `{userId}/` R2 files and asks a password account for its password.
 11. **Medium — No account linking.** Someone who registered with a password can't later sign in with GitHub on the same email (`OAuthAccountNotLinked`), and there's no settings screen to link them. **Fix:** a "Connect GitHub" action for signed-in users — not `allowDangerousEmailAccountLinking`.
 12. **Medium — Production runs in Stripe test mode.** Live mode needs an activated account, and new Indian accounts are invite-only; the live site accepts only test cards. See [Stripe test mode in production](../deployment/providers.md#stripe-test-mode-in-production).
 13. **Low — GitHub-only users can't add a password.** *Forgot password* deliberately answers with the generic "link sent" message for them, so they wait for an email that never comes. **Fix:** "Set a password" in Settings for accounts without one.
 14. **Low — Re-opening a used verification link shows an error.** Tokens are single-use, so a second visit (or a refresh) says *"Invalid verification token"* although the account is verified. **Fix:** when a token isn't found, say the link was already used and point to sign-in.
-15. **Low — The checkout webhook fails for a deleted user.** `handleCheckoutCompleted` uses `prisma.user.update`; if the user deleted their account between paying and the webhook, it throws, returns `500`, and Stripe retries for days. **Fix:** `updateMany`, or catch "record not found" and return `200`.
-16. **Low — Checkout doesn't check the current plan.** A Pro user who reaches `/api/stripe/checkout` gets a second subscription.
+15. ~~**Low — The checkout webhook fails for a deleted user.**~~ **Fixed:** `updateMany`, so a deleted user is a no-op.
+16. ~~**Low — Checkout doesn't check the current plan.**~~ **Fixed:** `/api/stripe/checkout` answers `409` for a Pro user.
 17. **Low — `invoice.payment_failed` does nothing** beyond logging — no email, no grace period.
 18. **Low — No email change** after registration.
 

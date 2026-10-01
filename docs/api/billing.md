@@ -11,6 +11,7 @@ Session required. `{ "plan": "monthly" | "yearly" }`.
 | `200` | `{ url }` — the Checkout Session URL; redirect the browser to it |
 | `400` | `plan` missing or not `monthly` / `yearly` (or its price id isn't configured) |
 | `401` | No session |
+| `409` | The user is already Pro. A second subscription would bill them twice; manage it in the portal |
 | `500` | Stripe error |
 
 Creates the Stripe customer on first use (`metadata.userId`) and saves `stripeCustomerId`. The session's metadata is `{ userId, app: 'bitbin' }`. Success returns to `/settings?upgraded=true`, cancel to `/settings`.
@@ -38,11 +39,12 @@ Called by Stripe, not the browser. No session — authenticity comes from the `s
 
 | Event | Effect on `users` |
 |---|---|
-| `checkout.session.completed` | Ignored unless `metadata.app` is `bitbin` (`STRIPE_APP_TAG`). Then by `metadata.userId`: `isPro = true`, `stripeCustomerId`, `stripeSubscriptionId` |
-| `invoice.paid` | By customer id: `isPro = true` |
+| `checkout.session.completed` | Ignored unless `metadata.app` is `bitbin` (`STRIPE_APP_TAG`). Then saves `stripeCustomerId` on the user in `metadata.userId` (a no-op if they've since deleted their account) and syncs the plan |
+| `invoice.paid` | Syncs the plan for that customer |
 | `invoice.payment_failed` | Nothing — logged |
-| `customer.subscription.updated` | By customer id: `isPro` = status `active` or `trialing` |
-| `customer.subscription.deleted` | By customer id: `isPro = false`, `stripeSubscriptionId = null` |
+| `customer.subscription.updated` / `.deleted` | Syncs the plan for that customer |
+
+**Syncing the plan** lists the customer's subscriptions from Stripe and sets `isPro` to whether one is `active` or `trialing`, with `stripeSubscriptionId` set to that subscription (or `null`). The event only says *whose* plan changed; the state comes from Stripe, so a retried or out-of-order event (a late `invoice.paid` after a cancellation) can't leave the wrong plan. If the Stripe call fails the handler returns `500` and Stripe retries.
 
 The endpoint must be subscribed to exactly these five events in the Stripe dashboard.
 

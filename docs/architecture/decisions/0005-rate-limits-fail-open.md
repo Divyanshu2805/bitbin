@@ -1,6 +1,6 @@
-# 0005. Rate limits fail open
+# 0005. Rate limits fail open (credential limits fail closed on errors)
 
-**Status:** Accepted
+**Status:** Accepted, amended
 
 ## Context
 
@@ -8,11 +8,11 @@ Sign-in, registration, password reset, uploads and the AI helpers need rate limi
 
 ## Decision
 
-`lib/rate-limit.ts` defines one sliding-window limiter per action and keys each by client IP plus an optional identifier. It **fails open**: if the Upstash variables are unset, still `.env.example` placeholders, or invalid, it logs a warning or error and every check passes; if Redis errors at runtime, it logs the error and allows the request.
+`lib/rate-limit.ts` defines one sliding-window limiter per action and keys each by client IP plus an optional identifier. It **fails open**: if the Upstash variables are unset, still `.env.example` placeholders, or invalid, it logs a warning or error and every check passes. If Redis **errors at runtime**, the limits that guard credentials (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, `changePassword`) **fail closed**: they refuse the request and ask the caller to retry in a minute. `ai`, `upload` and `api` log the error and allow the request.
 
 ## Consequences
 
-- An Upstash outage or misconfiguration never locks users out of their accounts.
+- A missing or misconfigured Upstash setup never locks users out of their accounts. An Upstash *outage* does block sign-in, registration and password reset until Redis is back: the price of not letting a failure switch off brute-force protection.
 - Local development works with no Redis at all.
-- The same outage, or a deploy missing the variables, silently removes every limit — including the brute-force protection on sign-in. Production should alert on the `Rate limit check failed` log line.
+- A deploy missing the variables still silently removes every limit, brute-force protection included; only runtime errors fail closed. Production should have the `UPSTASH_*` variables set and alert on the `Rate limit check failed` and `Upstash Redis not configured` log lines.
 - Limits keyed by IP are only as good as the `x-forwarded-for` header, which Vercel sets.

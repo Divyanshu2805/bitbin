@@ -31,7 +31,7 @@ interface ActionResult<T = unknown> {
 
 Upstash sliding windows, keyed by client IP plus an optional identifier (email or user id). Limits are listed in the [API reference](../api/errors-and-rate-limits.md#rate-limits). Two properties matter when changing anything nearby:
 
-- **It fails open.** Without Upstash configured — unset, still a `YOUR_…` placeholder, or an invalid URL — or when Redis errors, every check passes and a warning or error is logged. A Redis outage never locks users out — and never protects anything either. See [ADR 0005](decisions/0005-rate-limits-fail-open.md).
+- **It fails open, except for credentials.** Without Upstash configured (unset, still a `YOUR_…` placeholder, or an invalid URL) every check passes and a warning or error is logged. When Redis *errors*, the AI, upload and token-API limits pass, but the credential limits (sign-in, register, forgot / reset password, resend verification, change password) refuse the request. See [ADR 0005](decisions/0005-rate-limits-fail-open.md).
 - **The IP is the first `x-forwarded-for` entry**, then `x-real-ip`, then `127.0.0.1`. On Vercel the platform sets these headers.
 
 ## Keeping the UI fresh

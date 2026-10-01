@@ -17,8 +17,8 @@ Tags are the exception: tag names are globally unique rows shared by everyone, c
 NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 'jwt' }`):
 
 - The session is a signed, encrypted cookie keyed by `AUTH_SECRET`. The `sessions` table exists for the adapter but isn't used for JWT sessions.
-- The `jwt` callback puts the user id on the token at sign-in, and **re-reads `users.isPro` from the database every time the token is evaluated**, so a Stripe webhook changes a signed-in user's plan without a sign-out.
-- There is no server-side session revocation. Deleting an account, resetting a password or changing a password doesn't invalidate JWTs already issued — see [known gaps](../known-gaps/not-yet-built.md).
+- The `jwt` callback puts the user id on the token at sign-in, and **re-reads `users.isPro` and `users.sessionVersion` from the database every time the token is evaluated**, so a Stripe webhook changes a signed-in user's plan without a sign-out.
+- **Sessions can be revoked.** The token carries the `sessionVersion` it was issued with. Changing or resetting a password increments the column, so every older token fails the comparison and the `jwt` callback returns `null`, which ends the session. A deleted account ends its sessions the same way (the row is gone). Tokens issued before the column existed count as version `0`, so they keep working until the first bump. There's still no per-device list or "sign out everywhere" button.
 
 ## Authentication
 

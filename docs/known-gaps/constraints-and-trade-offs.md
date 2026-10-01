@@ -5,11 +5,11 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 ## Sessions and plans
 
 - **A database read per session evaluation.** The `jwt` callback re-reads `isPro` every time it runs ([ADR 0003](../architecture/decisions/0003-jwt-sessions-with-live-plan.md)). Cheap on a primary key, but it's a query on every authenticated request and proxy check. Caching it would reintroduce the stale-plan problem the design avoids.
-- **No session revocation.** JWTs can't be invalidated server-side, so "sign out everywhere" isn't possible, and a password change doesn't end other sessions. Fixing this means database sessions or a token version checked in `jwt`.
+- **Session revocation is all-or-nothing.** A password change or reset ends every session for the user (`users.sessionVersion`), but there's no per-device list or "sign out everywhere" button.
 
 ## Billing
 
-- **Webhooks aren't idempotent or ordered.** Each event is applied as it arrives: nothing records processed event ids, and nothing compares timestamps. A retried or out-of-order event can briefly — or, for a late `invoice.paid` after a cancellation, lastingly — set the wrong `isPro`. Storing processed event ids and deriving `isPro` from the subscription's current status (fetched from Stripe) would make it robust.
+- **Webhooks cost a Stripe call.** Each plan-changing event lists the customer's subscriptions from Stripe to compute `isPro`. That makes handlers idempotent and order-independent, at the price of one API call per event and a dependency on Stripe being reachable (a failure returns `500` and Stripe retries). Processed event ids still aren't recorded.
 - **One flag for the whole plan.** `isPro` is a boolean; there's no record of which price, period end or trial state a user has. A second paid tier or proration rules would need a subscription table.
 
 ## Storage
@@ -27,7 +27,7 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 
 ## Operations
 
-- **Rate limits fail open** ([ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md)) — an Upstash outage silently removes brute-force protection.
+- **Rate limits fail open when unconfigured** ([ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md)): a deploy without the `UPSTASH_*` variables has no brute-force protection. A Redis *error* fails closed for the credential limits, so an outage blocks sign-in and registration until it ends.
 - **Logs only.** No error tracker, metrics or alerting — failures are visible only in Vercel's function logs.
 - **One database for development and production** today — see [not yet built](not-yet-built.md#email-and-operations).
 - **Manual migrations.** Migrations are applied by hand before a deploy; nothing enforces the order.

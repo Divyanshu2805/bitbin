@@ -14,6 +14,7 @@ The account itself, the three tables NextAuth's Prisma adapter needs, and the AP
 | `isPro` | boolean, default `false` | The plan. Written only by the Stripe webhook; read into every session |
 | `stripeCustomerId` | text, unique, nullable | Set at first checkout |
 | `stripeSubscriptionId` | text, unique, nullable | Set by `checkout.session.completed`, cleared by `customer.subscription.deleted` |
+| `sessionVersion` | integer, default `0` | Bumped on password change and reset. A session token issued with an older value is rejected, which is how sessions are revoked |
 | `editorPreferences` | jsonb, nullable | Monaco settings; `null` means the defaults in `src/lib/constants/editor.ts` |
 | `createdAt`, `updatedAt` | timestamp | |
 

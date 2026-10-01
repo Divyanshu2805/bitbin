@@ -26,8 +26,8 @@ Stripe calls `POST /api/webhooks/stripe`. The handler reads the raw body, verifi
 
 | Event | Effect |
 |---|---|
-| `checkout.session.completed` | Skipped unless `metadata.app` is `bitbin`. Otherwise finds the user by `metadata.userId`; sets `isPro = true`, saves the customer and subscription ids |
-| `invoice.paid` | `isPro = true` for the user with that customer id (renewals) |
+| `checkout.session.completed` | Skipped unless `metadata.app` is `bitbin`. Otherwise saves the customer id on the user in `metadata.userId`, then syncs the plan |
+| `invoice.paid` | Syncs the plan for that customer (renewals) |
 | `invoice.payment_failed` | Logged only |
 | `customer.subscription.updated` | `isPro` = status is `active` or `trialing` |
 | `customer.subscription.deleted` | `isPro = false`, clears `stripeSubscriptionId` |

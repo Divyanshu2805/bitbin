@@ -4,6 +4,7 @@ What BitBin deliberately doesn't do yet, the trade-offs its design accepts, issu
 
 | Page | Covers |
 |---|---|
+| [Security gaps](security-gaps.md) | Every open security and data-integrity gap in one checklist, with fixes and a suggested order |
 | [Constraints and trade-offs](constraints-and-trade-offs.md) | Structural limits of the current design — what would have to change to scale or harden it |
 | [Not yet built](not-yet-built.md) | Open issues by area and severity, with suggested fixes, and the roadmap |
 | [App behavior](app-behavior.md) | Responses and UI behaviour that are easy to mistake for bugs |

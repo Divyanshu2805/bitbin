@@ -25,11 +25,13 @@ Multipart form data:
 | Status | When |
 |---|---|
 | `200` | `{ fileUrl, fileName, fileSize }` — pass these to `createItem` |
-| `400` | No file, an invalid `itemType`, or the file fails validation (extension, MIME type, size) |
+| `400` | No file, an invalid `itemType`, or the file fails validation (extension, MIME type, size, or contents that don't match the extension, see below) |
 | `401` | No session |
 | `403` | Not Pro (read from the database, not the session) |
 | `429` | `upload` limit — 10 / hour per IP + user |
 | `500` | Storage error or missing R2 configuration |
+
+The stored `Content-Type` comes from the extension, not from what the browser sent. After the name, size and type checks, the bytes are checked too: PNG, JPEG, GIF, WebP and PDF signatures must match; every other type must be valid UTF-8 without NUL bytes; and an SVG may not contain `<script>`, `<foreignObject>`, `<iframe>`, `<embed>`, `<object>`, `on…=` handlers or `javascript:`.
 
 Limits per type are in the [file uploads flow](../architecture/flows/file-uploads.md#limits). The object key is `{userId}/{timestamp}-{name}`, with every character outside `A–Z a–z 0–9 . -` replaced by `_`.
 

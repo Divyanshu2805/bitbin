@@ -7,8 +7,8 @@
 - **Verify against the raw body.** The webhook reads `request.text()` and passes it to `constructEvent`. Reading `request.json()` first changes the bytes and every signature fails.
 - **Each `stripe listen` session has its own secret.** Restarting the CLI can print a new `whsec_…`; the dev server needs restarting with it, or every event returns `400`.
 - **The dashboard endpoint must subscribe to all five events.** Missing `customer.subscription.deleted` means cancelled users stay Pro forever.
-- **Events aren't de-duplicated or ordered.** A retried or late `invoice.paid` can set `isPro = true` after a `customer.subscription.deleted`. See [known gaps](../../known-gaps/constraints-and-trade-offs.md).
-- **Checkout doesn't check the current plan.** A Pro user who reaches checkout can start a second subscription.
+- **Handlers read Stripe, not the event.** Every plan-changing event just triggers `syncPlanFromStripe(customerId)`, which lists the customer's subscriptions, so retried or out-of-order events are harmless. A new handler should call it too instead of trusting the event payload.
+- **Checkout refuses a Pro user** (`409`), so a second subscription can't be started from the app.
 
 ## Cloudflare R2
 
@@ -18,7 +18,7 @@
 
 ## Upstash
 
-- **It fails open.** Missing, placeholder or invalid variables, or a Redis error, mean no rate limiting at all, with only a log line to show for it. A production deploy without the `UPSTASH_*` variables looks fine and has no brute-force protection.
+- **It fails open when unconfigured** (and for AI, uploads and the token API on a Redis error; credential limits fail closed on an error). Missing, placeholder or invalid variables mean no rate limiting at all, with only a log line to show for it. A production deploy without the `UPSTASH_*` variables looks fine and has no brute-force protection.
 - **Local testing trips limits quickly.** Five sign-in attempts in 15 minutes is easy to hit while developing. Clear the keys or unset the variables — see [resetting data](../../local-development/resetting-data.md#clear-rate-limits).
 
 ## Resend

@@ -22,7 +22,7 @@ Calling `signIn('github')` from a client component needed two clicks in producti
 
 ## `isPro` is read on every session evaluation
 
-The `jwt` callback queries `users.isPro` each time it runs. That's what makes Stripe upgrades instant, and it means:
+The `jwt` callback queries `users.isPro` and `users.sessionVersion` each time it runs. That's what makes Stripe upgrades instant, and it means:
 
 - Adding more database reads to `jwt` adds them to every request.
 - Tests or scripts that change `isPro` see the change on the next request — no need to sign out.

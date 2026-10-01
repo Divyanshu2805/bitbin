@@ -43,6 +43,7 @@ Actions never throw to the client. They return:
 | `forgotPassword` | 3 / hour | IP | `POST /api/auth/forgot-password` |
 | `resetPassword` | 5 / 15 min | IP | `POST /api/auth/reset-password` |
 | `resendVerification` | 3 / 15 min | IP + email | `POST /api/auth/resend-verification` |
+| `changePassword` | 5 / 15 min | IP + user id | `POST /api/auth/change-password` |
 | `upload` | 10 / hour | IP + user id | `POST /api/upload` |
 | `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` and `/ai/description` |
 | `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
@@ -57,17 +58,17 @@ Route handlers answer `429` through `rateLimitResponse(retryAfter)`:
 
 with `Retry-After` in seconds. AI actions return "Too many AI requests. Please try again in …" as their `error`.
 
-Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`), change-password, export, checkout and portal, and every server action other than the AI ones.
+Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`), export, checkout and portal, and every server action other than the AI ones.
 
 ### Failure mode
 
-Rate limiting **fails open**:
+Rate limiting **fails open, except for the credential limits when Redis errors**:
 
 - With `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` unset, or still holding the `YOUR_…` placeholders from `.env.example`, every check logs a warning and passes.
 - If the values are set but invalid (a URL without `https://`, say), the Redis client can't be created; the error is logged and every check passes. Before this was handled, a leftover placeholder made registration crash with a `500`.
-- If Redis errors at runtime, the error is logged and the request is allowed.
+- If Redis errors at runtime, the error is logged. The credential limits (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, `changePassword`) then **refuse** the request with a 60-second `Retry-After`, so an outage can't switch off brute-force protection; `ai`, `upload` and `api` let the request through.
 
-`src/lib/rate-limit.test.ts` covers the unset, placeholder and invalid-URL cases. See [ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md).
+`src/lib/rate-limit.test.ts` covers the unset, placeholder, invalid-URL and Redis-error cases. See [ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md).
 
 ### Adding a limit
 
