@@ -39,6 +39,10 @@ export async function authenticateApiRequest(request: Request): Promise<ApiAuthR
     return { response: apiError('Invalid or revoked API token', 401) };
   }
 
+  if (found.expiresAt && found.expiresAt.getTime() <= Date.now()) {
+    return { response: apiError('API token has expired. Create a new one in Settings.', 401) };
+  }
+
   if (!found.user.isPro) {
     return { response: apiError('The BitBin extension requires a Pro subscription', 403) };
   }

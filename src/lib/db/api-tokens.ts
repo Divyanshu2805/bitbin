@@ -8,6 +8,8 @@ export interface ApiTokenSummary {
   name: string;
   prefix: string;
   lastUsedAt: Date | null;
+  /** null = never expires */
+  expiresAt: Date | null;
   createdAt: Date;
 }
 
@@ -16,6 +18,7 @@ const summarySelect = {
   name: true,
   prefix: true,
   lastUsedAt: true,
+  expiresAt: true,
   createdAt: true,
 } as const;
 
@@ -38,6 +41,7 @@ export interface CreateApiTokenData {
   name: string;
   tokenHash: string;
   prefix: string;
+  expiresAt?: Date | null;
 }
 
 export async function createApiToken(
@@ -63,6 +67,7 @@ export async function deleteApiToken(userId: string, tokenId: string): Promise<b
 export interface ApiTokenOwner {
   tokenId: string;
   lastUsedAt: Date | null;
+  expiresAt: Date | null;
   user: {
     id: string;
     email: string;
@@ -81,12 +86,18 @@ export async function findApiTokenByHash(tokenHash: string): Promise<ApiTokenOwn
     select: {
       id: true,
       lastUsedAt: true,
+      expiresAt: true,
       user: { select: { id: true, email: true, name: true, isPro: true } },
     },
   });
 
   if (!token) return null;
-  return { tokenId: token.id, lastUsedAt: token.lastUsedAt, user: token.user };
+  return {
+    tokenId: token.id,
+    lastUsedAt: token.lastUsedAt,
+    expiresAt: token.expiresAt,
+    user: token.user,
+  };
 }
 
 export async function touchApiToken(tokenId: string): Promise<void> {

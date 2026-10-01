@@ -38,6 +38,7 @@ const summary = {
   name: 'Chrome',
   prefix: 'bb_abcdefg',
   lastUsedAt: null,
+  expiresAt: null,
   createdAt: new Date(),
 };
 
@@ -98,8 +99,51 @@ describe('createApiToken server action', () => {
       name: 'Chrome',
       tokenHash: hashApiToken(token),
       prefix: token.slice(0, 10),
+      expiresAt: expect.any(Date),
     });
     expect(JSON.stringify(mockCreate.mock.calls[0])).not.toContain(token);
+  });
+
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it('expires a token after 90 days unless told otherwise', async () => {
+    signIn(true);
+    const before = Date.now();
+
+    await createApiToken({ name: 'Chrome' });
+
+    const expiresAt = mockCreate.mock.calls[0][1].expiresAt as Date;
+    expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + 90 * DAY);
+    expect(expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + 90 * DAY);
+  });
+
+  it.each([30, 365])('honours a %i day lifetime', async (days) => {
+    signIn(true);
+    const before = Date.now();
+
+    await createApiToken({ name: 'Chrome', expiresInDays: days as 30 | 365 });
+
+    const expiresAt = mockCreate.mock.calls[0][1].expiresAt as Date;
+    expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + days * DAY);
+    expect(expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + days * DAY);
+  });
+
+  it('lets a token never expire when asked', async () => {
+    signIn(true);
+
+    await createApiToken({ name: 'Chrome', expiresInDays: null });
+
+    expect(mockCreate.mock.calls[0][1].expiresAt).toBeNull();
+  });
+
+  it('rejects a lifetime that is not on the list', async () => {
+    signIn(true);
+
+    const result = await createApiToken({ name: 'Chrome', expiresInDays: 7 as unknown as 30 });
+
+    expect(result.success).toBe(false);
+    expect(result.fieldErrors?.expiresInDays).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });
 

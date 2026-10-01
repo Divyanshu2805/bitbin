@@ -8,11 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import ConfirmDeleteDialog from '@/components/shared/confirm-delete-dialog';
 import { Check, Copy, Download, KeyRound, Loader2, Plus, Puzzle, Trash2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { createApiToken, revokeApiToken } from '@/actions/api-tokens';
-import { formatRelativeDate } from '@/lib/utils/date';
+import { formatExpiry, formatRelativeDate } from '@/lib/utils/date';
 import type { ApiTokenSummary } from '@/lib/db/api-tokens';
 
 interface ExtensionSettingsProps {
@@ -23,6 +30,7 @@ interface ExtensionSettingsProps {
 export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsProps) {
   const router = useRouter();
   const [name, setName] = useState('Browser extension');
+  const [lifetime, setLifetime] = useState('90');
   const [creating, setCreating] = useState(false);
   const [newToken, setNewToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -32,9 +40,14 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
     e.preventDefault();
     setCreating(true);
     try {
-      const result = await createApiToken({ name });
+      const result = await createApiToken({
+        name,
+        expiresInDays: lifetime === 'never' ? null : (Number(lifetime) as 30 | 90 | 365),
+      });
       if (!result.success || !result.data) {
-        toast.error(result.fieldErrors?.name?.[0] ?? result.error ?? 'Failed to create token');
+        toast.error(
+          result.fieldErrors?.name?.[0] ?? result.fieldErrors?.expiresInDays?.[0] ?? result.error ?? 'Failed to create token'
+        );
         return;
       }
       setNewToken(result.data.token);
@@ -135,6 +148,20 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                   placeholder="e.g. Chrome on laptop"
                 />
               </div>
+              <div className="space-y-2 sm:w-40">
+                <Label htmlFor="token-lifetime">Expires</Label>
+                <Select value={lifetime} onValueChange={setLifetime}>
+                  <SelectTrigger id="token-lifetime" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">In 30 days</SelectItem>
+                    <SelectItem value="90">In 90 days</SelectItem>
+                    <SelectItem value="365">In 1 year</SelectItem>
+                    <SelectItem value="never">Never</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" disabled={creating || name.trim().length === 0}>
                 {creating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -173,7 +200,16 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                         <p className="truncate text-sm font-medium text-foreground">{token.name}</p>
                         <p className="truncate font-mono text-xs text-muted-foreground">
                           {token.prefix}… · created {formatRelativeDate(token.createdAt)} ·{' '}
-                          {token.lastUsedAt ? `used ${formatRelativeDate(token.lastUsedAt)}` : 'never used'}
+                          {token.lastUsedAt ? `used ${formatRelativeDate(token.lastUsedAt)}` : 'never used'} ·{' '}
+                          <span
+                            className={
+                              token.expiresAt && token.expiresAt.getTime() <= Date.now()
+                                ? 'text-destructive'
+                                : undefined
+                            }
+                          >
+                            {formatExpiry(token.expiresAt)}
+                          </span>
                         </p>
                       </div>
                     </div>

@@ -27,10 +27,11 @@ function request(authorization?: string) {
   });
 }
 
-function owner(isPro: boolean, lastUsedAt: Date | null = null) {
+function owner(isPro: boolean, lastUsedAt: Date | null = null, expiresAt: Date | null = null) {
   return {
     tokenId: 'token-1',
     lastUsedAt,
+    expiresAt,
     user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro },
   };
 }
@@ -55,6 +56,25 @@ describe('authenticateApiRequest', () => {
 
     expect(response?.status).toBe(401);
     expect(mockFind).toHaveBeenCalledWith(hashApiToken(TOKEN));
+  });
+
+  it('returns 401 for an expired token, before looking at the plan', async () => {
+    mockFind.mockResolvedValue(owner(true, null, new Date(Date.now() - 1000)));
+
+    const { response } = await authenticateApiRequest(request(`Bearer ${TOKEN}`));
+
+    expect(response?.status).toBe(401);
+    expect((await response?.json()).error).toContain('expired');
+    expect(mockRateLimit).not.toHaveBeenCalled();
+    expect(mockTouch).not.toHaveBeenCalled();
+  });
+
+  it('accepts a token that has not expired yet, and one that never expires', async () => {
+    mockFind.mockResolvedValue(owner(true, null, new Date(Date.now() + 60_000)));
+    expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`))).user).toBeDefined();
+
+    mockFind.mockResolvedValue(owner(true, null, null));
+    expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`))).user).toBeDefined();
   });
 
   it('returns 403 when the owner is no longer Pro', async () => {

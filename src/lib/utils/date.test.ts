@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { formatRelativeDate } from './date';
+import { formatRelativeDate, formatExpiry } from './date';
 
 describe('formatRelativeDate', () => {
   afterEach(() => {
@@ -70,5 +70,26 @@ describe('formatRelativeDate', () => {
     vi.setSystemTime(new Date('2025-06-15T12:00:00Z'));
 
     expect(formatRelativeDate('2025-06-15T08:00:00Z')).toBe('Today');
+  });
+});
+
+describe('formatExpiry', () => {
+  const now = new Date('2026-10-05T12:00:00Z');
+  const inMs = (ms: number) => new Date(now.getTime() + ms);
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it('says a token without a date never expires', () => {
+    expect(formatExpiry(null, now)).toBe('never expires');
+  });
+
+  it('says expired once the date has passed', () => {
+    expect(formatExpiry(inMs(-1), now)).toBe('expired');
+    expect(formatExpiry(inMs(0), now)).toBe('expired');
+  });
+
+  it('counts whole days, rounding up', () => {
+    expect(formatExpiry(inMs(3 * 60 * 60 * 1000), now)).toBe('expires today');
+    expect(formatExpiry(inMs(1.5 * DAY), now)).toBe('expires tomorrow');
+    expect(formatExpiry(inMs(30 * DAY), now)).toBe('expires in 30 days');
   });
 });

@@ -33,3 +33,19 @@ export function formatLongDate(date: Date | string): string {
     year: 'numeric',
   });
 }
+
+/**
+ * How long until a future date, for token expiry: "in 12 days", "tomorrow",
+ * "today", or "expired" once it has passed. `null` means it never expires.
+ */
+export function formatExpiry(date: Date | string | null, now: Date = new Date()): string {
+  if (date === null) return 'never expires';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const diffMs = dateObj.getTime() - now.getTime();
+  if (diffMs <= 0) return 'expired';
+
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (days <= 1) return 'expires today';
+  if (days === 2) return 'expires tomorrow';
+  return `expires in ${days} days`;
+}

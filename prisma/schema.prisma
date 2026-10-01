@@ -90,6 +90,7 @@ model ApiToken {
   tokenHash  String    @unique // SHA-256 of the token; the token itself is never stored
   prefix     String // First characters of the token, shown in the UI to tell tokens apart
   lastUsedAt DateTime?
+  expiresAt  DateTime? // null = never expires; checked on every API request
   createdAt  DateTime  @default(now())
 
   userId String
