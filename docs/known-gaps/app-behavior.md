@@ -9,7 +9,7 @@ Things that look like bugs but are intended — or at least known and accepted.
 | GitHub sign-in fails with `OAuthAccountNotLinked` | That email already has a password account; BitBin doesn't link the two. Sign in with the password |
 | A user who just paid is still Free for a moment | `isPro` only changes when the webhook arrives. The next request after that sees Pro |
 | A new item doesn't show in ⌘K search | The index is loaded once per page load — [search](../architecture/flows/search.md#limitations) |
-| An image opens without signing in | The R2 bucket is public; the download proxy's owner check only applies to downloads through BitBin |
+| An image URL from the database returns `403` when opened directly | Deliberate: the bucket is private. Files are only readable through `/api/download/…` by their signed-in owner |
 | Tags differ only by case (`React`, `react`) | Tag names are case-sensitive; AI-suggested tags are lowercased, typed ones aren't |
 | Importing the same export twice duplicates items | Only when **Skip duplicates** is off. With it on, items matching on title, type and content (or URL) are skipped |
 | An import stops part-way through a Free account's items | Free limits apply to imports; the result reports how many were skipped |

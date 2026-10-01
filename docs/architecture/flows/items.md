@@ -20,7 +20,7 @@ Creating, reading, editing and deleting items — the core of BitBin. The per-ty
 
 1. `getAuthedSession()`, then Zod validation — title required, tags trimmed and empties dropped, `url` and `fileUrl` must be `http(s)`.
 2. `file` and `image` types are rejected unless the session is Pro.
-3. `canCreateItem` enforces the Free cap of **50 items** (`src/lib/usage.ts`).
+3. `canCreateItem` pre-checks the Free cap of **50 items** (`src/lib/usage.ts`); the insert itself re-checks it inside a transaction under a lock on the user's row, so concurrent requests can't overshoot it.
 4. A `link` must have a URL.
 5. `lib/db/items.createItem` looks up the system item type by name, derives the content type (`link` → `URL`, `file` / `image` → `FILE`, everything else → `TEXT`), creates the row for the session user, `connectOrCreate`s the tags and links the selected collections.
 

@@ -39,9 +39,9 @@ Email links are built from `NEXT_PUBLIC_APP_URL`.
 
 ## Cloudflare R2
 
-- Enable the bucket's public URL (or attach a custom domain) and put it in `R2_PUBLIC_URL`.
-- A custom domain must also be added to `images.remotePatterns` in `next.config.ts`, which today allows `*.r2.dev`, `pub-*.r2.dev` and `*.r2.cloudflarestorage.com`.
-- Decide the public URL before users upload anything: stored file URLs and deletes are derived from it.
+- Keep the bucket **private**: no `r2.dev` URL, no custom domain. Every file is read through the app with the API token's credentials.
+- `R2_PUBLIC_URL` is only the name stored file URLs are built from (and what the ownership check compares them to). It doesn't have to be reachable. Don't change it once users have uploaded files: stored URLs and deletes are derived from it.
+- **Turning public access off on an existing bucket:** deploy this code first, check that images, downloads and the ZIP export work for a signed-in user, then disable the `r2.dev` URL (or custom domain) in the Cloudflare dashboard. Doing it in that order means there is no moment when images break.
 
 ## Upstash and the AI provider
 

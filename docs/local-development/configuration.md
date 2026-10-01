@@ -40,7 +40,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `R2_ACCOUNT_ID` | Cloudflare account ID; the S3 endpoint is built from it |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 → Manage API tokens, with *Object Read & Write* on the bucket |
 | `R2_BUCKET_NAME` | The bucket uploads go to |
-| `R2_PUBLIC_URL` | The bucket's public URL (`https://pub-….r2.dev` or a custom domain). Stored item URLs are built from it, and deletes derive the object key by stripping it — changing it later orphans existing items' files |
+| `R2_PUBLIC_URL` | A name for the bucket that stored item URLs are built from, such as `https://pub-….r2.dev`. The bucket itself is private and nothing fetches this URL, but don't change it once files exist: ownership checks and deletes derive keys from it |
 
 ## Billing (Stripe)
 

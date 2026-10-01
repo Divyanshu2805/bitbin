@@ -11,9 +11,9 @@
 | GitHub sign-in loops back to `/sign-in` | The GitHub OAuth app's callback must be exactly `http://localhost:3000/api/auth/callback/github`, and `AUTH_URL` must match the origin you're browsing |
 | `/sign-in?error=OAuthAccountNotLinked` | That email already has a password account. BitBin doesn't link GitHub to password accounts — sign in with the password. See [authentication](../architecture/flows/authentication.md#github) |
 | Creating an item fails with "Failed to create item" on a fresh database | The system item types are missing. Run `npm run db:seed` |
-| Uploads fail with 500 | An `R2_*` variable is missing, or the bucket has no public URL |
+| Uploads fail with 500 | An `R2_*` variable is missing (`R2_ACCOUNT_ID`, the key pair, `R2_BUCKET_NAME` or `R2_PUBLIC_URL`) |
 | Uploads fail with 403 | The account isn't Pro. Files and images are Pro-only |
-| Images don't render | `R2_PUBLIC_URL`'s host isn't allowed by `images.remotePatterns` in `next.config.ts` (it allows `*.r2.dev` and `*.r2.cloudflarestorage.com`; a custom domain needs adding) |
+| Images or downloads fail (404 or 500 from `/api/download`) | The R2 credentials can't read the bucket (the token needs *Object Read & Write*), or `R2_PUBLIC_URL` was changed after files were uploaded, so the stored URLs no longer map to keys |
 | AI buttons return an error | `OPENAI_API_KEY` is missing, the account isn't Pro, or the 20 / hour AI limit was hit |
 | "AI returned an unexpected format" | The model in `AI_MODEL` doesn't support JSON mode, which tags and descriptions need — see [provider and model](../architecture/flows/ai-features.md#provider-and-model) |
 | Upgrading succeeds in Stripe but the app still says Free | The webhook didn't arrive. Locally, `stripe listen` must be running and its `whsec_…` must be in `STRIPE_WEBHOOK_SECRET` (restart the dev server after changing it) |

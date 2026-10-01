@@ -21,7 +21,7 @@ BitBin is a single Next.js 16 App Router application. There is no separate API s
 |---|---|---|---|
 | PostgreSQL (Neon) | All application data | `lib/prisma.ts` through `@prisma/adapter-pg` | Yes |
 | Upstash Redis | Sliding-window rate limits | `lib/rate-limit.ts` (REST) | No — rate limiting fails open without it |
-| Cloudflare R2 | File and image binaries | `lib/r2.ts` (S3 API); images are also served straight from the public bucket URL | For files and images |
+| Cloudflare R2 | File and image binaries (private bucket) | `lib/r2.ts` (S3 API); every read goes through `/api/download` or the export | For files and images |
 | Stripe | Subscriptions, Customer Portal | `/api/stripe/*`; Stripe calls back into `/api/webhooks/stripe` | For upgrades |
 | OpenAI (or an OpenAI-compatible provider) | The four AI helpers | `src/actions/ai.ts` via `lib/openai.ts` | For AI |
 | Resend | Verification and password-reset email | `lib/email.ts` | For email verification |

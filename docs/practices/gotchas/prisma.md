@@ -26,9 +26,9 @@ The seed creates a system type only if it's missing. Changing an icon or colour 
 
 `updateItem` deletes an item's collection links, recreates them, then updates the item — three statements, no transaction. Only `importData` uses `prisma.$transaction`. When several writes must succeed together, wrap them.
 
-## Limits are checked, then written
+## Limits are checked, then written under a lock
 
-`canCreateItem` counts, then `createItem` inserts. Two concurrent creates at 49 items both pass. That's accepted for the Free plan; don't copy the pattern for anything that must be exact.
+`canCreateItem` counts and `createItem` inserts, which on its own would let two concurrent creates at 49 items both pass. For a Free account, `createItem`, `createCollection` and `importData` therefore pass the cap down (`maxItems` / `maxCollections`) and re-count inside a transaction after `SELECT … FOR UPDATE` on the user's row (`lockUserForLimit`, `lib/limit-error.ts`); a full account throws `LimitReachedError`. A new create path for a limited resource has to take the same lock, or it reintroduces the race.
 
 ## Implicit many-to-many tables
 

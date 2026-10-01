@@ -59,8 +59,8 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 ## Files
 
 - Uploads are stored under `{userId}/{timestamp}-{sanitised name}` in R2.
-- **Images and files are readable by anyone with their URL** — the bucket is public, and image items render straight from `R2_PUBLIC_URL`. The `/api/download` proxy exists to set `Content-Disposition` and enforces the owner check, but it isn't the only way to read an object.
-- Deleting an item deletes the R2 object named by its stored `fileUrl`. That URL is accepted from the client, and the key isn't checked against the caller's prefix — see [known gaps](../known-gaps/not-yet-built.md#security).
+- **The bucket is private.** Every read goes through `/api/download` (and the ZIP export), which require a session and a key inside the caller's own `{userId}/` folder, then read the object with the server's R2 credentials. Previews are served with the type chosen from the file extension, `nosniff` and a sandboxing CSP, so an uploaded SVG, XML or Markdown file can't run script on the app's origin. Public access on the bucket must stay **off**; if it's turned on, objects become readable by anyone with their URL again.
+- A `fileUrl` is accepted from the client only if it points into the caller's own folder (`isOwnedFileUrl`), and only then is it stored, read or deleted.
 
 ## Secrets
 

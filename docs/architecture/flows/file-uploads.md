@@ -24,10 +24,14 @@ Upload and item creation are two steps. An upload whose item is never created le
 
 ## Viewing and downloading
 
-- **Images** render directly from their public R2 URL through `next/image` (`next.config.ts` allows `*.r2.dev` and `*.r2.cloudflarestorage.com`).
-- **Downloads** go through `GET /api/download/{userId}/{file}`, because browsers won't reliably apply a filename to a cross-origin download. The handler requires a session, requires the path to start with the caller's user id (`403`), and streams the object with `Content-Disposition: attachment`.
+Nothing reads the bucket directly: it is private. The stored `fileUrl` only identifies the object, and the helpers in `lib/file-url.ts` turn it into a path on our own domain.
 
-The bucket is public, so the proxy is a convenience, not an access control — anyone with an object's URL can read it. See the [security model](../security-model.md#files).
+- **Images** render from `/api/download/{key}?inline=1` (`fileViewPath`), as `unoptimized` `next/image` or a plain `<img>`, with the type chosen from the file extension and a sandboxing `Content-Security-Policy`.
+- **PDF and text previews** use the same `?inline=1` URL (a PDF as itself, anything else as sandboxed plain text).
+- **Downloads** use `/api/download/{key}` (`fileDownloadPath`) with `Content-Disposition: attachment`.
+- **The ZIP export** reads each of the caller's own files with `getFromR2`, by key.
+
+The route requires a session (`401`), requires the key to be a plain path inside the caller's own `{userId}/` folder (`403`; no other user's folder, no `..`), and reads the object with the server's R2 credentials (`404` if it's missing). See the [security model](../security-model.md#files).
 
 ## Deletion
 
@@ -35,9 +39,9 @@ Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PU
 
 ## R2 setup checklist
 
-1. Create a bucket and enable its public `r2.dev` URL (or attach a custom domain — and add it to `images.remotePatterns`).
+1. Create a bucket and **leave public access off** (no `r2.dev` URL, no custom domain). Files are only read through the app.
 2. Create an API token with *Object Read & Write* on that bucket.
-3. Fill in the `R2_*` variables ([configuration](../../local-development/configuration.md#file-storage-cloudflare-r2)).
+3. Fill in the `R2_*` variables (`R2_PUBLIC_URL` is just the name stored file URLs are built from; nothing has to be reachable at it) ([configuration](../../local-development/configuration.md#file-storage-cloudflare-r2)).
 
 ## Related
 

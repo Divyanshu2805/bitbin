@@ -7,17 +7,17 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 | # | Gap | Severity | Recorded in |
 |---|---|---|---|
 | 1 | ~~Deleting an item can delete someone else's file~~ (fixed) | High | [Not yet built #1](not-yet-built.md#security) |
-| 2 | Open dependency advisories | High | [Not yet built #2](not-yet-built.md#security) |
+| 2 | ~~Open dependency advisories~~ (fixed for production; dev tooling still flagged) | High | [Not yet built #2](not-yet-built.md#security) |
 | 3 | ~~Credentials sign-in isn't rate limited on the server~~ (fixed) | Medium | [Not yet built #4](not-yet-built.md#security) |
 | 4 | ~~Rate limits fail open, including on sign-in~~ (fixed for credentials; unset config still fails open) | Medium | [ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md), [Constraints](constraints-and-trade-offs.md#operations) |
 | 5 | ~~Sessions can't be revoked~~ (fixed) | Medium | [Not yet built #6](not-yet-built.md#security), [Constraints](constraints-and-trade-offs.md#sessions-and-plans) |
 | 6 | ~~Stripe webhooks aren't idempotent or ordered~~ (fixed) | Medium | [Constraints](constraints-and-trade-offs.md#billing) |
 | 7 | ~~Deleting an account leaves its files and subscription~~ (fixed) | Medium | [Not yet built #10](not-yet-built.md#accounts-and-billing) |
-| 8 | Files are public to anyone with the URL | Medium | [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md), [Constraints](constraints-and-trade-offs.md#storage) |
-| 9 | API tokens never expire | Low | [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md) |
+| 8 | ~~Files are public to anyone with the URL~~ (fixed in code; turn public access off in Cloudflare) | Medium | [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md), [Constraints](constraints-and-trade-offs.md#storage) |
+| 9 | ~~API tokens never expire~~ (fixed) | Low | [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md) |
 | 10 | ~~Change-password isn't rate limited~~ (fixed) | Low | [Not yet built #7](not-yet-built.md#security) |
 | 11 | Ownership checks aren't all in `lib/db` | Low | [Not yet built #34](not-yet-built.md#code-health) |
-| 12 | Plan limits aren't atomic | Low | [Constraints](constraints-and-trade-offs.md#data-and-scale) |
+| 12 | ~~Plan limits aren't atomic~~ (fixed) | Low | [Constraints](constraints-and-trade-offs.md#data-and-scale) |
 | 13 | ~~Checkout doesn't check the current plan~~ (fixed) | Low | [Not yet built #16](not-yet-built.md#accounts-and-billing) |
 
 ## Gaps
@@ -34,11 +34,17 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 
 </details>
 
-### 2. Open dependency advisories — High
+### 2. ~~Open dependency advisories~~ — High, fixed for production
+
+**Fixed.** `next` is 16.3.8 and `npm audit fix` is applied. `.npmrc` sets `legacy-peer-deps=true`, which stops npm installing `nuxt` and its ~440 packages (a non-optional peer of `@vercel/analytics` the app never imports), and `monaco-editor` is pinned to the 0.45.0 the app loads from the CDN. `npm audit --omit=dev` reports 0. A full `npm audit` still lists 9 high ones in dev tooling (`prisma` CLI, `eslint-config-next`); npm only offers a prisma 6 downgrade, so wait for a patched release.
+
+<details><summary>Original description</summary>
 
 **Risk.** `npm audit` reports critical and high advisories in `next`, `next-auth`, `@auth/prisma-adapter`, `prisma` and `vitest`.
 
 **Fix.** Upgrade `next` to the patched 16.x release first, then the others one at a time, running `npm run test && npm run build` after each. Don't use `npm audit fix --force`.
+
+</details>
 
 ### 3. ~~Credentials sign-in isn't rate limited on the server~~ — Medium, fixed
 
@@ -100,17 +106,29 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 
 </details>
 
-### 8. Files are public to anyone with the URL — Medium
+### 8. ~~Files are public to anyone with the URL~~ — Medium, fixed in code
+
+**Fixed in code; one dashboard step left.** Every read now goes through `/api/download` (or the ZIP export), which checks the key is inside the caller's folder and reads the object with the server's credentials. Images render from `/api/download/…?inline=1`. The remaining step is in Cloudflare: **disable the bucket's `r2.dev` URL / custom domain** after deploying and checking that images and downloads work. Until then objects are still readable by direct URL. See [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md).
+
+<details><summary>Original description</summary>
 
 **Risk.** The bucket is public ([ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md)). The download route checks ownership, but anyone who gets an object's URL can read it directly.
 
 **Fix.** A private bucket, with short-lived signed URLs issued by an ownership-checked route for both downloads and image rendering.
 
-### 9. API tokens never expire — Low
+</details>
+
+### 9. ~~API tokens never expire~~ — Low, fixed
+
+**Fixed.** A token has an optional `expiresAt` (30 days, 90 by default, 1 year or never, chosen at creation), checked in `authenticateApiRequest` with a `401`, and shown in Settings. Existing tokens stay non-expiring. Migration `20261005120000_add_api_token_expiry`.
+
+<details><summary>Original description</summary>
 
 **Risk.** Personal access tokens are long-lived bearer credentials. A leaked token works until the user revokes it.
 
 **Fix.** An optional expiry chosen when the token is created (30, 90 days or never), checked in `authenticateApiRequest`, and a "last used" warning in Settings for tokens idle for a long time.
+
+</details>
 
 ### 10. ~~Change-password isn't rate limited~~ — Low, fixed
 
@@ -130,11 +148,17 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 
 **Fix.** Move those queries into `lib/db` so every read and write takes the user id in one layer. Postgres row-level security could later add a second line of defence.
 
-### 12. Plan limits aren't atomic — Low
+### 12. ~~Plan limits aren't atomic~~ — Low, fixed
+
+**Fixed.** For a Free account, creating an item or a collection, and importing, re-check the cap inside a transaction after locking the user's row, so concurrent requests can't overshoot it.
+
+<details><summary>Original description</summary>
 
 **Risk.** Counting then inserting lets concurrent requests push a Free account past its 50 items or 3 collections.
 
 **Fix.** Check the count and insert in one transaction with a row lock on the user, or enforce the cap with a database constraint.
+
+</details>
 
 ### 13. ~~Checkout doesn't check the current plan~~ — Low, fixed
 
@@ -165,6 +189,6 @@ Not in the original list; recorded here so the reasoning isn't lost.
 
 ## Suggested order
 
-Open: **#2** (dependencies, mostly done), **#8** (public bucket), **#9** (token expiry), **#11** (ownership checks outside `lib/db`) and **#12** (atomic plan limits).
+Open: **#11** (ownership checks outside `lib/db`), and the Cloudflare step under **#8** (turn public access off).
 
 When a gap is fixed, strike it through here and in its source entry the way [Not yet built](not-yet-built.md) does (for example item 3 there), so the numbering stays stable.

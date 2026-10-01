@@ -37,15 +37,16 @@ Limits per type are in the [file uploads flow](../architecture/flows/file-upload
 
 ## `GET /api/download/[...path]`
 
-`/api/download/{userId}/{timestamp}-{name}` — the object key. Streams the object with `Content-Disposition: attachment` and the original content type.
+`/api/download/{userId}/{timestamp}-{name}` — the object key. The bucket is private: this route is the only way to read a file. It reads the object with the server's R2 credentials and returns it with `Content-Disposition: attachment`, the stored content type and `X-Content-Type-Options: nosniff`.
 
-With `?inline=1` (the item panel's file preview) it's served `inline` instead: a PDF as `application/pdf`, anything else as `text/plain; charset=utf-8` with `Content-Security-Policy: sandbox`, and always `X-Content-Type-Options: nosniff`, so an uploaded file can't run script on the app's origin.
+With `?inline=1` (the app's previews) it's served `inline` instead: a PDF as `application/pdf`; an image as its type, chosen from the file extension (PNG, JPEG, GIF, WebP or SVG); anything else as `text/plain; charset=utf-8`. Everything but a PDF carries `Content-Security-Policy: sandbox` and always `X-Content-Type-Options: nosniff`, so an uploaded file can't run script on the app's origin. Responses are `Cache-Control: private, max-age=3600`.
 
 | Status | When |
 |---|---|
 | `200` | The file |
 | `401` | No session |
-| `403` | The path doesn't start with the caller's user id |
+| `403` | The key isn't a plain path inside the caller's own `{userId}/` folder: another user's folder, a look-alike id prefix, or a `.` / `..` segment (encoded or not) |
+| `404` | The object doesn't exist |
 | `404` | No such object |
 | `500` | Storage error or missing R2 configuration |
 

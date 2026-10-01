@@ -58,9 +58,10 @@ Personal access tokens for the [token API](../api/token-api.md), created in Sett
 | `tokenHash` | text, unique | SHA-256 (hex) of the token. The token itself is never stored |
 | `prefix` | text | The token's first 10 characters (`bb_…`), shown in Settings to tell tokens apart |
 | `lastUsedAt` | timestamp, nullable | Updated by `/api/v1` requests, at most once a minute |
+| `expiresAt` | timestamp, nullable | When the token stops working. `null` = never expires (tokens created before migration `20261005120000_add_api_token_expiry` stay `null`) |
 | `createdAt` | timestamp | |
 
-At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). Tokens don't expire. Revoking one deletes the row. Tokens are **not** exported or imported.
+At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). A token expires after 30 days, 90 days (the default), 1 year or never, chosen when it's created; `authenticateApiRequest` rejects an expired one with `401`. Revoking one deletes the row. Tokens are **not** exported or imported.
 
 ## Related
 

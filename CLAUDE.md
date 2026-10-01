@@ -71,6 +71,8 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **The Stripe webhook verifies the raw body** before doing anything, and only acts on checkouts tagged `metadata.app = STRIPE_APP_TAG`.
 - **A NextAuth provider change goes in both `auth.ts` and `auth.config.ts`** — e.g. GitHub's `issuer` override.
 - **`/api/v1/*` is the token API** — every handler starts with `authenticateApiRequest`, reuses the shared lib logic (`item-create`, `ai-tags`) instead of forking it, and stays backward compatible: the extension depends on it.
+- **Files live in a private bucket.** Never link to or fetch a stored `fileUrl`; use `fileViewPath` / `fileDownloadPath` (`lib/file-url.ts`) and read objects with `getFromR2`. Check client-supplied `fileUrl`s with `isOwnedFileUrl`.
+- **Free-plan limits are enforced under a lock.** A new way to create items or collections must pass `maxItems` / `maxCollections` so the count and insert run in one transaction (`lockUserForLimit`).
 - **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
 
 ## Practices

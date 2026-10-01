@@ -12,8 +12,9 @@
 
 ## Cloudflare R2
 
-- **Keys are derived from `R2_PUBLIC_URL`.** `deleteFromR2` strips the configured public URL from the stored `fileUrl`. Change the public URL (say, to a custom domain) and every existing item's delete stops finding its object.
-- **New image hosts need `next.config.ts`.** `images.remotePatterns` allows `*.r2.dev`, `pub-*.r2.dev` and `*.r2.cloudflarestorage.com`; a custom domain renders as a broken image until it's added.
+- **Keys are derived from `R2_PUBLIC_URL`.** `deleteFromR2`, `isOwnedFileUrl` and the viewers strip the configured URL (or the URL's path) from the stored `fileUrl` to get the key. Change the value (say, to a custom domain) and every existing item's delete and ownership check stops matching its object.
+- **The bucket is private; never link to an object directly.** Show or download a file through `fileViewPath` / `fileDownloadPath` (`lib/file-url.ts`). A direct R2 URL returns `403`. Images use `unoptimized` because they're per-user, and `images.remotePatterns` is intentionally empty.
+- **Public access must stay off in Cloudflare.** If it's switched on, every object is readable by anyone with its URL, and nothing in the app notices.
 - **Deletes swallow errors.** A failed R2 delete is logged and the item is deleted anyway, leaving an orphan.
 
 ## Upstash

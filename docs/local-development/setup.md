@@ -10,6 +10,8 @@ cd bitbin
 npm install
 ```
 
+The repo's `.npmrc` sets `legacy-peer-deps=true`. Without it npm installs `nuxt` (a non-optional peer of `@vercel/analytics`) and hundreds of packages the app never uses, which also brings in their security advisories.
+
 ## 2. Configure
 
 ```bash

@@ -11,12 +11,13 @@ Authorization: Bearer bb_…
 ```
 
 - Tokens are created and revoked in **Settings → Browser extension** (Pro only). The plain token is shown once. BitBin stores its SHA-256 hash.
+- A token expires after the lifetime chosen when it's created: 30 days, 90 days (the default), 1 year or never. Settings shows how long each token has left, and an expired one has to be replaced.
 - Cookies are ignored. A request with a session cookie and no token is rejected.
 - The owner's plan is re-read on every request, so a user who stops being Pro gets `403` from then on, even with a valid token.
 
 | Status | When |
 |---|---|
-| `401` | No `Authorization` header, not `Bearer bb_…`, or an unknown / revoked token |
+| `401` | No `Authorization` header, not `Bearer bb_…`, an unknown / revoked token, or an **expired** one ("API token has expired. Create a new one in Settings.") |
 | `403` | The token's owner isn't on Pro |
 | `429` | Over the `api` limit (60 requests a minute per user), with `Retry-After` |
 

@@ -14,14 +14,14 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 
 ## Storage
 
-- **Public bucket.** Every file and image is readable by anyone with its URL ([ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md)). Private files need a private bucket and signed URLs, and then images can't render from a plain URL.
+- **Files are served through the app.** The bucket is private ([ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md)), so every image and download passes through a function: no CDN cache, no image resizing, and function time proportional to the file (images cap at 5 MB, files at 10 MB). If that becomes a cost, use short-lived presigned URLs for large downloads from the same ownership check.
 - **Orphans accumulate.** Uploads whose item is never created, failed deletes, and deleted accounts all leave objects in R2. There's no sweeper.
 
 ## Data and scale
 
 - **Search loads everything.** The ⌘K index is every item and collection the user has, sent on each dashboard load and filtered in the browser. Fine for hundreds of items; thousands would call for server-side search (PostgreSQL full-text or `pg_trgm`).
 - **Offset pagination.** `?page=` with `skip` — simple, but deep pages get slower and rows shift while paging.
-- **Plan limits aren't atomic.** Counting then inserting lets concurrent requests overshoot the Free caps by a few rows.
+- **Plan limits are exact for Free creates, not for every path.** Creating an item or a collection, and importing, re-check the cap in a transaction under a lock on the user's row, so concurrent requests can't overshoot it. The cheaper pre-check in `lib/usage.ts` still runs first for a quick message. Any new way to create items must go through the same locked path.
 - **Global tags.** Tag names are shared by everyone and never deleted. Harmless today; per-user tag management (rename, merge, delete) would need per-user tags.
 - **Exports run in one function call.** A ZIP export fetches every file from R2 and compresses it inside a single serverless invocation, so a large library can hit Vercel's function time or memory limit.
 
