@@ -138,7 +138,7 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
             <Separator />
 
             <form onSubmit={handleCreate} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-2">
+              <div className="flex flex-1 flex-col gap-2">
                 <Label htmlFor="token-name">Token name</Label>
                 <Input
                   id="token-name"
@@ -148,7 +148,8 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                   placeholder="e.g. Chrome on laptop"
                 />
               </div>
-              <div className="space-y-2 sm:w-40">
+              {/* flex + gap, not space-y: Radix adds a hidden <select> after the trigger, which space-y would push the trigger up for */}
+              <div className="flex flex-col gap-2 sm:w-40">
                 <Label htmlFor="token-lifetime">Expires</Label>
                 <Select value={lifetime} onValueChange={setLifetime}>
                   <SelectTrigger id="token-lifetime" className="w-full">

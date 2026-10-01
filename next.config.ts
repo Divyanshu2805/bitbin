@@ -1,17 +1,18 @@
 import type { NextConfig } from 'next';
 
-// Headers for every response. The CSP is deliberately limited to directives that
-// can't break the page (no framing, no <base> or plugin tricks); a full script-src
-// policy needs nonces for the inline theme script and Monaco's CDN loader.
+// Headers for every response. Framing is limited to the app itself (the PDF preview
+// is an iframe of /api/download), never other sites. The CSP is deliberately limited
+// to directives that can't break the page; a full script-src policy needs nonces for
+// the inline theme script and Monaco's CDN loader.
 const securityHeaders = [
-  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   {
     key: 'Content-Security-Policy',
-    value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
   },
 ];
 

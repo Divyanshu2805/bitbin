@@ -183,7 +183,7 @@ Not in the original list; recorded here so the reasoning isn't lost.
 | **Account enumeration** through registration and resend-verification | Same response for every address |
 | **Account deletion without a password** | Password accounts must send it (see #7) |
 | **Uploads trusted the client's file type**, and SVGs could hold script | Content type derived from the extension; file signatures checked; SVG with script rejected |
-| **No security headers** | `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS and a `frame-ancestors` / `base-uri` / `object-src` CSP. A full `script-src` policy is still open: it needs nonces for the inline theme script and Monaco's CDN loader |
+| **No security headers** | `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS and a `frame-ancestors 'self'` / `base-uri` / `object-src` CSP. Framing must stay allowed for the app itself: the PDF preview is an iframe of `/api/download`. A full `script-src` policy is still open: it needs nonces for the inline theme script and Monaco's CDN loader |
 | **No size limits** on titles, content, tags, passwords, imports | Caps in `lib/validation.ts` (title 200, content 500,000, 20 tags of 50, language 50, passwords 128, imports 5,000 entries) |
 | **Import stored any URL**, `javascript:` included | Imports keep `http(s)` URLs only |
 
