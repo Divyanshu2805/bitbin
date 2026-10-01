@@ -1000,3 +1000,47 @@ describe('createItem file ownership', () => {
     );
   });
 });
+
+describe('item field limits', () => {
+  const base = { description: null, url: null, content: null, language: null, tags: [] as string[] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: false }, expires: new Date().toISOString() });
+    mockCanCreateItem.mockResolvedValue(true);
+    mockCreateItemQuery.mockResolvedValue({ id: 'item-123' } as never);
+  });
+
+  it('rejects an oversized title, content, language and tag list on create', async () => {
+    const tooMany = Array.from({ length: 21 }, (_, i) => `tag${i}`);
+    const results = await Promise.all([
+      createItem({ ...base, typeName: 'note', title: 't'.repeat(201) }),
+      createItem({ ...base, typeName: 'note', title: 'ok', content: 'x'.repeat(500_001) }),
+      createItem({ ...base, typeName: 'snippet', title: 'ok', language: 'l'.repeat(51) }),
+      createItem({ ...base, typeName: 'note', title: 'ok', tags: tooMany }),
+      createItem({ ...base, typeName: 'note', title: 'ok', tags: ['t'.repeat(51)] }),
+    ]);
+
+    for (const result of results) expect(result.success).toBe(false);
+    expect(mockCreateItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('applies the same limits on update', async () => {
+    const result = await updateItem('item-123', { ...base, title: 't'.repeat(201) });
+
+    expect(result.success).toBe(false);
+    expect(mockUpdateItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('accepts values at the limit', async () => {
+    const result = await createItem({
+      ...base,
+      typeName: 'note',
+      title: 't'.repeat(200),
+      content: 'x'.repeat(500_000),
+      tags: Array.from({ length: 20 }, (_, i) => `tag${i}`),
+    });
+
+    expect(result.success).toBe(true);
+  });
+});

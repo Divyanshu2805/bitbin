@@ -12,20 +12,28 @@ import {
   type ItemCollectionOption,
   type ItemCollectionChange,
 } from '@/lib/db/items';
-import { descriptionSchema, parseZodErrors, safeUrlSchema, validateId } from '@/lib/validation';
+import {
+  collectionIdsSchema,
+  contentSchema,
+  descriptionSchema,
+  languageSchema,
+  parseZodErrors,
+  safeUrlSchema,
+  tagsSchema,
+  titleSchema,
+  validateId,
+} from '@/lib/validation';
 import { createItemForUser, type CreateItemInput } from '@/lib/item-create';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
 
 const updateItemSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required'),
+  title: titleSchema,
   description: descriptionSchema,
-  content: z.string().nullable().optional().transform((val) => val || null),
+  content: contentSchema,
   url: safeUrlSchema,
-  language: z.string().trim().nullable().optional().transform((val) => val || null),
-  tags: z.array(z.string().trim()).transform((tags) =>
-    tags.filter((tag) => tag.length > 0)
-  ),
-  collectionIds: z.array(z.string()).optional(),
+  language: languageSchema,
+  tags: tagsSchema,
+  collectionIds: collectionIdsSchema,
 });
 
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;

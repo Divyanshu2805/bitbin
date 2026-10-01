@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { createItem as createItemQuery, VALID_ITEM_TYPES, type ItemDetail } from '@/lib/db/items';
-import { descriptionSchema, parseZodErrors, safeUrlSchema } from '@/lib/validation';
+import {
+  collectionIdsSchema,
+  contentSchema,
+  descriptionSchema,
+  languageSchema,
+  MAX_FILE_NAME_LENGTH,
+  parseZodErrors,
+  safeUrlSchema,
+  tagsSchema,
+  titleSchema,
+} from '@/lib/validation';
 import { canCreateItem } from '@/lib/usage';
 import type { ActionResult } from '@/lib/action-utils';
 import { detectLanguage } from '@/lib/detect-language';
@@ -17,17 +27,15 @@ const LANGUAGE_TYPES: string[] = ['snippet', 'command'];
 
 export const createItemSchema = z.object({
   typeName: z.enum(VALID_ITEM_TYPES, { message: 'Invalid item type' }),
-  title: z.string().trim().min(1, 'Title is required'),
+  title: titleSchema,
   description: descriptionSchema,
-  content: z.string().nullable().optional().transform((val) => val || null),
+  content: contentSchema,
   url: safeUrlSchema,
-  language: z.string().trim().nullable().optional().transform((val) => val || null),
-  tags: z.array(z.string().trim()).transform((tags) =>
-    tags.filter((tag) => tag.length > 0)
-  ),
-  collectionIds: z.array(z.string()).optional(),
+  language: languageSchema,
+  tags: tagsSchema,
+  collectionIds: collectionIdsSchema,
   fileUrl: safeUrlSchema,
-  fileName: z.string().nullable().optional().transform((val) => val || null),
+  fileName: z.string().max(MAX_FILE_NAME_LENGTH).nullable().optional().transform((val) => val || null),
   fileSize: z.number().int().positive().nullable().optional().transform((val) => val || null),
 });
 

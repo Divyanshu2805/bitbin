@@ -373,3 +373,70 @@ describe('importData server action', () => {
     expect(result.data?.collectionsSkipped).toBe(1);
   });
 });
+
+describe('importData input hardening', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+    vi.mocked(prisma.item.count).mockResolvedValue(0);
+    vi.mocked(prisma.collection.count).mockResolvedValue(0);
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.itemType.findMany).mockResolvedValue([
+      { id: 'type-1', name: 'link', icon: 'Link', color: '#fff', isSystem: true, userId: null },
+      { id: 'type-2', name: 'image', icon: 'Image', color: '#fff', isSystem: true, userId: null },
+    ]);
+  });
+
+  function captureCreates() {
+    const create = vi.fn().mockResolvedValue({ id: 'new-item' });
+    vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
+      const tx = {
+        collection: { findMany: vi.fn().mockResolvedValue([]), create: vi.fn() },
+        item: { create },
+      };
+      return (fn as (t: typeof tx) => Promise<void>)(tx);
+    });
+    return create;
+  }
+
+  const exportOf = (items: object[]) => JSON.stringify({ version: 1, items, collections: [] });
+
+  it('drops non-http URLs instead of storing them', async () => {
+    const create = captureCreates();
+    await importData(
+      exportOf([
+        { title: 'Bad', type: 'link', url: 'javascript:alert(1)', tags: [], collections: [] },
+        { title: 'Good', type: 'link', url: 'https://example.com', tags: [], collections: [] },
+      ]),
+      false
+    );
+
+    expect(create.mock.calls[0][0].data.url).toBeNull();
+    expect(create.mock.calls[1][0].data.url).toBe('https://example.com');
+  });
+
+  it("drops a file URL that isn't in the importer's own folder", async () => {
+    vi.stubEnv('R2_PUBLIC_URL', 'https://pub-test.r2.dev');
+    const create = captureCreates();
+    await importData(
+      exportOf([
+        { title: 'Theirs', type: 'image', fileUrl: 'https://pub-test.r2.dev/other-user/1-a.png', tags: [], collections: [] },
+        { title: 'Mine', type: 'image', fileUrl: 'https://pub-test.r2.dev/user-123/1-b.png', tags: [], collections: [] },
+      ]),
+      false
+    );
+
+    expect(create.mock.calls[0][0].data.fileUrl).toBeNull();
+    expect(create.mock.calls[1][0].data.fileUrl).toBe('https://pub-test.r2.dev/user-123/1-b.png');
+  });
+
+  it('rejects oversized fields', async () => {
+    const result = await importData(
+      exportOf([{ title: 't'.repeat(201), type: 'link', tags: [], collections: [] }]),
+      false
+    );
+
+    expect(result.success).toBe(false);
+  });
+});

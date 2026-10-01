@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { uploadToR2, validateFile } from '@/lib/r2';
+import { contentTypeForFile, uploadToR2, validateFile, validateFileContent } from '@/lib/r2';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
 
@@ -56,12 +56,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Convert to buffer and upload
+    // The bytes must match the extension; the stored type comes from the extension, not the client
     const buffer = Buffer.from(await file.arrayBuffer());
+    const contentCheck = validateFileContent(buffer, file.name);
+    if (!contentCheck.valid) {
+      return NextResponse.json({ error: contentCheck.error }, { status: 400 });
+    }
+
     const { fileUrl } = await uploadToR2(
       buffer,
       file.name,
-      file.type,
+      contentTypeForFile(file.name),
       session.user.id
     );
 

@@ -103,6 +103,88 @@ export function validateFile(
   return { valid: true };
 }
 
+const EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain',
+  '.md': 'text/markdown',
+  '.json': 'application/json',
+  '.yaml': 'application/x-yaml',
+  '.yml': 'application/x-yaml',
+  '.xml': 'application/xml',
+  '.csv': 'text/csv',
+  '.toml': 'application/toml',
+  '.ini': 'text/plain',
+};
+
+function extensionOf(fileName: string): string {
+  return '.' + (fileName.split('.').pop()?.toLowerCase() ?? '');
+}
+
+/**
+ * The content type we store and serve, chosen from the file extension. The
+ * type the browser sent is only checked, never trusted.
+ */
+export function contentTypeForFile(fileName: string): string {
+  return EXTENSION_CONTENT_TYPES[extensionOf(fileName)] ?? 'application/octet-stream';
+}
+
+function startsWith(buffer: Buffer, bytes: number[], offset = 0): boolean {
+  return bytes.every((byte, i) => buffer[offset + i] === byte);
+}
+
+const SIGNATURES: Record<string, (b: Buffer) => boolean> = {
+  '.png': (b) => startsWith(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  '.jpg': (b) => startsWith(b, [0xff, 0xd8, 0xff]),
+  '.jpeg': (b) => startsWith(b, [0xff, 0xd8, 0xff]),
+  '.gif': (b) => startsWith(b, [0x47, 0x49, 0x46, 0x38]),
+  '.webp': (b) => startsWith(b, [0x52, 0x49, 0x46, 0x46]) && startsWith(b, [0x57, 0x45, 0x42, 0x50], 8),
+  '.pdf': (b) => startsWith(b, [0x25, 0x50, 0x44, 0x46]),
+};
+
+const ACTIVE_SVG = /<script|<foreignObject|\son[a-z]+\s*=|javascript:|<iframe|<embed|<object/i;
+
+/**
+ * Check that a file's bytes are what its extension says: image and PDF
+ * signatures, text formats without binary content, and SVGs without script.
+ * Runs after validateFile, which only sees the name, size and declared type.
+ */
+export function validateFileContent(
+  buffer: Buffer,
+  fileName: string
+): { valid: boolean; error?: string } {
+  const ext = extensionOf(fileName);
+
+  const signature = SIGNATURES[ext];
+  if (signature) {
+    return signature(buffer)
+      ? { valid: true }
+      : { valid: false, error: 'File contents do not match its extension' };
+  }
+
+  // Everything else is text (svg, xml, json, md, ...): no NUL bytes, valid UTF-8
+  if (buffer.includes(0)) {
+    return { valid: false, error: 'File contents do not match its extension' };
+  }
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch {
+    return { valid: false, error: 'File contents do not match its extension' };
+  }
+
+  if (ext === '.svg' && ACTIVE_SVG.test(text)) {
+    return { valid: false, error: 'SVG files with scripts or embedded content are not allowed' };
+  }
+
+  return { valid: true };
+}
+
 /**
  * Upload file to R2
  */

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { validateFile, formatFileSize, isOwnedFileUrl, FILE_CONSTRAINTS } from './r2';
+import { validateFile, validateFileContent, contentTypeForFile, formatFileSize, isOwnedFileUrl, FILE_CONSTRAINTS } from './r2';
 
 describe('validateFile', () => {
   describe('image validation', () => {
@@ -244,5 +244,41 @@ describe('isOwnedFileUrl', () => {
     expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/')).toBe(false);
     vi.stubEnv('R2_PUBLIC_URL', '');
     expect(isOwnedFileUrl('u1', 'https://pub-test.r2.dev/u1/a.png')).toBe(false);
+  });
+});
+
+describe('validateFileContent', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
+
+  it('accepts a real PNG and rejects one with the wrong bytes', () => {
+    expect(validateFileContent(png, 'a.png').valid).toBe(true);
+    expect(validateFileContent(Buffer.from('<html>'), 'a.png').valid).toBe(false);
+  });
+
+  it('checks PDFs and JPEGs by signature', () => {
+    expect(validateFileContent(Buffer.from('%PDF-1.7'), 'a.pdf').valid).toBe(true);
+    expect(validateFileContent(Buffer.from('not a pdf'), 'a.pdf').valid).toBe(false);
+    expect(validateFileContent(Buffer.from([0xff, 0xd8, 0xff, 0xe0]), 'a.JPG').valid).toBe(true);
+  });
+
+  it('accepts text files and rejects binary content under a text extension', () => {
+    expect(validateFileContent(Buffer.from('{"a":1}'), 'a.json').valid).toBe(true);
+    expect(validateFileContent(png, 'a.json').valid).toBe(false);
+    expect(validateFileContent(Buffer.from([0xff, 0xfe, 0xfd]), 'notes.txt').valid).toBe(false);
+  });
+
+  it('rejects SVGs that can run script', () => {
+    expect(validateFileContent(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><circle r="1"/></svg>'), 'a.svg').valid).toBe(true);
+    expect(validateFileContent(Buffer.from('<svg><script>alert(1)</script></svg>'), 'a.svg').valid).toBe(false);
+    expect(validateFileContent(Buffer.from('<svg onload="alert(1)"></svg>'), 'a.svg').valid).toBe(false);
+    expect(validateFileContent(Buffer.from('<svg><a href="javascript:alert(1)"/></svg>'), 'a.svg').valid).toBe(false);
+  });
+});
+
+describe('contentTypeForFile', () => {
+  it('derives the type from the extension', () => {
+    expect(contentTypeForFile('Photo.JPG')).toBe('image/jpeg');
+    expect(contentTypeForFile('x.svg')).toBe('image/svg+xml');
+    expect(contentTypeForFile('x.unknown')).toBe('application/octet-stream');
   });
 });

@@ -5,14 +5,26 @@ import { prisma } from '@/lib/prisma';
 import { VALID_ITEM_TYPES } from '@/lib/db/items';
 import { MAX_ITEMS, MAX_COLLECTIONS } from '@/lib/usage';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
-import { MAX_DESCRIPTION_LENGTH } from '@/lib/validation';
+import {
+  isValidUrlProtocol,
+  MAX_CONTENT_LENGTH,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_FILE_NAME_LENGTH,
+  MAX_LANGUAGE_LENGTH,
+  MAX_TAG_LENGTH,
+  MAX_TAGS_PER_ITEM,
+  MAX_TITLE_LENGTH,
+} from '@/lib/validation';
+
+/** Most items or collections one import file may hold */
+const MAX_IMPORT_ENTRIES = 5000;
 import { isOwnedFileUrl } from '@/lib/r2';
 
 const importItemSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).max(MAX_TITLE_LENGTH),
   type: z.enum(VALID_ITEM_TYPES),
-  content: z.string().nullable().optional().default(null),
-  language: z.string().nullable().optional().default(null),
+  content: z.string().max(MAX_CONTENT_LENGTH).nullable().optional().default(null),
+  language: z.string().max(MAX_LANGUAGE_LENGTH).nullable().optional().default(null),
   // Older exports may hold longer descriptions: cut to the cap rather than fail the import
   description: z
     .string()
@@ -20,12 +32,22 @@ const importItemSchema = z.object({
     .optional()
     .default(null)
     .transform((val) => (val ? val.slice(0, MAX_DESCRIPTION_LENGTH) : val)),
-  url: z.string().nullable().optional().default(null),
-  fileName: z.string().nullable().optional().default(null),
+  // Same rule as safeUrlSchema: only http(s) links are kept (a javascript: URL becomes none)
+  url: z
+    .string()
+    .nullable()
+    .optional()
+    .default(null)
+    .transform((val) => (val && isValidUrlProtocol(val) ? val : null)),
+  fileName: z.string().max(MAX_FILE_NAME_LENGTH).nullable().optional().default(null),
   fileSize: z.number().nullable().optional().default(null),
   fileUrl: z.string().nullable().optional().default(null),
-  tags: z.array(z.string()).optional().default([]),
-  collections: z.array(z.string()).optional().default([]),
+  tags: z
+    .array(z.string().trim().min(1).max(MAX_TAG_LENGTH))
+    .max(MAX_TAGS_PER_ITEM)
+    .optional()
+    .default([]),
+  collections: z.array(z.string().max(100)).max(100).optional().default([]),
   isFavorite: z.boolean().optional().default(false),
   isPinned: z.boolean().optional().default(false),
   createdAt: z.string().optional(),
@@ -33,8 +55,8 @@ const importItemSchema = z.object({
 });
 
 const importCollectionSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().nullable().optional().default(null),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).nullable().optional().default(null),
   isFavorite: z.boolean().optional().default(false),
   isPinned: z.boolean().optional().default(false),
 });
@@ -42,8 +64,8 @@ const importCollectionSchema = z.object({
 const importDataSchema = z.object({
   version: z.number(),
   exportedAt: z.string().optional(),
-  items: z.array(importItemSchema),
-  collections: z.array(importCollectionSchema),
+  items: z.array(importItemSchema).max(MAX_IMPORT_ENTRIES),
+  collections: z.array(importCollectionSchema).max(MAX_IMPORT_ENTRIES),
 });
 
 export type ImportInput = z.infer<typeof importDataSchema>;
