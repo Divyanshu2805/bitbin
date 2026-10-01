@@ -4,12 +4,15 @@ import { generateVerificationToken } from '@/lib/tokens'
 import { sendVerificationEmail } from '@/lib/email'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
+const GENERIC_MESSAGE =
+  'If an unverified account exists with this email, a verification link has been sent.'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { email } = body
 
-    if (!email) {
+    if (typeof email !== 'string' || !email) {
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }
@@ -31,16 +34,13 @@ export async function POST(request: Request) {
       // Don't reveal if user exists or not for security
       return NextResponse.json({
         success: true,
-        message: 'If an account exists with this email, a verification link has been sent.',
+        message: GENERIC_MESSAGE,
       })
     }
 
-    // Check if already verified
+    // Verified accounts get the generic answer too, so the response never says whether an address is registered
     if (user.emailVerified) {
-      return NextResponse.json({
-        success: true,
-        message: 'Email is already verified. You can sign in.',
-      })
+      return NextResponse.json({ success: true, message: GENERIC_MESSAGE })
     }
 
     // Generate new token and send email
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Verification email sent. Please check your inbox.',
+      message: GENERIC_MESSAGE,
     })
   } catch (error) {
     console.error('Resend verification error:', error)
