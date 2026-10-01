@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, File as FileIcon } from "lucide-react";
 import { formatFileSize } from "@/lib/r2";
+import { fileViewPath } from "@/lib/file-url";
 import CodeEditor from "./code-editor";
 import MarkdownEditor from "./markdown-editor";
 
@@ -28,15 +29,6 @@ const TEXT_LANGUAGES: Record<string, string> = {
 // Past this many characters the preview is cut; the download has it all
 const MAX_PREVIEW_CHARS = 200_000;
 
-/** The file's key in storage (`{userId}/{timestamp}-{name}`), for /api/download. */
-function storageKey(fileUrl: string) {
-  try {
-    return new URL(fileUrl).pathname.slice(1);
-  } catch {
-    return null;
-  }
-}
-
 /**
  * A file item in the item panel, previewed in the height it's given (the parent
  * must have one): a PDF in the browser's viewer, Markdown rendered, and the
@@ -47,8 +39,7 @@ function storageKey(fileUrl: string) {
 export default function FileViewer({ fileUrl, fileName, fileSize, onDownload }: FileViewerProps) {
   const name = fileName || "file";
   const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
-  const key = storageKey(fileUrl);
-  const src = key ? `/api/download/${key}?inline=1` : null;
+  const src = fileViewPath(fileUrl);
   const isPdf = ext === "pdf";
   const isMarkdown = ext === "md";
   const textLanguage = TEXT_LANGUAGES[ext];

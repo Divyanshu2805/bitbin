@@ -1,6 +1,7 @@
 "use client";
 
 import Image from 'next/image';
+import { fileViewPath } from '@/lib/file-url';
 import { Star, Pin, ImageOff } from 'lucide-react';
 import { useItemDrawer } from '@/components/items/item-drawer-provider';
 import { formatRelativeDate } from '@/lib/utils/date';
@@ -27,10 +28,11 @@ export default function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
       style={{ '--accent-color': 'var(--brand-lime)' } as React.CSSProperties}
     >
       <div className="relative aspect-video overflow-hidden bg-[repeating-conic-gradient(var(--muted)_0_25%,var(--card)_0_50%)] bg-[length:16px_16px]">
-        {item.fileUrl ? (
+        {fileViewPath(item.fileUrl) ? (
           <Image
-            src={item.fileUrl}
+            src={fileViewPath(item.fileUrl)!}
             alt={item.title}
+            unoptimized
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"

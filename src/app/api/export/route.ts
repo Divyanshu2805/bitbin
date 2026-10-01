@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { isOwnedFileUrl } from '@/lib/r2';
+import { getFromR2, isOwnedFileUrl } from '@/lib/r2';
+import { fileKeyFromUrl } from '@/lib/file-url';
 import { getUserExportData } from '@/lib/db/export';
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
@@ -75,11 +76,11 @@ export async function GET(request: NextRequest) {
 
   for (const item of fileItems) {
     try {
-      const response = await fetch(item.fileUrl!);
-      if (response.ok && response.body) {
-        const arrayBuffer = await response.arrayBuffer();
+      // The bucket is private: read the object with our credentials, by its key
+      const object = await getFromR2(fileKeyFromUrl(item.fileUrl)!);
+      if (object) {
         const fileName = item.fileName || `file-${fileItems.indexOf(item)}`;
-        archive.append(Buffer.from(arrayBuffer), { name: `files/${fileName}` });
+        archive.append(Buffer.from(object.body), { name: `files/${fileName}` });
       }
     } catch {
       // Skip files that can't be fetched

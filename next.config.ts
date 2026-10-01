@@ -26,22 +26,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.r2.cloudflarestorage.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.r2.dev',
-      },
-      {
-        protocol: 'https',
-        hostname: 'pub-*.r2.dev',
-      },
-    ],
-  },
+  // No remote image hosts: files live in a private bucket and are shown through
+  // /api/download (rendered with `unoptimized`, since they are per-user)
 };
 
 export default nextConfig;

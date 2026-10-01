@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { validateFile, validateFileContent, contentTypeForFile, formatFileSize, isOwnedFileUrl, FILE_CONSTRAINTS } from './r2';
+import { validateFile, validateFileContent, contentTypeForFile, formatFileSize, isOwnedFileUrl, isOwnedKey, FILE_CONSTRAINTS } from './r2';
 
 describe('validateFile', () => {
   describe('image validation', () => {
@@ -280,5 +280,29 @@ describe('contentTypeForFile', () => {
     expect(contentTypeForFile('Photo.JPG')).toBe('image/jpeg');
     expect(contentTypeForFile('x.svg')).toBe('image/svg+xml');
     expect(contentTypeForFile('x.unknown')).toBe('application/octet-stream');
+  });
+});
+
+describe('isOwnedKey', () => {
+  it('accepts a plain key in the user folder', () => {
+    expect(isOwnedKey('u1', 'u1/123-a.png')).toBe(true);
+    expect(isOwnedKey('u1', 'u1/sub/123-a.png')).toBe(true);
+  });
+
+  it('rejects other folders, look-alike ids and empty keys', () => {
+    expect(isOwnedKey('u1', 'u2/123-a.png')).toBe(false);
+    expect(isOwnedKey('u1', 'u10/123-a.png')).toBe(false);
+    expect(isOwnedKey('u1', 'u1')).toBe(false);
+    expect(isOwnedKey('u1', 'u1/')).toBe(false);
+    expect(isOwnedKey('u1', '')).toBe(false);
+    expect(isOwnedKey('', 'u1/a.png')).toBe(false);
+    expect(isOwnedKey('u1', null)).toBe(false);
+  });
+
+  it('rejects dot segments, encoded or not', () => {
+    expect(isOwnedKey('u1', 'u1/../u2/a.png')).toBe(false);
+    expect(isOwnedKey('u1', 'u1/./a.png')).toBe(false);
+    expect(isOwnedKey('u1', 'u1/%2e%2e/u2/a.png')).toBe(false);
+    expect(isOwnedKey('u1', 'u1/..%2Fu2/a.png')).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 
@@ -223,25 +224,63 @@ export async function uploadToR2(
 const DOT_SEGMENT = /(^|[\\/])\.\.?($|[\\/])/;
 
 /**
+ * Whether an object key is a plain path inside the user's own `{userId}/`
+ * folder: the right prefix, something after it, and no dot segments (encoded
+ * or not) that could climb out of it.
+ */
+export function isOwnedKey(userId: string, key: string | null | undefined): boolean {
+  if (!userId || !key) return false;
+
+  const prefix = `${userId}/`;
+  if (!key.startsWith(prefix)) return false;
+
+  const rest = key.slice(prefix.length);
+  if (!rest || DOT_SEGMENT.test(rest)) return false;
+  try {
+    return !DOT_SEGMENT.test(decodeURIComponent(rest));
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Whether `fileUrl` points at an object inside the user's own `{userId}/`
  * folder of our bucket. Client-supplied file URLs must pass this before they
- * are stored, fetched or deleted: anything else could be another user's file
- * or an arbitrary host.
+ * are stored, read or deleted: anything else could be another user's file or
+ * an arbitrary host.
  */
 export function isOwnedFileUrl(userId: string, fileUrl: string | null | undefined): boolean {
   const publicUrl = process.env.R2_PUBLIC_URL;
   if (!publicUrl || !userId || !fileUrl) return false;
 
-  const prefix = `${publicUrl.replace(/\/+$/, '')}/${userId}/`;
+  const prefix = `${publicUrl.replace(/\/+$/, '')}/`;
   if (!fileUrl.startsWith(prefix)) return false;
 
-  // The key must be a plain path under the prefix: no dot segments, encoded or not
-  const key = fileUrl.slice(prefix.length);
-  if (!key || DOT_SEGMENT.test(key)) return false;
+  return isOwnedKey(userId, fileUrl.slice(prefix.length));
+}
+
+/**
+ * Read an object through the S3 API with our credentials. The bucket is
+ * private, so this is the only way to read a file. `null` if it doesn't exist.
+ */
+export async function getFromR2(
+  key: string
+): Promise<{ body: Uint8Array; contentType: string | undefined } | null> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+  if (!bucketName) throw new Error('R2 bucket configuration missing');
+
   try {
-    return !DOT_SEGMENT.test(decodeURIComponent(key));
-  } catch {
-    return false;
+    const response = await client.send(new GetObjectCommand({ Bucket: bucketName, Key: key }));
+    if (!response.Body) return null;
+    return {
+      body: await response.Body.transformToByteArray(),
+      contentType: response.ContentType,
+    };
+  } catch (error) {
+    const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
+    throw error;
   }
 }
 

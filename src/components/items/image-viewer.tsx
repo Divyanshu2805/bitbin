@@ -37,6 +37,7 @@ export default function ImageViewer({ src, alt, fileName, fileSize }: ImageViewe
         <Image
           src={src}
           alt={alt}
+          unoptimized
           fill
           sizes="(max-width: 768px) 100vw, 1400px"
           className="object-contain p-4 drop-shadow-[0_12px_32px_rgb(0_0_0/0.25)]"

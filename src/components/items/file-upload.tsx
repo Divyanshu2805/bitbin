@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
+import { fileViewPath } from "@/lib/file-url";
 import { Upload, X, File, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FILE_CONSTRAINTS, formatFileSize } from "@/lib/r2";
@@ -180,8 +181,9 @@ export default function FileUpload({
           {isImage ? (
             <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
-                src={uploadedFile.fileUrl}
+                src={fileViewPath(uploadedFile.fileUrl) ?? ""}
                 alt={uploadedFile.fileName}
+                unoptimized
                 fill
                 sizes="64px"
                 className="object-cover"

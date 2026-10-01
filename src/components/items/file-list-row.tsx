@@ -6,6 +6,7 @@ import { useItemDrawer } from '@/components/items/item-drawer-provider';
 import { formatRelativeDate } from '@/lib/utils/date';
 import { formatFileSize } from '@/lib/r2';
 import { readableColor } from "@/lib/utils/color";
+import { fileDownloadPath } from '@/lib/file-url';
 import type { ItemWithType } from '@/lib/db/items';
 import { itemDragProps } from './item-drag';
 
@@ -65,19 +66,9 @@ export default function FileListRow({ item }: FileListRowProps) {
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!item.fileUrl) return;
-
-    // Extract the path from the R2 URL (format: https://xxx.r2.dev/{userId}/{timestamp}-{filename})
-    try {
-      const url = new URL(item.fileUrl);
-      // Remove leading slash from pathname
-      const filePath = url.pathname.slice(1);
-      // Use download proxy to avoid CORS
-      window.open(`/api/download/${filePath}`, '_blank');
-    } catch {
-      // Fallback: open the file URL directly
-      window.open(item.fileUrl, '_blank');
-    }
+    // The bucket is private: files are only readable through the download route
+    const path = fileDownloadPath(item.fileUrl);
+    if (path) window.open(path, '_blank');
   };
 
   return (

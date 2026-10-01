@@ -42,6 +42,7 @@ import GenerateDescriptionButton from "./generate-description-button";
 import { Kbd } from "@/components/shared/kbd";
 import LanguagePicker from "./language-picker";
 import { detectLanguage } from "@/lib/detect-language";
+import { fileDownloadPath, fileViewPath } from "@/lib/file-url";
 import { readableColor } from "@/lib/utils/color";
 import { isTyping } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
@@ -444,19 +445,9 @@ export default function ItemDrawer() {
   });
 
   const handleDownload = () => {
-    if (!item?.fileUrl) return;
-
-    // Extract the path from the R2 URL (format: https://xxx.r2.dev/{userId}/{timestamp}-{filename})
-    try {
-      const url = new URL(item.fileUrl);
-      // Remove leading slash from pathname
-      const filePath = url.pathname.slice(1);
-      // Use download proxy to avoid CORS
-      window.open(`/api/download/${filePath}`, "_blank");
-    } catch {
-      // Fallback: open the file URL directly
-      window.open(item.fileUrl, "_blank");
-    }
+    // The bucket is private: files are only readable through the download route
+    const path = fileDownloadPath(item?.fileUrl);
+    if (path) window.open(path, "_blank");
   };
 
   const details = item ? (
@@ -847,7 +838,7 @@ export default function ItemDrawer() {
                       {isImage ? (
                         <div className="min-h-0 flex-1">
                           <ImageViewer
-                            src={item.fileUrl}
+                            src={fileViewPath(item.fileUrl) ?? ""}
                             alt={item.fileName || item.title}
                             fileName={item.fileName}
                             fileSize={item.fileSize}
