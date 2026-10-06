@@ -9,7 +9,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `DATABASE_URL` | Yes | Prisma (`src/lib/prisma.ts`, `prisma.config.ts`) | PostgreSQL connection string. For Neon, copy the pooled URL and keep `?sslmode=require` |
 | `AUTH_SECRET` | Yes | NextAuth | Signs the session JWT. Generate with `npx auth secret`. Rotating it signs everyone out |
 | `AUTH_URL` | Yes | NextAuth | Base URL of the app — `http://localhost:3000` locally |
-| `NEXT_PUBLIC_APP_URL` | Yes | Email links, Stripe redirect URLs | Public URL used to build absolute links |
+| `NEXT_PUBLIC_APP_URL` | Yes | Email links, Stripe redirect URLs, link previews | Public URL used to build absolute links, including the canonical URL, `robots.txt`, the sitemap and the Open Graph image. It is read at **build** time for those, so set it before the production build |
 | `CRON_SECRET` | Production, if you keep the demo account | `/api/cron/reset-demo` | A long random string. Vercel's cron sends it as `Authorization: Bearer …`. Without it the reset route refuses every request, so the demo account is never reset. Not needed locally |
 
 ## Authentication
@@ -48,7 +48,8 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `R2_ACCOUNT_ID` | Cloudflare account ID; the S3 endpoint is built from it |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 → Manage API tokens, with *Object Read & Write* on the bucket |
 | `R2_BUCKET_NAME` | The bucket uploads go to |
-$&
+| `R2_PUBLIC_URL` | The bucket stays private; this is only the prefix that stored file URLs are built from (`https://….r2.dev`). Set it once and never change it: deletes, ownership checks and the viewers strip it from each stored `fileUrl` to get the object key |
+
 ## Billing (Stripe)
 
 | Variable | Notes |

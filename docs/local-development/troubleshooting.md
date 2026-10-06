@@ -19,6 +19,10 @@
 | Upgrading succeeds in Stripe but the app still says Free | The webhook didn't arrive. Locally, `stripe listen` must be running and its `whsec_…` must be in `STRIPE_WEBHOOK_SECRET` (restart the dev server after changing it) |
 | "Too many attempts" while testing sign-in | You hit a rate limit. Wait, or [clear the counters](resetting-data.md#clear-rate-limits) |
 | ⌘K search doesn't show something just saved | The index reloads when the palette opens; close it and reopen it after a moment. See [search](../architecture/flows/search.md) |
+| `db:seed` or `db:cleanup` stops with "refusing to run" | The database host isn't marked safe to reset. Add it to `SAFE_DATABASE_HOSTS` (a Neon development branch, say) or confirm once with `CONFIRM_DATABASE_HOST`. Never do either for the production host. See [resetting data](resetting-data.md#before-you-run-either-script) |
+| `npm run test:coverage` fails with "coverage for … does not meet global threshold" | A change lowered coverage below the floor in `vitest.config.ts`. Add tests for the new code; don't lower the floor |
+| Signing in with `?callbackUrl=https://…` lands on the dashboard | Deliberate: only paths on this site are followed after sign-in (`safeCallbackPath`), so an external URL can't be used as a phishing redirect |
+| No errors appear in Sentry locally | Deliberate: Sentry is off unless `SENTRY_DSN` is set, and it is set on Vercel only |
 | Schema changes aren't picked up | Run `npm run db:migrate` — not `db push`, which is disabled |
 
 ## Related

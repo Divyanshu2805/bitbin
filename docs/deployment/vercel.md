@@ -20,7 +20,7 @@ The live site runs on Vercel at a subdomain of a domain you own (for example `bi
 
    The demo user the seed also creates is the public sandbox account (see [the demo account](../schema/migrations-and-seeding.md#the-demo-account)). If you keep it, set `CRON_SECRET` (below) so it is reset daily.
 
-Use a separate Neon branch for local development, so test accounts and experimental migrations never reach live data.
+Use a separate Neon branch for local development, so test accounts and experimental migrations never reach live data. BitBin's own development setup does: the `dev` branch holds the schema and the seeded demo account only, its host is listed in `SAFE_DATABASE_HOSTS`, and the destructive scripts refuse any other host.
 
 ## Project
 

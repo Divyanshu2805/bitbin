@@ -2,6 +2,7 @@
   "name": "bitbin-desktop",
   "productName": "BitBin",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Save the clipboard to BitBin from the system tray. Requires BitBin Pro.",
   "author": "Divyanshu Agrahari",

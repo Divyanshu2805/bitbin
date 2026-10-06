@@ -1,6 +1,6 @@
 # 0007. A small token-authenticated API for the browser extension
 
-**Status:** Accepted. Amends the "there is no public API" consequence of [0001](0001-one-nextjs-app-no-separate-api.md).
+**Status:** Accepted, amended (tokens now expire, and the desktop app is a second client). Amends the "there is no public API" consequence of [0001](0001-one-nextjs-app-no-separate-api.md).
 
 ## Context
 
@@ -21,7 +21,7 @@ Add a small, versioned JSON API under `/api/v1/`, authenticated only by **person
 ## Consequences
 
 - BitBin now has an external contract. Changes to `/api/v1/*` responses must stay backward compatible, or ship as `/api/v2/` while `v1` keeps working until the extension is updated.
-- Tokens are long-lived bearer credentials. Revoking one (Settings → Browser extension) takes effect on the next request. There's no expiry, and a user can hold at most 10.
+- Tokens are long-lived bearer credentials. Revoking one (Settings → Browser extension) takes effect on the next request. A token expires after the lifetime picked when it is created (30 days, 90 days by default, a year, or never; amended after the original decision, migration `add_api_token_expiry`), and a user can hold at most 10.
 - The token lookup is the one query not scoped by user id, because the token is what identifies the user. Everything after it is scoped by the token owner's id, exactly like a session.
 - Collection ids sent to the create path are filtered to the caller's own collections in `lib/db/items.ts`. That closes the gap for the `createItem` / `updateItem` actions as well.
 - The same API can serve a future desktop tray app or CLI without further server changes.

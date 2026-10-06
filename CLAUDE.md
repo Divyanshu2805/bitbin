@@ -8,7 +8,7 @@ BitBin is a personal store for developer knowledge — snippets, prompts, comman
 
 - **One Next.js 16 App Router app**, React 19, TypeScript 5. No separate API server.
 - PostgreSQL (Neon) through Prisma 7 with the pg driver adapter; NextAuth v5 with JWT sessions; Tailwind v4 + shadcn/ui.
-- Services: Cloudflare R2 (files), Upstash Redis (rate limits), Stripe, OpenAI or any OpenAI-compatible provider, Resend, GitHub OAuth. Deployed on Vercel at bitbin.divyanshuagrahari.dev.
+- Services: Cloudflare R2 (files), Upstash Redis (rate limits), Stripe, OpenAI or any OpenAI-compatible provider, Resend, GitHub OAuth, Sentry (errors). Deployed on Vercel at bitbin.divyanshuagrahari.dev; GitHub Actions CI checks every push.
 
 ## Read before acting
 
@@ -31,7 +31,7 @@ These are authoritative and kept current:
 
 ```
 src/
-  app/                pages (RSC) and api/ route handlers; (auth)/ group for the sign-in pages
+  app/                pages (RSC) and api/ route handlers; (auth)/ group for the sign-in pages; privacy/ and terms/ are public legal pages
   actions/            server actions — every UI write: items, collections, ai, api-tokens, search, settings, import, export, auth
   auth.ts             NextAuth: adapter, providers, jwt/session callbacks (isPro re-read every evaluation)
   auth.config.ts      edge-safe subset for proxy.ts only
@@ -48,6 +48,7 @@ extension/            Chrome/Edge MV3 extension, plain JS, outside the Next buil
 desktop/              Electron tray app (global shortcut saves the clipboard), plain CommonJS with its own package.json,
                       outside the Next build (tsconfig/eslint/vitest exclude it); `cd desktop && npm test` runs its tests
 scripts/              test-db.ts, cleanup-users.ts
+.github/              workflows/ci.yml (audit, lint, tests + coverage floor, build) and dependabot.yml
 docs/                 documentation — start at docs/README.md
 ```
 
@@ -55,7 +56,8 @@ docs/                 documentation — start at docs/README.md
 
 ```bash
 npm run dev                                   # http://localhost:3000
-npm run lint && npm run test && npm run build # before every push
+npm run lint && npm run test && npm run build # before every push (CI runs these plus an audit)
+npm run test:coverage                         # coverage report; fails below the floor in vitest.config.ts
 npm run db:migrate                            # schema change → new migration (never db push)
 npm run db:seed                               # system item types + demo@bitbin.dev / 12345678
 npx vitest run src/actions/items.test.ts      # one test file
@@ -75,12 +77,14 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **`/api/v1/*` is the token API** — every handler starts with `authenticateApiRequest`, reuses the shared lib logic (`item-create`, `ai-tags`) instead of forking it, and stays backward compatible: the extension and the desktop app depend on it.
 - **Files live in a private bucket.** Never link to or fetch a stored `fileUrl`; use `fileViewPath` / `fileDownloadPath` (`lib/file-url.ts`) and read objects with `getFromR2`. Check client-supplied `fileUrl`s with `isOwnedFileUrl`.
 - **Free-plan limits are enforced under a lock.** A new way to create items or collections must pass `maxItems` / `maxCollections` so the count and insert run in one transaction (`lockUserForLimit`).
-- **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
-
 - **`demo@bitbin.dev` is a public sandbox.** Its password is published, so anything that changes an account itself (password, name, deletion, billing, email) must refuse it with `isDemoEmail` (`lib/demo.ts`). A daily cron (`/api/cron/reset-demo`, needs `CRON_SECRET`) restores its library.
 - **Expensive or abusable endpoints get a rate limit** (`checkRateLimit`, or `checkActionRateLimit` in actions); the table is in `docs/api/errors-and-rate-limits.md`.
+- **A redirect target from the client goes through `safeCallbackPath`** (`lib/validation.ts`), so `?callbackUrl=` can't send anyone off-site.
+- **Coverage has a floor** in `vitest.config.ts`. New server code comes with tests; never lower the floor to let a change through.
 - **Scripts that delete or overwrite data call `assertSafeToRunDestructive`** (`lib/db-safety.ts`). `console.error` is the error channel: Sentry captures it, so log the real error there and return a generic message.
 - **Email tokens are stored hashed** (`lib/tokens.ts`); only the emailed link holds the raw value.
+- **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
+
 ## Practices
 
 The following are imported in full.
@@ -102,6 +106,8 @@ Silent-failure traps this stack has hit, imported in full. Check here first when
 @docs/practices/gotchas/prisma.md
 
 @docs/practices/gotchas/integrations.md
+
+@docs/practices/gotchas/tooling-and-ci.md
 
 ## Commits
 

@@ -4,7 +4,7 @@ The goal: BitBin as a finished, working, defensible project for admissions commi
 
 Times are hands-on working time including tests and docs, not elapsed time. Tick a box when the work is merged. `[~]` means the code is done and a step on your side is left.
 
-**Core path: about 50 hours (about 18 done). Optional stretch: about 10 hours more.**
+**Core path: about 40 hours after dropping the case study and the demo video (about 39 done; left: the screenshots and the Dependabot PRs, about 1.5 hours). Optional stretch: about 10 hours more.**
 
 | Phase | Goal | Time |
 |---|---|---|
@@ -17,9 +17,9 @@ Times are hands-on working time including tests and docs, not elapsed time. Tick
 ## Phase 1: Works for every visitor (10 to 12 h)
 
 1. - [x] **Demo account: make it a safe public sandbox.** Done in code: the account can't change its password or name, be deleted, upgraded or reset by email; a daily cron (`/api/cron/reset-demo`, `vercel.json`) restores its library. Needs `CRON_SECRET` set on Vercel for the reset to run. Checked 2026-10-06 in a real session: sign-in works with the published password (so the sandbox matters), and password change, deletion and checkout each return 403. *1.5 to 2 h.*
-2. - [ ] **Email that reaches strangers.** Add a **subdomain** (`bitbin.divyanshuagrahari.dev`, not the root, which other apps use) in Resend, add its DNS records and a `_dmarc.bitbin` TXT record in Cloudflare, set `FROM_EMAIL` to `BitBin <noreply@bitbin.divyanshuagrahari.dev>` on Vercel. Without this a recruiter who registers never gets the verification email. *30 min, your dashboards.*
-3. - [ ] **Stripe webhook has all five events** and the right secret. *5 min, your dashboard.*
-4. - [ ] **Smoke test of the live site:** register and verify, sign in, change password (you're signed out), reset by email, upgrade with a test card, extension token, delete account. *45 min.*
+2. - [x] **Email that reaches strangers.** The `bitbin.divyanshuagrahari.dev` subdomain is verified in Resend, `FROM_EMAIL` is set, and the `_dmarc.bitbin` record (`v=DMARC1; p=none;`) is live (checked 2026-10-06). Mail sends and verifies. It first landed in spam because the domain is new; that improves as people open the emails, and the README should say to check spam.
+3. - [x] **Stripe webhook has all five events** and the right secret (checked 2026-10-06).
+4. - [x] **Smoke test of the live site:** register and verify, sign in, change password, reset by email, upgrade with a test card, extension token and delete account all worked (2026-10-06).
 5. - [x] **Search shows new items straight away** (the index only loads once today). *1 h.*
 6. - [x] **Search no longer downloads every item's full content** to build a 100-character preview. *1.5 to 2 h.*
 7. - [x] **Import fixes:** "skip duplicates" skips different notes, and `createdAt` / `updatedAt` are dropped. *2 h.*
@@ -31,27 +31,29 @@ Times are hands-on working time including tests and docs, not elapsed time. Tick
 10. - [x] **Rate limits on import, export, checkout, portal and item creation.** Import 5/h (preview 20/h), export 10/h, checkout 10/h, portal 20/h, item and collection creation 120/min.
 11. - [x] **Hash reset and verification tokens** in the database. Also single-use under a race, and a mistyped new password no longer burns the reset link. Links emailed before this deploy stop working once.
 12. - [x] **Destructive scripts refuse production, and a separate development database.** The guard is done: `db:seed` and `db:cleanup` refuse to run until the host is in `SAFE_DATABASE_HOSTS` or confirmed with `CONFIRM_DATABASE_HOST`. The Neon `dev` branch exists (schema only, no user data), the local `.env` points at it with its host in `SAFE_DATABASE_HOSTS`, its migration history is synced and it is seeded. Vercel still points at production.
-13. - [~] **Error monitoring** (Sentry) with alerts on 5xx and webhook failures. The code is done (off until `SENTRY_DSN` is set, strips cookies, tokens and personal data, verified with the real SDK). Still yours: create the Sentry project, set `SENTRY_DSN` on Vercel, add the alert rules (10 min, steps in `docs/deployment/providers.md`).
-14. - [~] **Dependabot and GitHub secret scanning** switched on. `.github/dependabot.yml` is done. Still yours: in the repository's Settings → Advanced Security turn on Dependabot security updates, Secret scanning and Push protection (3 min).
+13. - [x] **Error monitoring** (Sentry) with alerts on 5xx and webhook failures. Sentry is live, the alert rule is set, and Node warning noise is filtered. The code strips cookies, tokens and personal data.
+14. - [x] **Dependabot and GitHub secret scanning** switched on. `.github/dependabot.yml` is in place and the GitHub security settings are enabled.
 15. - [x] **`sslmode=verify-full`** in `DATABASE_URL`. Done in code (`normalizeDatabaseUrl`), so the environment variable can stay as it is; checked against the live database.
 
 ## Phase 3: Proof, with numbers (18 to 24 h)
 
-16. - [ ] **CI on every push** (lint, tests, build, `npm audit --omit=dev`) with a README badge. *1.5 to 2 h.*
-17. - [~] **Tests for the eight untested route handlers.** Done: reset-password, verify, portal and checkout (fully), change-password and delete-account (the demo guard only). Left: upload, forgot-password, and the real-account paths of change-password and delete-account. *About 2 h left.*
-18. - [ ] **Coverage report with a floor** in CI, so there's a real percentage to quote. *1 to 1.5 h.*
-19. - [ ] **Accessibility, responsive and Lighthouse pass:** keyboard, contrast in both themes, labels, phone width on every page; record the Lighthouse scores. *6 to 8 h.*
-20. - [ ] **A second security review** (`/security-review`, plus a manual pass over the components and extension) and fix what it finds. *3 to 4 h plus fixes.*
-21. - [ ] **Privacy policy and Terms pages**, linked in the footer and sign-up. *2 to 3 h.*
+16. - [x] **CI on every push** (audit, lint, tests with the coverage floor, build) with a README badge. `.github/workflows/ci.yml` is live; its first run on GitHub (2026-10-07, commit `e013b64`) passed.
+17. - [x] **Tests for every route handler.** Added upload, forgot-password and the real-account paths of change-password and delete-account, plus `/api/items/[id]`, `/api/v1/me` and `/api/v1/collections`. 622 tests across 57 files.
+18. - [x] **Coverage report with a floor** (`npm run test:coverage`, enforced in CI). Today: about 81% statements, 81% branches, 81% lines, 71% functions over `actions`, `lib` and `api`; the floor sits just under that.
+19. - [x] **Accessibility, responsive and Lighthouse pass.** Lighthouse on a production build, 12 pages including every signed-in one: accessibility 100, SEO 100, best practices 96 (the only miss is the Vercel analytics script that doesn't exist on localhost), performance 80 to 95 (localhost, simulated throttling). Fixed: two low-contrast labels, a heading-order skip, a label-in-name mismatch on the homepage demo, and item / collection cards that were a `role=button` div holding other buttons (now a real title button; the whole card is still clickable). No horizontal scroll at 375 px on any page. Not measured: light-theme contrast.
+20. - [x] **A second security review**: manual pass over the components, extension, desktop app, route handlers and actions. One finding, fixed: `/sign-in?callbackUrl=https://evil.example` redirected off-site after sign-in (open redirect), now `safeCallbackPath` with a test. Extension (no `innerHTML`, narrow host permissions) and desktop app (context isolation, sandbox, navigation denied) came out clean. Note: `npm audit --omit=dev` now shows 2 moderate advisories (PostCSS via `@tailwindcss/typography`, published after the last audit); CI fails only on high or critical.
+21. - [x] **Privacy policy and Terms pages** at `/privacy` and `/terms`, linked in the footer and on the sign-up form.
+
+29. - [ ] **Clear the five Dependabot pull requests** (opened 2026-10-06): after CI is on `main`, rebase and merge the grouped minor/patch update (#1) when CI is green; handle the majors (`@types/node` 20 to 26, `@vitejs/plugin-react` 5 to 6, `dotenv` 17 to 18, `vitest` 4 to 5, which also needs `@vitest/coverage-v8` bumped) one at a time, or close them. *1 h.*
 
 ## Phase 4: Showcase (12 to 16 h)
 
-22. - [ ] **README rewrite:** one-line pitch, live link and demo login, screenshots or a GIF, feature list, architecture diagram, stack, security highlights, badges. *3 to 4 h.*
-23. - [ ] **Engineering case study** (one page): the problem, the key decisions (the ADRs), the security audit with before and after, and a metrics table. *3 h.*
-24. - [ ] **60 to 90 second demo video**, linked from the README. *2 h.*
-25. - [ ] **Share polish:** Open Graph and Twitter metadata, `robots.txt`, a sitemap, favicon check. *1.5 h.*
-26. - [ ] **Resume numbers sheet:** gather and verify every figure below. *30 min.*
-27. - [ ] **Known limitations section** in the README, built from the "left out" list below. *30 min.*
+22. - [~] **README rewrite:** done: pitch, live link and demo login (with the spam-folder note), plans table, feature list with the extension and desktop app, architecture diagram, stack, security highlights, quality numbers, quick start, layout, limitations, docs index, badges, license. Left for you: embed screenshots at the end, with the final docs check.
+23. - [x] ~~Engineering case study~~ **Dropped by choice.** The measured figures live on [Project metrics](../metrics.md) instead.
+24. - [x] ~~Demo video~~ **Dropped by choice.**
+25. - [x] **Share polish:** Open Graph and Twitter metadata with a generated 1200x630 preview image, `robots.txt` (API and signed-in pages disallowed), a sitemap of the five public pages, a canonical URL and `SoftwareApplication` structured data on the homepage, `noindex` on every signed-in and token page, and a favicon check (added `favicon.ico` and an Apple touch icon alongside `icon.svg`). Tests in `src/app/robots.test.ts`.
+26. - [x] **Metrics page:** [docs/metrics.md](../metrics.md) holds every measured figure and how to re-check it. No narrative, numbers only.
+27. - [x] **Known limitations section** in the README, built from the "left out" list below.
 
 ## Stretch
 
@@ -61,14 +63,14 @@ Times are hands-on working time including tests and docs, not elapsed time. Tick
 
 | Figure | Now | After this list |
 |---|---|---|
-| Automated tests | 553 across 50 files | + route tests (+ e2e if you do the stretch) |
-| Test coverage | not measured | a real percentage from item 18 |
-| Security issues found and fixed in an audit of your own app | about 25 (5 critical or high, 9 medium, the rest low) | + whatever item 20 finds |
+| Automated tests | 622 across 57 files | (+ e2e if you do the stretch) |
+| Test coverage | about 81% statements, branches and lines; 71% functions | held by the CI floor |
+| Security issues found and fixed in an audit of your own app | about 26 (5 critical or high, 9 medium, the rest low) | |
 | Production dependency vulnerabilities | 72 (9 critical) down to 0 | held at 0 by CI |
-| Architecture decision records | 7 | + the case study |
-| Lighthouse (performance, accessibility, best practices, SEO) | not measured | from item 19 |
+| Architecture decision records | 9 | |
+| Lighthouse (performance, accessibility, best practices, SEO) | 80 to 95, 100, 96, 100 (production build, localhost, 12 pages) | |
 | Free-plan limit enforced under concurrency | yes, with a race test | |
-| Migrations, route handlers, server actions | 7, 30+, 20+ | |
+| Migrations, route handlers, server actions | 7, 22, 26 | |
 
 ## Left out on purpose (list as "future work")
 

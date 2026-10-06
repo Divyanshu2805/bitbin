@@ -1,6 +1,6 @@
 # API Reference
 
-Almost every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. The exception is the [token API](token-api.md) under `/api/v1`, which the browser extension calls with a personal access token ([ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md)). There are two kinds of endpoint:
+Almost every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. The exception is the [token API](token-api.md) under `/api/v1`, which the browser extension and the desktop app call with a personal access token ([ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md)). There are two kinds of endpoint:
 
 - **Route handlers** under `src/app/api/` — real HTTP endpoints, used where the browser, NextAuth or Stripe needs a URL.
 - **Server actions** under `src/actions/` — async functions called from client components, which Next.js turns into POST requests. Every UI write goes through one ([ADR 0002](../architecture/decisions/0002-server-actions-for-writes.md)).
@@ -25,11 +25,26 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `POST` | `/api/stripe/checkout` | Session | Start a Checkout Session | [Billing](billing.md) |
 | `POST` | `/api/stripe/portal` | Session | Open the Customer Portal | [Billing](billing.md) |
 | `POST` | `/api/webhooks/stripe` | Stripe signature | Receive subscription events | [Billing](billing.md) |
+| `GET` | `/api/cron/reset-demo` | `Bearer CRON_SECRET` | Restore the public demo account's library (called daily by Vercel Cron) | [Operations](#operations-endpoint) |
 | `GET` | `/api/v1/me` | Token, Pro | Check an API token | [Token API](token-api.md) |
 | `GET` | `/api/v1/collections` | Token, Pro | The caller's collections, for the extension's picker | [Token API](token-api.md) |
 | `POST` | `/api/v1/items` | Token, Pro | Create a text or link item | [Token API](token-api.md) |
 | `POST` | `/api/v1/ai/tags` | Token, Pro | AI tag suggestions | [Token API](token-api.md) |
 | `POST` | `/api/v1/ai/description` | Token, Pro | AI-written description | [Token API](token-api.md) |
+
+## Operations endpoint
+
+`GET /api/cron/reset-demo` is called once a day by the cron in `vercel.json` (21:00 UTC), never by the UI. Vercel sends `Authorization: Bearer $CRON_SECRET` when the variable is set in the project.
+
+| Status | When |
+|---|---|
+| `200` | `{ success: true }` — the demo library was restored in one transaction (and its name, plan and Stripe ids reset). `{ success: true, skipped: true }` when the database has no demo account |
+| `401` | Missing or wrong bearer value (compared in constant time), or `CRON_SECRET` isn't set, in which case the route refuses every caller |
+| `500` | The reset failed; logged as `Demo reset failed` |
+
+## Pages that need no API
+
+The public [Privacy Policy](../../src/app/privacy/page.tsx) (`/privacy`) and [Terms of Service](../../src/app/terms/page.tsx) (`/terms`) are static pages; they call nothing and need no session.
 
 ## Server actions
 

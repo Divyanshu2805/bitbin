@@ -11,6 +11,7 @@ Session required. `{ "plan": "monthly" | "yearly" }`.
 | `200` | `{ url }` — the Checkout Session URL; redirect the browser to it |
 | `400` | `plan` missing or not `monthly` / `yearly` (or its price id isn't configured) |
 | `401` | No session |
+| `403` | The public demo account, which can't be upgraded |
 | `409` | The user is already Pro. A second subscription would bill them twice; manage it in the portal |
 | `500` | Stripe error |
 

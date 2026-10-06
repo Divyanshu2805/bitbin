@@ -10,8 +10,9 @@ Session required. `format` defaults to `json`.
 | `400` | `format` is neither `json` nor `zip` |
 | `401` | No session |
 | `403` | `zip` requested by a Free user |
+| `429` | Over the `export` limit |
 
-Not rate limited.
+Rate limited: 10 exports an hour per IP + user (`export`), because a ZIP reads every file from storage. A `429` carries `Retry-After`.
 
 ## The JSON manifest
 

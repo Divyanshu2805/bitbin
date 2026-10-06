@@ -18,6 +18,10 @@ npm run db:migrate:deploy     # prisma migrate deploy — apply pending migratio
 | `20260108054512_init` | The base schema: users and the NextAuth tables, items, item types, collections, the joins and tags |
 | `20260119063307_add_query_indexes` | The composite indexes on `items` and `collections` that back the dashboard |
 | `20260210052148_add_editor_preferences` | `users.editorPreferences` (`jsonb`) |
+| `20260924225247_add_api_tokens` | The `api_tokens` table: hashed personal access tokens for the token API |
+| `20260927120000_add_collection_pin` | `collections.isPinned`, so a collection can be pinned to the top |
+| `20260930150000_add_session_version` | `users.sessionVersion`, bumped on password change and reset to revoke sessions |
+| `20261005120000_add_api_token_expiry` | `api_tokens.expiresAt`; existing tokens stay `null` (never expire) |
 
 ### Adding one
 

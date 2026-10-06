@@ -9,6 +9,12 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 - [ ] Forgot password → the reset email arrives → the new password works.
 - [ ] GitHub sign-in lands on `/dashboard` in one click.
 - [ ] Signed out, `/dashboard` redirects to sign-in.
+- [ ] Change password → you're signed out → the new password works. Delete a throwaway account (with its password) → it's gone and can't sign in.
+- [ ] `/sign-in?callbackUrl=https://example.com` signs in and lands on `/dashboard`, not on example.com.
+- [ ] The demo account (`demo@bitbin.dev`) signs in, and changing its password, deleting it and upgrading it are each refused.
+- [ ] `/privacy` and `/terms` load signed out and are linked from the footer and the sign-up form.
+- [ ] `/robots.txt` and `/sitemap.xml` show the production domain (not `localhost`), and a signed-in page such as `/dashboard` is listed as disallowed.
+- [ ] Pasting the site URL into a chat app or a card validator shows the BitBin title, description and preview image.
 
 ## Items
 
@@ -32,3 +38,6 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 
 - [ ] Stripe dashboard → Webhooks shows the deliveries as succeeded (`200`).
 - [ ] Vercel's function logs show no `Upstash Redis not configured`, `Invalid Upstash Redis config` or `Rate limit check failed` lines.
+- [ ] Vercel → Cron Jobs lists `/api/cron/reset-demo`, and `CRON_SECRET` is set (the demo library is restored daily).
+- [ ] The latest GitHub Actions run on `main` is green, and Sentry is receiving events (`SENTRY_DSN` set).
+- [ ] The Cloudflare R2 bucket still has public access off: a direct object URL returns `403`/`404`, while images render in the app.

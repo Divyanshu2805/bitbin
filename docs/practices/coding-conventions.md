@@ -75,6 +75,17 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 - The `@/` alias points at `src/`.
 - `npm run lint` must pass; the React Compiler is on, so follow the rules of hooks strictly.
 
+## Accessibility
+
+- Use real `<button>` and `<a>` elements. A clickable card is a container with a real button for its title (see the [design system](design-system.md#accessibility-notes)), never a `role="button"` `div` holding other buttons.
+- Icon-only buttons need an `aria-label`; one `h1` per page, and no skipped heading levels.
+- Motion respects `prefers-reduced-motion`.
+
+## Redirects and account state
+
+- A URL the client supplies to redirect to goes through `safeCallbackPath` (`lib/validation.ts`).
+- A route or action that changes the account itself checks `isDemoEmail` (`lib/demo.ts`) after the session, before anything else.
+
 ## What to avoid
 
 - Importing `prisma` in a component or a new page — add a `lib/db` function.

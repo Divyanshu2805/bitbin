@@ -34,6 +34,9 @@ npm run test:watch   # watch mode
 | `src/lib/r2.test.ts` | File validation, size formatting, key parsing |
 | `src/lib/rate-limit.test.ts` | Failing open with unset, placeholder and invalid Upstash config |
 | `src/lib/usage.test.ts` | Free / Pro limits |
+| `src/app/robots.test.ts` | `robots.txt` blocks the API and signed-in paths but no public page, the sitemap lists exactly the public pages, and the two lists never overlap |
+| `src/lib/validation.test.ts` | `safeCallbackPath` (no open redirect after sign-in) and `safeUrlSchema` |
+| `src/app/api/auth/*/route.test.ts`, `upload/route.test.ts`, `items/[id]/route.test.ts`, `v1/me`, `v1/collections` | Auth, rate-limit, ownership and error paths of the remaining route handlers: change-password, delete-account (subscription and storage failures), forgot-password (same answer for every address), upload (Pro, rate limit, content checks) |
 | `src/lib/utils/date.test.ts` | Relative date formatting |
 | `src/lib/constants/editor.test.ts` | Editor preference defaults and merging |
 
@@ -48,7 +51,7 @@ npm run test:watch   # watch mode
 
 Check these by hand when a change touches them:
 
-- Route handlers other than `/api/v1`: auth flows, upload / download, export, Stripe checkout and webhook. Adding tests for these is [tracked](../known-gaps/not-yet-built.md#code-health). The `/api/v1` route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/lib/api-auth` and the library underneath.
+- Route handlers are unit-tested, but not against real services (R2, Stripe, Resend); try those in test mode. The route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/auth` or `@/lib/api-auth`, Prisma and the library underneath.
 - The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
 - The desktop app (`desktop/`): `cd desktop && npm test` runs its `node:test` suites (type guessing, the API client and body builders, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
 - NextAuth callbacks and `proxy.ts`.
@@ -56,6 +59,16 @@ Check these by hand when a change touches them:
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.
 
 The [deployment smoke test](../deployment/smoke-test.md) is the end-to-end checklist.
+
+## Coverage and CI
+
+```bash
+npm run test:coverage   # same tests, plus a v8 coverage report in coverage/ (git-ignored)
+```
+
+Coverage covers `src/actions`, `src/lib` and `src/app/api` (components are checked in the browser). `vitest.config.ts` sets a floor of 75% statements, branches and lines and 65% functions, just under today's numbers (about 81 / 81 / 81 / 71); a run below it fails. Raise the floor when coverage grows, never lower it to make a change pass.
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request: `npm ci`, `npm audit --omit=dev --audit-level=high`, lint, tests with the coverage floor, and a build with placeholder variables. The coverage report is uploaded as a build artifact.
 
 ## Before pushing
 

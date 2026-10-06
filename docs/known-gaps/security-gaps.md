@@ -13,7 +13,7 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 | 5 | ~~Sessions can't be revoked~~ (fixed) | Medium | [Not yet built #6](not-yet-built.md#security), [Constraints](constraints-and-trade-offs.md#sessions-and-plans) |
 | 6 | ~~Stripe webhooks aren't idempotent or ordered~~ (fixed) | Medium | [Constraints](constraints-and-trade-offs.md#billing) |
 | 7 | ~~Deleting an account leaves its files and subscription~~ (fixed) | Medium | [Not yet built #10](not-yet-built.md#accounts-and-billing) |
-| 8 | ~~Files are public to anyone with the URL~~ (fixed in code; turn public access off in Cloudflare) | Medium | [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md), [Constraints](constraints-and-trade-offs.md#storage) |
+| 8 | ~~Files are public to anyone with the URL~~ (fixed; bucket confirmed private) | Medium | [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md), [Constraints](constraints-and-trade-offs.md#storage) |
 | 9 | ~~API tokens never expire~~ (fixed) | Low | [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md) |
 | 10 | ~~Change-password isn't rate limited~~ (fixed) | Low | [Not yet built #7](not-yet-built.md#security) |
 | 11 | Ownership checks aren't all in `lib/db` | Low | [Not yet built #34](not-yet-built.md#code-health) |
@@ -106,9 +106,9 @@ Every open security and data-integrity gap in one place: what can go wrong, how 
 
 </details>
 
-### 8. ~~Files are public to anyone with the URL~~ — Medium, fixed in code
+### 8. ~~Files are public to anyone with the URL~~ — Medium, fixed
 
-**Fixed in code; one dashboard step left.** Every read now goes through `/api/download` (or the ZIP export), which checks the key is inside the caller's folder and reads the object with the server's credentials. Images render from `/api/download/…?inline=1`. The remaining step is in Cloudflare: **disable the bucket's `r2.dev` URL / custom domain** after deploying and checking that images and downloads work. Until then objects are still readable by direct URL. See [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md).
+**Fixed.** Every read now goes through `/api/download` (or the ZIP export), which checks the key is inside the caller's folder and reads the object with the server's credentials. Images render from `/api/download/…?inline=1`. The bucket's public `r2.dev` URL is off and was confirmed private on 2026-10-06; it has to stay that way, because nothing in the app notices if it is switched back on. See [ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md).
 
 <details><summary>Original description</summary>
 
@@ -186,9 +186,12 @@ Not in the original list; recorded here so the reasoning isn't lost.
 | **No security headers** | `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS and a `frame-ancestors 'self'` / `base-uri` / `object-src` CSP. Framing must stay allowed for the app itself: the PDF preview is an iframe of `/api/download`. A full `script-src` policy is still open: it needs nonces for the inline theme script and Monaco's CDN loader |
 | **No size limits** on titles, content, tags, passwords, imports | Caps in `lib/validation.ts` (title 200, content 500,000, 20 tags of 50, language 50, passwords 128, imports 5,000 entries) |
 | **Import stored any URL**, `javascript:` included | Imports keep `http(s)` URLs only |
+| **Open redirect after sign-in.** `/sign-in?callbackUrl=https://evil.example` sent a user off-site once they signed in | `safeCallbackPath` (`lib/validation.ts`) keeps only a path on this site; everything else goes to `/dashboard` |
 
 ## Suggested order
 
-Open: **#11** (ownership checks outside `lib/db`), and the Cloudflare step under **#8** (turn public access off).
+Open: **#11** (ownership checks outside `lib/db`). The Cloudflare step under #8 is done.
+
+A second review (2026-10-06) covered the components, extension, desktop app, route handlers and actions. It found one issue, the open redirect after sign-in (see above), now fixed with a test.
 
 When a gap is fixed, strike it through here and in its source entry the way [Not yet built](not-yet-built.md) does (for example item 3 there), so the numbering stays stable.

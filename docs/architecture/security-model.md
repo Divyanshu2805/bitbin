@@ -24,11 +24,11 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 
 | Method | Where | Protections |
 |---|---|---|
-| Email + password | Credentials provider in `src/auth.ts` | bcrypt (cost 12), minimum length 8, email must be verified (unless `SKIP_EMAIL_VERIFICATION`), `login` rate limit checked by the sign-in form first |
+| Email + password | Credentials provider in `src/auth.ts` | bcrypt (cost 12), length 8 to 128, email must be verified (unless `SKIP_EMAIL_VERIFICATION`), `login` rate limit (5 per 15 minutes per IP and email) enforced inside `authorize()`, so it can't be bypassed by calling the endpoint directly |
 | GitHub | GitHub provider + `signInWithGitHub` server action | GitHub sign-in is refused for an email that already has a password account (`OAuthAccountNotLinked`), and the account row the adapter created is removed |
-| API token | `/api/v1/*`, `src/lib/api-auth.ts` | `bb_` + 32 random bytes, stored as a SHA-256 hash, shown once; `Bearer` header only (cookies ignored); owner's `isPro` re-read on every request; `api` rate limit; revocable in Settings, at most 10 per user |
-| Password reset | `/api/auth/forgot-password`, `/api/auth/reset-password` | 32-byte random token, 1-hour expiry, single use; the forgot endpoint answers identically whether or not the email exists |
-| Email verification | `/api/auth/verify` | 32-byte random token, 24-hour expiry, single use |
+| API token | `/api/v1/*`, `src/lib/api-auth.ts` | `bb_` + 32 random bytes, stored as a SHA-256 hash, shown once; `Bearer` header only (cookies ignored); expires after 30, 90 or 365 days (or never, by choice); owner's `isPro` re-read on every request; `api` rate limit; revocable in Settings, at most 10 per user |
+| Password reset | `/api/auth/forgot-password`, `/api/auth/reset-password` | 32-byte random token, stored only as its SHA-256 hash, 1-hour expiry, single use (consumed with a delete that must remove exactly one row, so a race can't use a link twice); the forgot endpoint answers identically whether or not the email exists, and a mistyped new password doesn't burn the link |
+| Email verification | `/api/auth/verify` | 32-byte random token, stored only as its SHA-256 hash, 24-hour expiry, single use |
 
 ## What protects each route
 
@@ -42,7 +42,9 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 | `/api/extension/download` | `auth()` → `401`; session `isPro` → `403` |
 | `/api/v1/*` | `authenticateApiRequest`: valid token → `401` otherwise; owner on Pro → `403` otherwise; `api` rate limit → `429` |
 | `/api/webhooks/stripe` | No session — the `stripe-signature` header is verified against `STRIPE_WEBHOOK_SECRET` → `400` otherwise |
+| `/api/cron/reset-demo` | No session — `Authorization: Bearer $CRON_SECRET`, compared in constant time; refuses everyone when `CRON_SECRET` is unset |
 | Registration, password reset, resend verification | Public, rate limited per IP (and per email where relevant) |
+| After sign-in | The `callbackUrl` is reduced to a path on this site (`safeCallbackPath`), so the sign-in page can't redirect off-site |
 
 ## Plan enforcement
 
@@ -50,11 +52,23 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 
 | Rule | Enforced in |
 |---|---|
-| 50 items, 3 collections on Free | `lib/usage.ts` (`canCreateItem`, `canCreateCollection`), called by `createItem`, `createCollection`, and `importData` |
+| 50 items, 3 collections on Free | `lib/usage.ts` (`canCreateItem`, `canCreateCollection`) for a quick message, then re-checked inside a transaction after locking the user's row (`lockUserForLimit`, `lib/limit-error.ts`) by `createItem`, `createCollection` and `importData`, so concurrent requests can't overshoot the cap |
 | File and image items are Pro | `createItem` (session `isPro`), `/api/upload` (re-reads `isPro` from the database) |
 | AI is Pro | `requirePro` in every action in `src/actions/ai.ts` |
 | API tokens and `/api/v1` are Pro | `createApiToken` (session `isPro`); `authenticateApiRequest` (re-reads `isPro` from the database) |
 | ZIP export is Pro | `/api/export` → `403` |
+
+## The public demo account
+
+`demo@bitbin.dev` has a published password so visitors can try the app, which makes it a shared sandbox. Everything that would change the account itself is refused with `isDemoEmail` (`lib/demo.ts`): changing the password or name, deleting it, checkout (it has no Stripe customer, so the portal has nothing to open), and password reset by email. A daily cron restores its library, so anything a visitor saves there disappears. Never put anything private in it.
+
+## Input and abuse limits
+
+- Every action validates with Zod `safeParse`; every route handler checks its input explicitly. Size caps apply to every item field, passwords (128 characters) and imports (5,000 entries) — `lib/validation.ts`.
+- Any URL that will be rendered as a link goes through `safeUrlSchema` (only `http(s)`); imports apply the same rule.
+- Uploads are checked for extension, MIME type, size and file signature (`validateFileContent`), and an SVG with script is rejected.
+- Expensive or abusable endpoints are rate limited: the public auth endpoints, import, export, checkout, the portal, item and collection creation, uploads, AI and the token API — see [errors and rate limits](../api/errors-and-rate-limits.md#rate-limits).
+- Responses carry `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, a strict `Referrer-Policy`, `Permissions-Policy`, HSTS, and a CSP limited to `frame-ancestors 'self'; base-uri 'self'; object-src 'none'`. A full `script-src` policy is [not built](../known-gaps/security-gaps.md): it needs nonces for the inline theme script and Monaco's CDN loader.
 
 ## Files
 
@@ -67,6 +81,9 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 - All secrets are environment variables; `.env*` is git-ignored except `.env.example`, which holds only `YOUR_…` placeholders.
 - Stripe, R2, OpenAI and Resend keys are used only in server code. The only `NEXT_PUBLIC_` variable is the app URL.
 - AI, Stripe and storage errors are logged server-side; the client receives a generic message, never a stack trace or key.
+- Error reports to Sentry have cookies, auth headers, request bodies, query strings, IPs and user data removed before they leave the server.
+- Destructive scripts (`db:seed`, `db:cleanup`) refuse to run against a database that isn't marked safe, so a local command can't wipe production.
+- Dependencies are watched by Dependabot, GitHub secret scanning with push protection, and a production `npm audit` in CI that fails on high or critical advisories.
 
 ## Related
 

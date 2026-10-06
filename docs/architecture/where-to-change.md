@@ -30,6 +30,13 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | Sign-in behaviour | `src/auth.ts` (providers, `signIn` / `jwt` / `session` callbacks); `src/auth.config.ts` only for what `proxy.ts` needs — a provider change goes in both |
 | Auth emails | `src/lib/email.ts` (templates; the sender is the `FROM_EMAIL` variable), `src/lib/tokens.ts` (lifetimes) |
 | A new protected page | Call `auth()` and `redirect('/sign-in')` in the page; extend the matcher in `src/proxy.ts` only if it belongs under `/dashboard` |
+| Where sign-in redirects after success | `safeCallbackPath` in `src/lib/validation.ts` (only same-site paths) and `components/auth/sign-in-form.tsx` |
+| The public demo account | `src/lib/demo.ts` (the check), `prisma/demo-content.ts` and `prisma/seed.ts` (its library), `src/app/api/cron/reset-demo/route.ts` and `vercel.json` (the daily reset). Anything that changes an account itself must refuse it with `isDemoEmail` |
+| Link previews, SEO and icons | Site name, description and the public origin in `src/lib/site.ts`; the Open Graph / Twitter metadata in `src/app/layout.tsx`; the share image in `src/app/opengraph-image.tsx` (reused by `twitter-image.tsx`); `robots.ts` and `sitemap.ts` for crawlers; the homepage's canonical URL and structured data in `src/app/page.tsx`. A new public page goes in `PUBLIC_PATHS`, a new private area in `PRIVATE_PATHS`, and any signed-in or token page also needs `robots: { index: false }` |
+| Privacy and Terms pages | `src/app/privacy/page.tsx`, `src/app/terms/page.tsx`, framed by `components/shared/legal-page.tsx`; linked from `components/homepage/Footer.tsx` and the register form |
+| Error monitoring | `src/lib/monitoring.ts` (options and scrubbing), `src/instrumentation.ts`; see [Sentry setup](../deployment/providers.md#sentry) |
+| CI, coverage floor, dependency updates | `.github/workflows/ci.yml`, `vitest.config.ts` (`coverage.thresholds`), `.github/dependabot.yml` |
+| A script that deletes data | Call `assertSafeToRunDestructive` from `src/lib/db-safety.ts` first |
 | A rate limit | `rateLimitConfigs` in `src/lib/rate-limit.ts`, then `checkRateLimit` in the handler — see [rate limits](../api/errors-and-rate-limits.md#adding-a-limit) |
 | Upload types or sizes | `FILE_CONSTRAINTS` in `src/lib/r2.ts` (and `next.config.ts` for new image hosts) |
 | AI prompts, model or provider | The prompt strings in `src/actions/ai.ts`; the model and provider are the `AI_MODEL` and `OPENAI_BASE_URL` variables, read in `src/lib/openai.ts` |

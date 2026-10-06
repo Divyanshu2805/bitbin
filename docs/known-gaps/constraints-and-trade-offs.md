@@ -28,7 +28,8 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 ## Operations
 
 - **Rate limits fail open when unconfigured** ([ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md)): a deploy without the `UPSTASH_*` variables has no brute-force protection. A Redis *error* fails closed for the credential limits, so an outage blocks sign-in and registration until it ends.
-- **Logs only.** No error tracker, metrics or alerting — failures are visible only in Vercel's function logs.
-- **One database for development and production** today — see [not yet built](not-yet-built.md#email-and-operations).
+- **Errors are tracked, nothing else is.** Sentry (`lib/monitoring.ts`) captures server errors and every `console.error`, with cookies, tokens and personal data stripped, and alert rules for 5xx and webhook failures. There are no metrics, uptime checks or tracing; Vercel's function logs hold the rest.
+- **Development has its own database branch; the live site has one production database.** Local work uses a Neon `dev` branch (schema only, no user data). `db:seed` and `db:cleanup` refuse to run against a host that isn't listed in `SAFE_DATABASE_HOSTS` ([`lib/db-safety.ts`](../../src/lib/db-safety.ts)). There is no staging environment: every push to `main` deploys straight to production.
 - **Manual migrations.** Migrations are applied by hand before a deploy; nothing enforces the order.
-- **No CI.** Lint, tests and build are run locally before pushing; nothing runs them on push.
+- **CI checks; it doesn't deploy or migrate.** GitHub Actions (`.github/workflows/ci.yml`) runs the production dependency audit (high and critical), lint, the tests with a coverage floor and a build on every push and pull request. Vercel deploys independently, so a red CI run doesn't stop a deploy, and nothing applies migrations.
+- **Unit tests cover server code only.** Coverage (about 81%) spans `src/actions`, `src/lib` and `src/app/api`. Components, the proxy, NextAuth callbacks, the extension and real third-party services are checked by hand, and there are no end-to-end tests ([Remaining work](remaining-work.md)).

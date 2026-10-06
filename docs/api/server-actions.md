@@ -8,7 +8,7 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createItem` | `{ typeName, title, description?, content?, url?, language?, tags, collectionIds?, fileUrl?, fileName?, fileSize? }` | `ItemDetail` | Zod; description ≤ 1000; `file` / `image` need Pro; Free cap of 50 items; `link` needs `url`. A snippet or command without `language` gets one detected from `content` (`lib/detect-language.ts`) |
+| `createItem` | `{ typeName, title, description?, content?, url?, language?, tags, collectionIds?, fileUrl?, fileName?, fileSize? }` | `ItemDetail` | Zod; description ≤ 1000; `file` / `image` need Pro; `create` rate limit (120 / minute); Free cap of 50 items, enforced under a row lock so concurrent creates can't overshoot it; `link` needs `url`; `fileUrl` must be in the caller's own storage folder. A snippet or command without `language` gets one detected from `content` (`lib/detect-language.ts`) |
 | `updateItem` | `itemId`, `{ title, description?, content?, url?, language?, tags, collectionIds? }` | `ItemDetail` | Zod; description ≤ 1000; owned. Replaces tags and collection links |
 | `deleteItem` | `itemId` | `null` | Owned. Also deletes the R2 object named by `fileUrl` |
 | `toggleItemFavorite` | `itemId` | `{ isFavorite }` | Owned |
@@ -24,7 +24,7 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createCollection` | `{ name, description? }` | The collection | Name 1–100, description ≤ 500; Free cap of 3 |
+| `createCollection` | `{ name, description? }` | The collection | Name 1–100, description ≤ 500; `create` rate limit; Free cap of 3 (under the same row lock) |
 | `updateCollection` | `{ id, name, description? }` | The collection | Same limits; owned |
 | `deleteCollection` | `{ id }` | `null` | Owned. Items are kept |
 | `toggleCollectionFavorite` | `collectionId` | `{ isFavorite }` | Owned |
@@ -48,8 +48,8 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 | Action | Input | Returns |
 |---|---|---|
-| `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…" |
-| `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. One transaction; Free limits apply; file and image items skipped for Free users |
+| `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…". `importPreview` rate limit (20 / hour) |
+| `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. `import` rate limit (5 / hour); one transaction; Free limits apply (under the row lock); file and image items skipped for Free users; only `http(s)` URLs and the caller's own `fileUrl`s are kept; "skip duplicates" matches on title, type and content (or URL); `createdAt` / `updatedAt` are kept |
 | `exportData` | — | The manifest as data. Not used by the UI, which downloads through [`/api/export`](export-format.md) |
 
 ## API tokens
@@ -69,7 +69,7 @@ The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`):
 |---|---|---|
 | `getSearchData` (`search.ts`) | — | `{ items, collections }` — the whole ⌘K index for the user |
 | `updateEditorPreferences` (`settings.ts`) | `{ fontSize, tabSize, wordWrap, minimap, theme }` | Validated against the allowed values, saved to `users.editorPreferences` |
-| `updateName` (`settings.ts`) | `{ name }` | Trimmed, 1–50 characters (`fieldErrors.name` otherwise), saved to `users.name` for the session user; returns `{ name }`. Edited in place on `/profile` |
+| `updateName` (`settings.ts`) | `{ name }` | Trimmed, 1–50 characters (`fieldErrors.name` otherwise), saved to `users.name` for the session user; returns `{ name }`. Edited in place on `/profile`. Refused for the public demo account |
 | `signInWithGitHub` (`auth.ts`) | — | Redirects to GitHub; see [authentication](../architecture/flows/authentication.md#github) |
 
 ## Related

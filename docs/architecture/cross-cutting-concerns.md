@@ -63,15 +63,29 @@ Everything is an environment variable — see [configuration](../local-developme
 | `MAX_CONTENT_LENGTH` (2,000) — the model itself is the `AI_MODEL` variable | `src/actions/ai.ts` |
 | `FILE_CONSTRAINTS` (5 MB images, 10 MB files, allowed extensions) | `src/lib/r2.ts` |
 | `rateLimitConfigs` | `src/lib/rate-limit.ts` |
+| Coverage floor (75 / 75 / 65 / 75) | `vitest.config.ts` |
 | Token lifetimes (24 h verification, 1 h reset) | `src/lib/tokens.ts` |
 | `STRIPE_APP_TAG` (`bitbin`) | `src/lib/stripe.ts` |
 | Plan feature lists (`FREE_FEATURES`, `PRO_FEATURES`) | `src/lib/constants/pricing.ts`. Displayed prices are literals in `PricingSection.tsx`, `upgrade-pricing.tsx` and `billing-settings.tsx`; the charged price comes from the Stripe price ids |
 
 ## Observability
 
-- Server errors go to `console.error` / `console.warn`, which Vercel captures in its function logs. There is no error tracker or structured logging.
+- Server errors go to `console.error` / `console.warn`, which Vercel captures in its function logs. `console.error` is the error channel: Sentry (`lib/monitoring.ts`, started from `instrumentation.ts`) captures every `console.error` and every error Next.js catches, so log the real error there and return a generic message to the client.
+- Sentry is off unless `SENTRY_DSN` is set (production only). Before an event leaves the server, cookies, auth headers, request bodies, query strings, IPs and user data are stripped, and no performance traces are sent. Node process warnings are ignored. Alert rules live in the Sentry dashboard ([setup](../deployment/providers.md#sentry)).
 - `@vercel/analytics` reports page views once deployed on Vercel.
-- There are no health checks or metrics endpoints.
+- There are no health checks, metrics endpoints or structured logging.
+
+## Redirects
+
+Anything the client says to go to after an action (the sign-in `callbackUrl`) goes through `safeCallbackPath` in `lib/validation.ts`: only a path on this site is followed, so an absolute, protocol-relative or backslash URL can't turn the sign-in page into an open redirect.
+
+## The demo account
+
+`demo@bitbin.dev` is a public sandbox: its password is published so anyone can try the app. `lib/demo.ts` (`isDemoEmail`) is the single check. Anything that changes the account itself (password, name, deletion, billing, email) refuses it with a 403 or an `ActionResult` error, and a daily cron (`/api/cron/reset-demo`, `vercel.json`, authorised by `CRON_SECRET`) restores its library from `prisma/demo-content.ts` in one transaction. A new feature that changes account-level state needs the same check.
+
+## Destructive scripts
+
+`db:seed` and `db:cleanup` call `assertSafeToRunDestructive` (`lib/db-safety.ts`) before touching data. They read the same `DATABASE_URL` as the app, so they refuse to run until the host is listed in `SAFE_DATABASE_HOSTS` (a development branch) or confirmed once with `CONFIRM_DATABASE_HOST`. `lib/db-url.ts` normalises `sslmode` for the pg driver, for the app and the scripts alike.
 
 ## Related
 

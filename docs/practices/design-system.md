@@ -224,8 +224,22 @@ an optional `icon` (the palette's `>` prompt).
 
 ## Accessibility notes
 
-- Cards that open the drawer are focusable (`role="button"`, `tabIndex=0`)
-  and respond to Enter/Space. Nested buttons don't trigger the card.
+- A card that opens the drawer (an item) or a page (a collection) is a plain
+  container with a real `<button data-card-open>` for its title, inside the
+  heading. The title button is the keyboard and screen-reader target (its name
+  is the title); the container's `onClick` keeps the whole card clickable for
+  the mouse, and the card draws a focus ring when the title button has focus.
+  The toolbar buttons stop propagation, so they don't open the card. Don't put
+  `role="button"` on a container that holds other buttons.
+- Pages have one `h1`; lists of cards sit under an `h2` (visible, or
+  `sr-only` on the type and collection pages) so heading levels never skip.
+- Muted text on the dark surfaces stays at `text-muted-foreground` or
+  `/85`; fainter alphas fall below the 4.5:1 contrast ratio. Lighthouse's
+  accessibility audit scores 100 on every page in the dark theme; the light
+  theme hasn't been audited.
+- Interactive demos on the homepage (the hero's shuffle) are an overlay
+  `<button>` with only an `aria-label`, so the accessible name matches what the
+  button does.
 - Hover-only controls (copy, card menus) are always visible on touch screens
   and when focused.
 - Active nav links set `aria-current`. Icon-only buttons have an `aria-label`.

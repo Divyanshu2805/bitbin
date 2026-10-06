@@ -32,6 +32,10 @@ The `jwt` callback queries `users.isPro` and `users.sessionVersion` each time it
 
 With JWT sessions, deleting a user or changing a password doesn't sign anyone out: an existing token stays valid until it expires. Code that loads the user from a session id must handle "user not found" rather than assume the row exists.
 
+## `callbackUrl` is user input
+
+The proxy puts the page someone was heading to in `?callbackUrl=`, and the sign-in form follows it after a successful sign-in. Anyone can craft that link, so the form passes it through `safeCallbackPath` and only follows a path on this site. Following the raw value would turn `/sign-in?callbackUrl=https://evil.example` into an open redirect from a trusted domain.
+
 ## `router.refresh()`, not `revalidatePath`
 
 Actions don't revalidate; components call `router.refresh()` after a successful action. A new component that forgets leaves the page showing stale server-rendered data until the next navigation.

@@ -35,6 +35,8 @@ Until a domain is verified, Resend only delivers to your own address, so other p
 3. Add a DMARC record: a TXT record `_dmarc` with `v=DMARC1; p=none;`, tightened to `p=quarantine` once reports look clean. Without it, verification emails are more likely to land in spam.
 4. Once Resend marks the domain *Verified*, set `FROM_EMAIL="BitBin <noreply@bitbin.yourdomain.com>"` in Vercel and redeploy.
 
+A brand-new sending domain has no reputation, so the first messages often go to spam even with SPF, DKIM and DMARC in place; that improves as recipients open them. The README tells new users to check their spam folder.
+
 Email links are built from `NEXT_PUBLIC_APP_URL`.
 
 ## Cloudflare R2
@@ -56,7 +58,7 @@ Without `SENTRY_DSN` nothing is sent and nothing changes.
 
 ## GitHub
 
-`.github/dependabot.yml` has Dependabot open a weekly pull request for npm and GitHub Actions updates (routine bumps grouped in one). Two switches in the repository's **Settings → Advanced Security** are still yours: **Dependabot security updates** and **Secret scanning** with **Push protection**.
+`.github/dependabot.yml` has Dependabot open a weekly pull request for npm and GitHub Actions updates (routine bumps grouped in one). Three switches in the repository's **Settings → Advanced Security** belong to the repository, not the code, and are on for this one: **Dependabot security updates**, **Secret scanning** and **Push protection**. Check them when forking. The CI workflow is described under [Continuous integration](README.md#continuous-integration).
 
 ## Upstash and the AI provider
 

@@ -10,7 +10,7 @@ Everything about how BitBin is built, run and changed. Start with the section th
 ## Understanding the app
 
 - [Architecture](architecture/README.md) — layers, module map, request flows, security model.
-- [Architecture decisions](architecture/decisions/README.md) — why the app is shaped the way it is.
+- [Architecture decisions](architecture/decisions/README.md) — why the app is shaped the way it is (nine records).
 - [Data model](schema/README.md) — the tables, item types, conventions, migrations and seeding.
 
 ## Reference
@@ -18,6 +18,7 @@ Everything about how BitBin is built, run and changed. Start with the section th
 - [API reference](api/README.md) — every route handler and server action, the [token API](api/token-api.md) used by the browser extension, the export format, errors and rate limits.
 - [Browser extension](../extension/README.md) — the Chrome / Edge "Save from anywhere" extension: files, installing, loading it locally.
 - [Desktop tray app](../desktop/README.md) — the Electron app that saves the clipboard from a global shortcut: files, running it, packaging.
+- [Project metrics](metrics.md) — measured quality, accessibility, security and scale figures, and how to re-check them.
 - [Known gaps](known-gaps/README.md) — constraints, trade-offs, open issues, and the roadmap.
 
 ## Contributing

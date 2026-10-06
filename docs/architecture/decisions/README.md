@@ -10,7 +10,9 @@ Short records of the decisions that shape BitBin, each with the context that for
 | [0004](0004-files-in-r2-behind-a-download-proxy.md) | Store binaries in Cloudflare R2, and download them through an app route | Accepted |
 | [0005](0005-rate-limits-fail-open.md) | Let rate limiting fail open when Redis is missing or down | Accepted |
 | [0006](0006-schema-changes-only-through-migrations.md) | Change the schema only through committed Prisma migrations | Accepted |
-| [0007](0007-token-api-for-the-browser-extension.md) | Add a small `/api/v1` authenticated by personal access tokens, for the browser extension | Accepted |
+| [0007](0007-token-api-for-the-browser-extension.md) | Add a small `/api/v1` authenticated by personal access tokens, for the browser extension and the desktop app | Accepted, amended |
+| [0008](0008-public-demo-account-as-a-locked-sandbox.md) | Offer a public demo account that can't change itself, and reset it daily | Accepted |
+| [0009](0009-ci-checks-and-a-coverage-floor.md) | Run CI on every push, with a coverage floor on the server code, without gating the deploy | Accepted |
 
 ## Writing a new record
 

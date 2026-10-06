@@ -28,7 +28,15 @@ The return shape of every server action — `{ success, data?, error?, fieldErro
 
 ## Session
 
-A NextAuth JWT carrying the user's id and `isPro`. `getAuthedSession()` in actions and `auth()` everywhere else are the only ways code learns who the caller is.
+A NextAuth JWT carrying the user's id, `isPro` and `sessionVersion`. `getAuthedSession()` in actions and `auth()` everywhere else are the only ways code learns who the caller is.
+
+## API token
+
+A personal access token (`bb_…`, stored only as a SHA-256 hash, expiring, revocable) that lets the browser extension and the desktop app call `/api/v1` as its owner. Cookies are never accepted there. See the [token API](../api/token-api.md).
+
+## The demo account
+
+`demo@bitbin.dev`, a public sandbox whose password is published. It works like any Free account except that it can't change itself (`isDemoEmail`), and a daily cron restores its library. See [ADR 0008](decisions/0008-public-demo-account-as-a-locked-sandbox.md).
 
 ## Editor preferences
 

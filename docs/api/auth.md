@@ -32,7 +32,7 @@ Registering an address that already has an account never changes a verified or G
 
 ## `POST /api/auth/forgot-password`
 
-`{ "email": "…" }`. Always `200` with "If an account exists with this email, a password reset link has been sent." — it never reveals whether an account exists. `400` without an email, `429` over the `forgotPassword` limit (3 / hour per IP).
+`{ "email": "…" }`. Always `200` with "If an account exists with this email, a password reset link has been sent." — it never reveals whether an account exists, and sends nothing for GitHub-only accounts or the public demo account. `400` without an email, `429` over the `forgotPassword` limit (3 / hour per IP).
 
 ## `POST /api/auth/reset-password`
 
@@ -42,8 +42,8 @@ Registering an address that already has an account never changes a verified or G
 
 | Status | When |
 |---|---|
-| `200` | Password changed; the token is deleted |
-| `400` | Missing token or passwords, mismatch, under 8 characters, invalid token, or expired token |
+| `200` | Password changed; every existing session ends (`sessionVersion` is bumped) and the token is deleted |
+| `400` | Missing token or passwords, mismatch, under 8 or over 128 characters, invalid token, or expired token. The password is checked **before** the token is spent, so a typo doesn't burn the link |
 | `404` | The token's account no longer exists |
 | `429` | `resetPassword` limit — 5 / 15 min per IP |
 
@@ -56,11 +56,12 @@ Session required. `{ "currentPassword": "…", "newPassword": "…" }`.
 | `200` | Changed. Every session ends, this one included (`sessionVersion` is bumped); the UI signs out and asks the user to sign in again |
 | `400` | Missing or non-string fields, new password under 8 or over 128 characters, a GitHub-only account ("not available for OAuth accounts"), or a wrong current password |
 | `401` | No session |
+| `403` | The public demo account, whose password is published and can't be changed |
 | `429` | `changePassword` limit, 5 / 15 min per IP + user |
 
 ## `DELETE /api/auth/delete-account`
 
-Session required. `{ "password": "…" }` in the body — required, and checked with bcrypt, for accounts that have a password (GitHub-only accounts send nothing). Cancels the Stripe subscription first (the account is kept if that fails), deletes the user's `{userId}/` files from R2 (best effort, logged on failure), then deletes the user; items, collections, accounts and sessions cascade. `200` with `{ success: true }`, `400` for a wrong or missing password, `401` without a session, `404` if the account is gone, `500` on failure.
+Session required. `{ "password": "…" }` in the body — required, and checked with bcrypt, for accounts that have a password (GitHub-only accounts send nothing). Cancels the Stripe subscription first (the account is kept if that fails), deletes the user's `{userId}/` files from R2 (best effort, logged on failure), then deletes the user; items, collections, accounts and sessions cascade. `200` with `{ success: true }`, `400` for a wrong or missing password, `401` without a session, `403` for the public demo account, `404` if the account is gone, `500` on failure (including a subscription that couldn't be cancelled, in which case nothing is deleted).
 
 ## Related
 

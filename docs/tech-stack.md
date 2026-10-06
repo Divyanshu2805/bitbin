@@ -14,6 +14,8 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Editors | Monaco (`@monaco-editor/react`), `react-markdown` + `remark-gfm` | Code items and markdown items |
 | Search UI | `cmdk` | The ⌘K command palette |
 | Icons, toasts | Lucide, Sonner | |
+| Motion | Lenis (smooth scrolling on the homepage), CSS View Transitions, CSS animations | Page slides, scroll reveals, card and button effects; all off under `prefers-reduced-motion` |
+| Theming | `next-themes` | Dark by default, light available |
 
 ## Data
 
@@ -33,14 +35,26 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Payments | Stripe | Checkout (subscriptions), Customer Portal, webhooks |
 | AI | OpenAI Responses API, or any OpenAI-compatible provider (default model `gpt-5-nano`) | Auto-tags, descriptions, code explanations, prompt optimization |
 | Export | `archiver` | ZIP exports with file binaries |
-| Hosting | Vercel + `@vercel/analytics` | Builds, serverless runtime, page analytics |
+| Error monitoring | Sentry (`@sentry/nextjs`) | Server errors and `console.error`, with personal data stripped; off until `SENTRY_DSN` is set |
+| Hosting | Vercel + `@vercel/analytics` | Builds, serverless runtime, a daily cron for the demo reset, page analytics |
+
+## Clients outside the web app
+
+| Area | Choice | Used for |
+|---|---|---|
+| Browser extension | Chrome / Edge Manifest V3, plain JavaScript (`extension/`) | Saving a selection from any page through the [token API](api/token-api.md) (Pro) |
+| Desktop app | Electron, plain CommonJS (`desktop/`) | A tray app whose global shortcut saves the clipboard through the same token API |
+
+Both sit outside the Next build and have their own tests and READMEs.
 
 ## Tooling
 
 | Area | Choice |
 |---|---|
-| Tests | Vitest 4 (Node environment) |
+| Tests | Vitest 4 (Node environment) with `@vitest/coverage-v8`; `node:test` for `desktop/` |
 | Lint | ESLint 9 with `eslint-config-next` |
+| CI | GitHub Actions: audit, lint, tests with a coverage floor, build ([workflow](../.github/workflows/ci.yml)) |
+| Dependency updates | Dependabot (weekly, npm and GitHub Actions) |
 | Scripts | `tsx` for `prisma/seed.ts` and `scripts/*.ts` |
 
 ## Related
