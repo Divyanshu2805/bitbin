@@ -10,11 +10,12 @@ import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/com
 import FormError from "@/components/shared/form-error";
 import GitHubAuthSection from "@/components/shared/github-auth-section";
 import { slideTo } from "@/lib/view-transition";
+import { safeCallbackPath } from "@/lib/validation";
 
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = safeCallbackPath(searchParams.get("callbackUrl"));
   const error = searchParams.get("error");
   const registered = searchParams.get("registered");
   const viaGitHub = searchParams.get("via") === "github";

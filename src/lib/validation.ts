@@ -107,3 +107,15 @@ export const descriptionSchema = z
   .nullable()
   .optional()
   .transform((val) => val || null);
+
+/**
+ * Where to send someone after signing in. Only a path on this site is allowed: an absolute URL,
+ * a protocol-relative one (`//evil.example`) or a backslash trick would turn the sign-in page
+ * into an open redirect, so anything else falls back to `fallback`.
+ */
+export function safeCallbackPath(value: string | null | undefined, fallback = '/dashboard'): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return fallback;
+  // Browsers drop tabs and newlines inside a URL, so "/<tab>/evil.example" would become "//evil.example"
+  if (/[\u0000-\u001f\u007f]/.test(value)) return fallback;
+  return value;
+}
