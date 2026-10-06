@@ -1,0 +1,32 @@
+# Dependabot opens a pull request when a dependency has a newer version or a
+# security advisory. Security updates also need "Dependabot security updates"
+# switched on in the repository settings (Settings -> Advanced Security).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      # One pull request for the routine bumps, so they can be reviewed together
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Majors of the framework pieces are done by hand, with the GitHub sign-in re-test
+      - dependency-name: next-auth
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@auth/prisma-adapter"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore"

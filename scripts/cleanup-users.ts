@@ -2,6 +2,8 @@ import 'dotenv/config'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../src/generated/prisma/client'
+import { normalizeDatabaseUrl } from '../src/lib/db-url'
+import { assertSafeToRunDestructive } from '../src/lib/db-safety'
 
 const DEMO_EMAIL = 'demo@bitbin.dev'
 
@@ -15,7 +17,10 @@ async function main() {
 
   console.log('Connecting to database...')
 
-  const pool = new Pool({ connectionString })
+  // Deletes every account but the demo one: stop unless this database is marked safe to reset
+  assertSafeToRunDestructive(connectionString, 'delete every user except the demo user')
+
+  const pool = new Pool({ connectionString: normalizeDatabaseUrl(connectionString) })
   const adapter = new PrismaPg(pool)
   const prisma = new PrismaClient({ adapter })
 
