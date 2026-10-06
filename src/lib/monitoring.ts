@@ -49,6 +49,9 @@ export function monitoringOptions(env: Record<string, string | undefined> = proc
     tracesSampleRate: 0,
     sendDefaultPii: false,
     integrations: [Sentry.captureConsoleIntegration({ levels: ['error'] })],
+    // Node and the platform print process warnings ("ExperimentalWarning: …") to stderr at
+    // startup; with every console.error captured they would show up as app errors
+    ignoreErrors: [/ExperimentalWarning/],
     beforeSend: scrubEvent,
   };
 }

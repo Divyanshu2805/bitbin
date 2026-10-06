@@ -96,7 +96,7 @@ async function main() {
   // ============================================
   console.log('\n📝 Resetting the demo user collections and items...')
   await prisma.$transaction((tx) => resetDemoContent(tx, demoUser.id), { timeout: 30_000 })
-  console.log('   ✓ 3 collections, 17 items')
+  console.log('   ✓ 3 collections, 18 items')
 
   // ============================================
   // SUMMARY
@@ -106,7 +106,7 @@ async function main() {
   console.log(`   • 7 system item types`)
   console.log(`   • 1 demo user (demo@bitbin.dev / 12345678)`)
   console.log(`   • 3 collections`)
-  console.log(`   • 17 items total`)
+  console.log(`   • 18 items total`)
 }
 
 main()

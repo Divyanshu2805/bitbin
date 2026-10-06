@@ -49,7 +49,8 @@ Server errors go to [Sentry](https://sentry.io) (`lib/monitoring.ts`). Both Next
 
 1. Create a Sentry project (platform: Next.js) and copy its DSN.
 2. Add it to Vercel as `SENTRY_DSN` (Production) and redeploy.
-3. In Sentry: **Alerts → Create alert → Issues**, notify you by email when *a new issue is created* and when *an issue is seen more than 10 times in an hour*. Add a second rule filtered on the message `Stripe webhook` so a failing webhook is never missed.
+3. In Sentry: **Alerts → Create alert → Issues**, with the trigger *A new issue is created* (and, to hear about an old problem getting worse, *An issue escalates*), the action **Notify on preferred channel**, and no filter. Every first failure is a new issue, a failing Stripe webhook included: those are logged as `Error handling <event type>` or `Webhook signature verification failed`. Sentry's message filters (*Event attribute*) don't combine with the *new issue* trigger, so don't try to narrow it to the webhook.
+4. Archive an issue (**Archive → Forever**) once it's understood and harmless, so it stops alerting.
 
 Without `SENTRY_DSN` nothing is sent and nothing changes.
 

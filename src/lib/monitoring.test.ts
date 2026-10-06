@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import * as Sentry from '@sentry/nextjs';
 import type { ErrorEvent } from '@sentry/nextjs';
 import { monitoringOptions, scrubEvent } from './monitoring';
@@ -61,6 +61,7 @@ describe('monitoringOptions', () => {
     expect(options.tracesSampleRate).toBe(0);
     expect(options.sendDefaultPii).toBe(false);
     expect(options.beforeSend).toBe(scrubEvent);
+    expect(options.ignoreErrors).toEqual([/ExperimentalWarning/]);
   });
 
   it('falls back to NODE_ENV when not on Vercel', () => {
@@ -69,26 +70,93 @@ describe('monitoringOptions', () => {
 });
 
 describe('with the real SDK', () => {
-  it('turns a console.error into an event, without anything sensitive in it', async () => {
-    const sent: string[] = [];
+  // One setup for the whole block: the SDK hooks the console once per process
+  const envelopes: string[] = [];
+
+  beforeAll(() => {
     Sentry.init({
       ...monitoringOptions({ SENTRY_DSN: 'https://key@example.invalid/1', NODE_ENV: 'test' }),
       // Capture what would be sent instead of sending it
       transport: () => ({
         send: async (envelope: unknown) => {
-          sent.push(JSON.stringify(envelope));
+          envelopes.push(JSON.stringify(envelope));
           return {};
         },
         flush: async () => true,
       }),
     });
+  });
 
-    console.error('Stripe webhook handler failed:', new Error('db is down'));
-    await Sentry.flush(2000);
+  afterAll(async () => {
     await Sentry.close(2000);
+  });
 
-    const all = sent.join('\n');
-    expect(all).toContain('db is down');
-    expect(all).not.toContain('authjs.session-token');
+  beforeEach(() => {
+    envelopes.length = 0;
+  });
+
+  type SentEvent = {
+    message?: string;
+    exception?: { values?: { value?: string }[] };
+    request?: { cookies?: unknown; headers?: Record<string, string>; url?: string };
+  };
+
+  /** The events (not the client reports) that were sent, as objects. */
+  async function sentAfter(run: () => void): Promise<SentEvent[]> {
+    run();
+    await Sentry.flush(2000);
+    const events: SentEvent[] = [];
+    for (const raw of envelopes) {
+      const [, items] = JSON.parse(raw) as [unknown, [{ type: string }, SentEvent][]];
+      for (const [header, payload] of items) if (header.type === 'event') events.push(payload);
+    }
+    return events;
+  }
+
+  const titleOf = (e: SentEvent) => e.exception?.values?.[0]?.value ?? e.message ?? '';
+
+  it('turns a console.error into an event', async () => {
+    const events = await sentAfter(() => console.error('Stripe webhook handler failed:', new Error('db is down')));
+
+    expect(events.map(titleOf)).toEqual(['db is down']);
+  });
+
+  it('strips cookies and credentials from what it sends', async () => {
+    // Built at run time, so the values aren't sitting in this file's source (Sentry attaches source lines)
+    const sessionValue = ['session', 'cookie', 'value'].join('-');
+    const bearer = ['Bearer', 'bb', 'token'].join('_');
+
+    const events = await sentAfter(() => {
+      Sentry.captureEvent({
+        message: 'Something failed',
+        request: {
+          url: 'https://bitbin.example/api/auth/verify?token=abc123',
+          cookies: { 'authjs.session-token': sessionValue },
+          headers: { Cookie: sessionValue, Authorization: bearer, 'User-Agent': 'test' },
+        },
+      });
+    });
+
+    const json = JSON.stringify(events);
+    expect(events).toHaveLength(1);
+    for (const secret of [sessionValue, bearer, 'abc123']) expect(json).not.toContain(secret);
+    expect(events[0].request?.headers?.['User-Agent']).toBe('test');
+  });
+
+  it('ignores Node process warnings printed to the console', async () => {
+    const events = await sentAfter(() =>
+      console.error('(node:4) ExperimentalWarning: vm.USE_MAIN_CONTEXT_DEFAULT_LOADER is an experimental feature')
+    );
+
+    expect(events).toEqual([]);
+  });
+
+  it('still captures a real error logged next to a warning', async () => {
+    const events = await sentAfter(() => {
+      console.error('(node:4) ExperimentalWarning: something experimental');
+      console.error('Payment provider call failed:', new Error('cache is down'));
+    });
+
+    expect(events.map(titleOf)).toEqual(['cache is down']);
   });
 });

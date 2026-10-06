@@ -40,7 +40,7 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
   const plan = isYearly ? 'yearly' : 'monthly';
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10">
+    <div className="mx-auto max-w-4xl space-y-7">
       <PageHeader
         path="upgrade"
         title={
@@ -62,31 +62,31 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
         />
       </PageHeader>
 
-      <div className="grid items-stretch gap-5 stagger md:grid-cols-2">
+      <div className="grid items-stretch gap-4 stagger md:grid-cols-2">
         {/* Free: where you are now */}
-        <div className="flex flex-col rounded-2xl border border-border bg-card/80 p-7">
+        <div className="flex flex-col rounded-xl border border-border bg-card/80 p-5">
           <div className="flex items-center justify-between">
-            <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-muted-foreground">Free</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Free</p>
             <span className="rounded-md border border-border px-2 py-0.5 font-mono text-[10.5px] text-muted-foreground">
               current plan
             </span>
           </div>
-          <p className="mt-4 flex items-baseline gap-1.5">
-            <span className="font-display text-5xl font-extrabold tracking-tight">$0</span>
-            <span className="text-muted-foreground">/month</span>
+          <p className="mt-3 flex items-baseline gap-1.5">
+            <span className="font-display text-4xl font-extrabold tracking-tight">$0</span>
+            <span className="text-sm text-muted-foreground">/month</span>
           </p>
-          <p className="text-desc mt-1 h-5 text-sm">Where your bin is today.</p>
+          <p className="text-desc mt-1 h-5 text-[13px]">Where your bin is today.</p>
 
-          <div className="mt-6 space-y-2">
+          <div className="mt-4 space-y-1.5">
             <UsageMeter label="items" used={itemCount} limit={MAX_ITEMS} />
             <UsageMeter label="collections" used={collectionCount} limit={MAX_COLLECTIONS} />
           </div>
 
-          <ul className="my-7 flex-1 space-y-3">
+          <ul className="mb-5 mt-4 flex-1 space-y-2 border-t border-border/60 pt-4">
             {FREE_FEATURES.map((f) => (
               <li
                 key={f.text}
-                className={cn('flex items-start gap-3 text-[15px]', f.included ? 'text-foreground/85' : 'text-muted-foreground/50')}
+                className={cn('flex items-start gap-2.5 text-[13.5px] leading-snug', f.included ? 'text-foreground/85' : 'text-muted-foreground/50')}
               >
                 {f.included ? (
                   <Check className="mt-0.5 size-4 shrink-0 text-lime" strokeWidth={2.5} />
@@ -97,35 +97,35 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
               </li>
             ))}
           </ul>
-          <Button variant="outline" size="lg" disabled className="h-11 w-full font-mono">
+          <Button variant="outline" disabled className="h-10 w-full font-mono">
             you&apos;re here
           </Button>
         </div>
 
         {/* Pro: a light runs slowly round its border */}
-        <div className="relative overflow-hidden rounded-2xl p-px">
+        <div className="relative overflow-hidden rounded-xl p-px">
           <span
             aria-hidden
             className="absolute inset-[-60%] animate-spin-slow bg-[conic-gradient(from_0deg,transparent_0deg,transparent_220deg,var(--brand-lime)_300deg,var(--brand-cyan)_360deg)]"
           />
-          <div className="relative flex h-full flex-col rounded-[15px] bg-card p-7">
+          <div className="relative flex h-full flex-col rounded-[11px] bg-card p-5">
             <div className="flex items-center justify-between">
-              <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-lime">Pro</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lime">Pro</p>
               <span className="rounded-md border border-lime/30 bg-lime/10 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-lime">
                 recommended
               </span>
             </div>
-            <p className="mt-4 flex items-baseline gap-1.5">
+            <p className="mt-3 flex items-baseline gap-1.5">
               <span
                 key={plan}
-                className="font-display text-5xl font-extrabold tracking-tight animate-[fade-up_0.35s_cubic-bezier(0.22,1,0.36,1)_both]"
+                className="font-display text-4xl font-extrabold tracking-tight animate-[fade-up_0.35s_cubic-bezier(0.22,1,0.36,1)_both]"
               >
                 {isYearly ? '$6' : '$8'}
               </span>
               {isYearly ? <span className="font-display text-xl text-muted-foreground line-through">$8</span> : null}
-              <span className="text-muted-foreground">/month</span>
+              <span className="text-sm text-muted-foreground">/month</span>
             </p>
-            <p className="text-desc mt-1 h-5 text-sm">
+            <p className="text-desc mt-1 h-5 text-[13px]">
               {isYearly ? (
                 <span key="y" className="animate-fade-in">
                   Billed $72 a year · <span className="text-lime">save $24</span>
@@ -137,26 +137,25 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
               )}
             </p>
 
-            <div className="mt-6 flex items-center justify-between rounded-md border border-lime/20 bg-lime/[0.04] px-3 py-2.5 font-mono text-[11px] text-muted-foreground">
+            <div className="mt-4 flex items-center justify-between rounded-md border border-lime/20 bg-lime/[0.04] px-3 py-2 font-mono text-[11px] text-muted-foreground">
               your bin
               <span className="flex items-center gap-1.5 text-lime">
                 <InfinityIcon className="size-4" /> no limits
               </span>
             </div>
 
-            <ul className="my-7 flex-1 space-y-3">
+            <ul className="mb-5 mt-4 flex-1 space-y-2 border-t border-border/60 pt-4">
               {PRO_FEATURES.map((text) => (
-                <li key={text} className="flex items-start gap-3 text-[15px] text-foreground/90">
+                <li key={text} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-foreground/90">
                   <Check className="mt-0.5 size-4 shrink-0 text-lime" strokeWidth={2.5} />
                   {text}
                 </li>
               ))}
             </ul>
             <Button
-              size="lg"
               onClick={() => handleUpgrade(plan)}
               disabled={loading !== null}
-              className="h-11 w-full font-mono text-[15px]"
+              className="h-10 w-full font-mono text-sm"
             >
               <Sparkles className="h-4 w-4" />
               {loading ? (

@@ -2,7 +2,7 @@ import { ContentType } from '../src/generated/prisma/client'
 import type { Prisma } from '../src/generated/prisma/client'
 
 /**
- * The demo account's sample library: three collections and seventeen items
+ * The demo account's sample library: three collections and eighteen items
  * (snippets, prompts, commands and links). Used by the seed and by the daily
  * reset of the public demo account (`/api/cron/reset-demo`), so both put back
  * exactly the same content.
