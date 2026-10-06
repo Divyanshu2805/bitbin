@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Mail } from "lucide-react";
 import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 import FormError from "@/components/shared/form-error";
+import { TURNSTILE_ENABLED, TurnstileWidget } from "@/components/auth/turnstile-widget";
 
 function BackToSignIn() {
   return (
@@ -25,17 +26,25 @@ export function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setError("Please complete the verification check");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
 
       const data = await response.json();
@@ -43,6 +52,7 @@ export function ForgotPasswordForm() {
       if (!response.ok) {
         setError(data.error || "Something went wrong");
         setIsLoading(false);
+        setTurnstileReset((n) => n + 1); // a token works once
         return;
       }
 
@@ -107,6 +117,7 @@ export function ForgotPasswordForm() {
             required
             disabled={isLoading}
           />
+          <TurnstileWidget onToken={setTurnstileToken} resetKey={turnstileReset} />
           <div className="pt-1">
             <AuthSubmit loading={isLoading} loadingText="Sending link">
               Send reset link

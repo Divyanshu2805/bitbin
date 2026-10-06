@@ -11,10 +11,13 @@ vi.mock('@/lib/tokens', () => ({ generatePasswordResetToken: generateToken }));
 vi.mock('@/lib/email', () => ({ sendPasswordResetEmail: sendEmail }));
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit,
+  getClientIP: vi.fn().mockResolvedValue('203.0.113.7'),
   rateLimitResponse: () => new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 }),
 }));
+vi.mock('@/lib/turnstile', () => ({ isTurnstileEnabled: vi.fn().mockReturnValue(false), verifyTurnstile: vi.fn() }));
 
 import { POST } from './route';
+import { isTurnstileEnabled, verifyTurnstile } from '@/lib/turnstile';
 
 const post = (body: unknown) =>
   POST(new Request('http://localhost/api/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }));
@@ -31,6 +34,33 @@ describe('POST /api/auth/forgot-password', () => {
     checkRateLimit.mockResolvedValue({ success: false, retryAfter: 60 });
     expect((await post({ email: 'a@b.com' })).status).toBe(429);
     expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('limits reset mail per address, whatever the IP', async () => {
+    findUnique.mockResolvedValue({ password: 'hash' });
+    await post({ email: 'Victim@B.com' });
+    expect(checkRateLimit).toHaveBeenCalledWith('forgotPasswordEmail', 'victim@b.com', { ignoreIp: true });
+
+    checkRateLimit.mockImplementation(async (type: string) =>
+      type === 'forgotPasswordEmail' ? { success: false, retryAfter: 900 } : { success: true }
+    );
+    sendEmail.mockClear();
+    const res = await post({ email: 'victim@b.com' });
+
+    expect(res.status).toBe(429);
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('refuses a request whose Turnstile token fails, when configured', async () => {
+    vi.mocked(isTurnstileEnabled).mockReturnValue(true);
+    vi.mocked(verifyTurnstile).mockResolvedValue({ ok: false, message: 'Please complete the verification check and try again.' });
+
+    const res = await post({ email: 'user@example.com', turnstileToken: 'bad' });
+
+    expect(res.status).toBe(400);
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    vi.mocked(isTurnstileEnabled).mockReturnValue(false);
   });
 
   it('requires an email', async () => {

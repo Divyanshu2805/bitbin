@@ -17,10 +17,12 @@ import { AgentSpinner, ResultLine, ToolLine } from "@/components/shared/agent-sp
 import { explanationKey, getExplanation, getPendingExplanation, trackExplanation } from "@/lib/explanation-store";
 import { Check, Code2, Copy, Sparkles } from "lucide-react";
 
-// Configure Monaco to load from CDN
+// Monaco is served from this site (public/monaco, copied from node_modules by scripts/copy-monaco.mjs
+// before `dev` and `build`), not from a CDN: no third-party script runs in the page, and the
+// Content Security Policy can say `script-src 'self'`.
 loader.config({
   paths: {
-    vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
+    vs: "/monaco/vs",
   },
 });
 

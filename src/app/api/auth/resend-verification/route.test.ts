@@ -7,10 +7,11 @@ vi.mock('@/lib/email', () => ({ sendVerificationEmail: sendEmail }));
 vi.mock('@/lib/tokens', () => ({ generateVerificationToken: vi.fn().mockResolvedValue('token') }));
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
-  rateLimitResponse: vi.fn(),
+  rateLimitResponse: vi.fn(() => new Response(JSON.stringify({ error: 'Too many attempts' }), { status: 429 })),
 }));
 
 import { POST } from './route';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const post = (email: unknown) =>
   POST(new Request('http://localhost/x', { method: 'POST', body: JSON.stringify({ email }) }));
@@ -28,6 +29,22 @@ describe('POST /api/auth/resend-verification', () => {
 
     expect(verified).toEqual(unknown);
     expect(unverified).toEqual(unknown);
+  });
+
+  it('also limits resends per address, whatever the IP', async () => {
+    findUnique.mockResolvedValue({ emailVerified: null });
+    await post('Victim@B.com');
+    expect(checkRateLimit).toHaveBeenCalledWith('resendVerificationEmail', 'victim@b.com', { ignoreIp: true });
+
+    vi.mocked(checkRateLimit).mockImplementation(async (type) =>
+      type === 'resendVerificationEmail' ? { success: false, remaining: 0, reset: 0, retryAfter: 900 } : { success: true, remaining: 1, reset: 0, retryAfter: 0 }
+    );
+    sendEmail.mockClear();
+    const res = await post('victim@b.com');
+
+    expect(res.status).toBe(429);
+    expect(sendEmail).not.toHaveBeenCalled();
+    vi.mocked(checkRateLimit).mockResolvedValue({ success: true, remaining: 1, reset: 0, retryAfter: 0 });
   });
 
   it('only sends mail to an unverified account', async () => {

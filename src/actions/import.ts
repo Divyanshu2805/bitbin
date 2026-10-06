@@ -20,6 +20,7 @@ import {
 const MAX_IMPORT_ENTRIES = 5000;
 import { isOwnedFileUrl } from '@/lib/r2';
 import { lockUserForLimit } from '@/lib/limit-error';
+import { demoBlockedMessage, isDemoEmail } from '@/lib/demo';
 import { isDuplicateItem, parseExportDate, type ItemIdentity } from '@/lib/import-utils';
 
 const importItemSchema = z.object({
@@ -95,6 +96,8 @@ export async function previewImport(
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
 
+  if (isDemoEmail(session.user.email)) return { success: false, error: demoBlockedMessage('import data') };
+
   const limited = await checkActionRateLimit('importPreview', session.user.id, 'import previews');
   if (limited) return limited;
 
@@ -141,6 +144,9 @@ export async function importData(
 ): Promise<ActionResult<ImportResult>> {
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
+
+  // An import could fill the shared library with thousands of entries
+  if (isDemoEmail(session.user.email)) return { success: false, error: demoBlockedMessage('import data') };
 
   const limited = await checkActionRateLimit('import', session.user.id, 'imports');
   if (limited) return limited;

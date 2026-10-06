@@ -67,3 +67,18 @@ describe('POST /api/stripe/portal', () => {
     expect(JSON.stringify(await res.json())).not.toContain('secret');
   });
 });
+
+describe('POST /api/stripe/portal from another site', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('is refused before a portal session is created', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', isPro: true }, expires: '' } as Session);
+
+    const res = await POST(
+      new Request('http://localhost/api/stripe/portal', { method: 'POST', headers: { origin: 'https://evil.example' } })
+    );
+
+    expect(res.status).toBe(403);
+    expect(portalCreate).not.toHaveBeenCalled();
+  });
+});

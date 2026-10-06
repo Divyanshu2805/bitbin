@@ -5,9 +5,14 @@ import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 import { deleteUserFilesFromR2 } from '@/lib/r2'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
+import { rejectCrossSite } from '@/lib/same-origin'
 
 export async function DELETE(request: Request) {
   try {
+    // A second line of defence behind SameSite=Lax: refuse requests a browser says are cross-site
+    const crossSite = rejectCrossSite(request)
+    if (crossSite) return crossSite
+
     const session = await auth()
 
     if (!session?.user?.id) {

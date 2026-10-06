@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generatePasswordResetToken } from '@/lib/tokens'
 import { sendPasswordResetEmail } from '@/lib/email'
-import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit'
+import { isTurnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
 import { isDemoEmail } from '@/lib/demo'
 
 export async function POST(request: Request) {
@@ -21,6 +22,22 @@ export async function POST(request: Request) {
         { error: 'Email is required' },
         { status: 400 }
       )
+    }
+
+    // Bot check, when Turnstile is configured
+    if (isTurnstileEnabled()) {
+      const verdict = await verifyTurnstile(body?.turnstileToken, await getClientIP())
+      if (!verdict.ok) {
+        return NextResponse.json({ error: verdict.message }, { status: 400 })
+      }
+    }
+
+    // At most 3 reset mails an hour to one address, from any number of IPs
+    if (typeof email === 'string') {
+      const emailLimit = await checkRateLimit('forgotPasswordEmail', email.trim().toLowerCase(), { ignoreIp: true })
+      if (!emailLimit.success) {
+        return rateLimitResponse(emailLimit.retryAfter)
+      }
     }
 
     // The demo account's password can't be reset (and it has no mailbox); answer as for any other address

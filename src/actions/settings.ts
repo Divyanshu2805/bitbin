@@ -1,14 +1,18 @@
 'use server';
 
 import { z } from 'zod';
-import { updateEditorPreferences as updateEditorPreferencesQuery, updateUserName } from '@/lib/db/users';
+import {
+  revokeUserSessions,
+  updateEditorPreferences as updateEditorPreferencesQuery,
+  updateUserName,
+} from '@/lib/db/users';
 import {
   type EditorPreferences,
   EDITOR_THEMES,
   FONT_SIZES,
   TAB_SIZES,
 } from '@/lib/constants/editor';
-import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
 import { parseZodErrors } from '@/lib/validation';
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo';
 
@@ -78,4 +82,29 @@ export async function updateName(
   }
 
   return { success: true, data: { name } };
+}
+
+/**
+ * "Sign out everywhere": ends every session this account has, this one included. The caller then
+ * clears its own cookie with `signOut()`. Sessions are stateless JWTs, so there is no list of
+ * devices to show, only this switch. A password change or reset does the same thing.
+ */
+export async function signOutEverywhere(): Promise<ActionResult> {
+  const { session, unauthorized } = await getAuthedSession();
+  if (unauthorized) return unauthorized;
+
+  // The shared demo account would sign every visitor out
+  if (isDemoEmail(session.user.email)) {
+    return { success: false, error: demoBlockedMessage('sign everyone out') };
+  }
+
+  const limited = await checkActionRateLimit('sessions', session.user.id, 'sign-out requests');
+  if (limited) return limited;
+
+  const revoked = await revokeUserSessions(session.user.id);
+  if (!revoked) {
+    return { success: false, error: 'Could not sign you out everywhere. Try again.' };
+  }
+
+  return { success: true };
 }

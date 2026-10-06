@@ -95,6 +95,22 @@ export async function updateEditorPreferences(
 }
 
 /**
+ * End every session this user has, on every device: a token carries the `sessionVersion` it was
+ * issued with, and bumping it makes the `jwt` callback reject all older ones.
+ */
+export async function revokeUserSessions(userId: string): Promise<boolean> {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { sessionVersion: { increment: 1 } },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Get user's editor preferences
  */
 export async function getEditorPreferences(userId: string): Promise<EditorPreferences> {

@@ -137,3 +137,23 @@ describe('DELETE /api/auth/delete-account', () => {
     expect(del).toHaveBeenCalled();
   });
 });
+
+describe('DELETE /api/auth/delete-account from another site', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('is refused before the account is touched', async () => {
+    mockAuth.mockResolvedValue(session());
+
+    const res = await DELETE(
+      new Request('http://localhost/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: { origin: 'https://evil.example' },
+        body: JSON.stringify({ password: 'password123' }),
+      })
+    );
+
+    expect(res.status).toBe(403);
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(del).not.toHaveBeenCalled();
+  });
+});

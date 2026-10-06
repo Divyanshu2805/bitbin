@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     "extension/**",
     // Desktop tray app: plain CommonJS for Electron, with its own package.json
     "desktop/**",
+    // Generated copy of the code editor (scripts/copy-monaco.mjs)
+    "public/monaco/**",
   ]),
 ]);
 

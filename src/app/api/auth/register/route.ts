@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/email';
-import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit';
+import { isTurnstileEnabled, verifyTurnstile } from '@/lib/turnstile';
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation';
 
 const MAX_NAME_LENGTH = 50;
@@ -28,6 +29,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, password, confirmPassword } = body;
 
+    // Bot check, when Turnstile is configured
+    if (isTurnstileEnabled()) {
+      const verdict = await verifyTurnstile(body?.turnstileToken, await getClientIP());
+      if (!verdict.ok) {
+        return NextResponse.json({ error: verdict.message }, { status: 400 });
+      }
+    }
+
     // Validate required fields
     if (
       typeof email !== 'string' ||
@@ -45,6 +54,12 @@ export async function POST(request: Request) {
 
     if (email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) {
       return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+    }
+
+    // At most 3 mails an hour to one address, from any number of IPs: nobody can flood an inbox
+    const emailLimit = await checkRateLimit('registerEmail', email.trim().toLowerCase(), { ignoreIp: true });
+    if (!emailLimit.success) {
+      return rateLimitResponse(emailLimit.retryAfter);
     }
 
     if (name !== undefined && name !== null && (typeof name !== 'string' || name.length > MAX_NAME_LENGTH)) {

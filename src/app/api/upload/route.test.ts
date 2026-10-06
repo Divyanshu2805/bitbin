@@ -2,11 +2,16 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
-const { findUnique, upload, checkRateLimit } = vi.hoisted(() => ({
+const { findUnique, upload, checkRateLimit, sanitize, scan } = vi.hoisted(() => ({
   findUnique: vi.fn(),
   upload: vi.fn(),
   checkRateLimit: vi.fn(),
+  sanitize: vi.fn(),
+  scan: vi.fn(),
 }));
+// The sanitizer and the malware check have their own tests; here only how the route uses them
+vi.mock('@/lib/image-sanitize', () => ({ sanitizeImage: sanitize }));
+vi.mock('@/lib/virus-check', () => ({ checkKnownMalware: scan }));
 vi.mock('@/lib/prisma', () => ({ prisma: { user: { findUnique } } }));
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit,
@@ -41,6 +46,8 @@ describe('POST /api/upload', () => {
     findUnique.mockResolvedValue({ isPro: true });
     checkRateLimit.mockResolvedValue({ success: true });
     upload.mockResolvedValue({ fileUrl: 'https://r2.example/user-1/abc.png' });
+    sanitize.mockImplementation(async (buffer: Buffer) => ({ ok: true, buffer }));
+    scan.mockResolvedValue({ safe: true, checked: false });
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -110,6 +117,46 @@ describe('POST /api/upload', () => {
     });
   });
 
+  it('stores the sanitized bytes, and reports their size, not the original', async () => {
+    const cleaned = Buffer.from('cleaned-image-bytes');
+    sanitize.mockResolvedValue({ ok: true, buffer: cleaned });
+
+    const res = await post({ file: png(), itemType: 'image' });
+
+    expect(res.status).toBe(200);
+    expect(upload).toHaveBeenCalledWith(cleaned, 'logo.png', 'image/png', 'user-1');
+    expect((await res.json()).data.fileSize).toBe(cleaned.length);
+  });
+
+  it('refuses an image that cannot be decoded, and stores nothing', async () => {
+    sanitize.mockResolvedValue({ ok: false, error: 'Could not read this image.' });
+
+    const res = await post({ file: png(), itemType: 'image' });
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain('Could not read');
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('refuses a file flagged as known malware, and stores nothing', async () => {
+    scan.mockResolvedValue({ safe: false, reason: 'This file was flagged as malware and cannot be uploaded.' });
+
+    const res = await post({ file: png(), itemType: 'image' });
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain('malware');
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('checks the processed bytes for malware, not the original upload', async () => {
+    const cleaned = Buffer.from('cleaned');
+    sanitize.mockResolvedValue({ ok: true, buffer: cleaned });
+
+    await post({ file: png(), itemType: 'image' });
+
+    expect(scan).toHaveBeenCalledWith(cleaned);
+  });
+
   it('returns a generic 500 when storage fails', async () => {
     upload.mockRejectedValue(new Error('R2 key AKIA123 denied'));
 
@@ -117,5 +164,22 @@ describe('POST /api/upload', () => {
 
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain('AKIA123');
+  });
+});
+
+describe('POST /api/upload from another site', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('is refused before anything is read or stored', async () => {
+    const form = new FormData();
+    form.set('file', png());
+    form.set('itemType', 'image');
+
+    const res = await POST(
+      new Request('http://localhost/api/upload', { method: 'POST', headers: { 'sec-fetch-site': 'cross-site' }, body: form })
+    );
+
+    expect(res.status).toBe(403);
+    expect(upload).not.toHaveBeenCalled();
   });
 });

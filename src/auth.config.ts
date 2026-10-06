@@ -1,6 +1,7 @@
 import GitHub from 'next-auth/providers/github'
 import Credentials from 'next-auth/providers/credentials'
 import type { NextAuthConfig } from 'next-auth'
+import { SESSION_MAX_AGE_SECONDS, SESSION_UPDATE_AGE_SECONDS } from '@/lib/constants/session'
 
 /**
  * Edge-compatible auth configuration.
@@ -11,6 +12,7 @@ import type { NextAuthConfig } from 'next-auth'
  * The actual bcrypt validation is in auth.ts which overrides this.
  */
 export default {
+  session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE_SECONDS, updateAge: SESSION_UPDATE_AGE_SECONDS },
   pages: {
     signIn: '/sign-in',
   },

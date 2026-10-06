@@ -595,3 +595,22 @@ describe('import rate limits', () => {
     expect(mockCheckRateLimit).toHaveBeenCalledWith('importPreview', 'user-123');
   });
 });
+
+describe('imports on the shared demo account', () => {
+  const demo = { user: { id: 'demo-1', email: 'demo@bitbin.dev', isPro: false }, expires: '' } as Session;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue(demo);
+  });
+
+  it('are refused, preview included, before the file is read', async () => {
+    const preview = await previewImport(validExportJson);
+    const run = await importData(validExportJson, false);
+
+    expect(preview.success).toBe(false);
+    expect(run.success).toBe(false);
+    expect(run.error).toContain("The demo account can't import data");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});

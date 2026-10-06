@@ -10,11 +10,17 @@ vi.mock('@/auth', () => ({
 vi.mock('@/lib/db/users', () => ({
   updateEditorPreferences: vi.fn(),
   updateUserName: vi.fn(),
+  revokeUserSessions: vi.fn(),
+}));
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 1, reset: 0, retryAfter: 0 }),
+  formatRetryTime: (s: number) => `${s} seconds`,
 }));
 
-import { updateEditorPreferences, updateName } from './settings';
+import { signOutEverywhere, updateEditorPreferences, updateName } from './settings';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { auth } from '@/auth';
-import { updateEditorPreferences as updateEditorPreferencesQuery, updateUserName } from '@/lib/db/users';
+import { revokeUserSessions, updateEditorPreferences as updateEditorPreferencesQuery, updateUserName } from '@/lib/db/users';
 import { DEFAULT_EDITOR_PREFERENCES } from '@/lib/constants/editor';
 
 const mockAuth = auth as unknown as Mock<() => Promise<Session | null>>;
@@ -234,5 +240,61 @@ describe('updateName for the public demo account', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('demo account');
     expect(mockUpdateUserName).not.toHaveBeenCalled();
+  });
+});
+
+describe('signOutEverywhere server action', () => {
+  const signedIn = (email = 'user@example.com') =>
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', email, isPro: false }, expires: '' } as Session);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(checkRateLimit).mockResolvedValue({ success: true, remaining: 1, reset: 0, retryAfter: 0 });
+  });
+
+  it('requires a session', async () => {
+    mockAuth.mockResolvedValue(null);
+
+    const result = await signOutEverywhere();
+
+    expect(result).toMatchObject({ success: false, error: 'Unauthorized' });
+    expect(revokeUserSessions).not.toHaveBeenCalled();
+  });
+
+  it("won't sign every visitor out of the shared demo account", async () => {
+    signedIn('demo@bitbin.dev');
+
+    const result = await signOutEverywhere();
+
+    expect(result.success).toBe(false);
+    expect(revokeUserSessions).not.toHaveBeenCalled();
+  });
+
+  it('is rate limited', async () => {
+    signedIn();
+    vi.mocked(checkRateLimit).mockResolvedValue({ success: false, remaining: 0, reset: 0, retryAfter: 120 });
+
+    const result = await signOutEverywhere();
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Too many');
+    expect(revokeUserSessions).not.toHaveBeenCalled();
+  });
+
+  it("revokes the session user's sessions, taking the id from the session only", async () => {
+    signedIn();
+    vi.mocked(revokeUserSessions).mockResolvedValue(true);
+
+    const result = await signOutEverywhere();
+
+    expect(result.success).toBe(true);
+    expect(revokeUserSessions).toHaveBeenCalledWith('user-123');
+  });
+
+  it('reports a failure to revoke', async () => {
+    signedIn();
+    vi.mocked(revokeUserSessions).mockResolvedValue(false);
+
+    expect((await signOutEverywhere()).success).toBe(false);
   });
 });

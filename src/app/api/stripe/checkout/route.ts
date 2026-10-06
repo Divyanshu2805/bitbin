@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
 import { prisma } from '@/lib/prisma'
+import { rejectCrossSite } from '@/lib/same-origin'
 
 const PRICE_MAP: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_ID_MONTHLY,
@@ -12,6 +13,10 @@ const PRICE_MAP: Record<string, string | undefined> = {
 
 export async function POST(request: Request) {
   try {
+    // A second line of defence behind SameSite=Lax: refuse requests a browser says are cross-site
+    const crossSite = rejectCrossSite(request)
+    if (crossSite) return crossSite
+
     const session = await auth()
 
     if (!session?.user?.id) {

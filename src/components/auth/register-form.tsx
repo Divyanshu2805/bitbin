@@ -7,6 +7,7 @@ import { KeyRound, Lock, Mail, User } from "lucide-react";
 import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 import FormError from "@/components/shared/form-error";
 import GitHubAuthSection from "@/components/shared/github-auth-section";
+import { TURNSTILE_ENABLED, TurnstileWidget } from "@/components/auth/turnstile-widget";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -17,6 +18,8 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,11 +38,17 @@ export function RegisterForm() {
       return;
     }
 
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setError("Please complete the verification check");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, confirmPassword }),
+        body: JSON.stringify({ name, email, password, confirmPassword, turnstileToken }),
       });
 
       const data = await response.json();
@@ -47,6 +56,7 @@ export function RegisterForm() {
       if (!response.ok) {
         setError(data.error || "Registration failed");
         setIsLoading(false);
+        setTurnstileReset((n) => n + 1); // a token works once
         return;
       }
 
@@ -116,6 +126,7 @@ export function RegisterForm() {
               disabled={isLoading}
             />
           </div>
+          <TurnstileWidget onToken={setTurnstileToken} resetKey={turnstileReset} />
           <div className="pt-1">
             <AuthSubmit loading={isLoading} loadingText="Creating account">
               Create account

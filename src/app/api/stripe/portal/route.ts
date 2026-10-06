@@ -3,9 +3,14 @@ import { auth } from '@/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
+import { rejectCrossSite } from '@/lib/same-origin'
 
-export async function POST() {
+export async function POST(request?: Request) {
   try {
+    // A second line of defence behind SameSite=Lax: refuse requests a browser says are cross-site
+    const crossSite = request ? rejectCrossSite(request) : null
+    if (crossSite) return crossSite
+
     const session = await auth()
 
     if (!session?.user?.id) {

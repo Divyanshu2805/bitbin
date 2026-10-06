@@ -7,6 +7,7 @@ import {
   toggleItemFavorite as toggleItemFavoriteQuery,
   toggleItemPin as toggleItemPinQuery,
   getCollectionsForItem as getCollectionsForItemQuery,
+  getItemById as getItemByIdQuery,
   setItemInCollection as setItemInCollectionQuery,
   type ItemDetail,
   type ItemCollectionOption,
@@ -25,6 +26,7 @@ import {
 } from '@/lib/validation';
 import { createItemForUser, type CreateItemInput } from '@/lib/item-create';
 import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { demoItemRestriction, isDemoEmail } from '@/lib/demo';
 
 const updateItemSchema = z.object({
   title: titleSchema,
@@ -49,6 +51,13 @@ export async function updateItem(
 
   if (!parsed.success) {
     return { success: false, error: 'Validation failed', fieldErrors: parseZodErrors(parsed.error) };
+  }
+
+  // The shared demo account: no new or changed links, no huge pastes (everyone sees what is saved)
+  if (isDemoEmail(session.user.email)) {
+    const existing = await getItemByIdQuery(session.user.id, itemId);
+    const restriction = demoItemRestriction(parsed.data, existing?.url);
+    if (restriction) return { success: false, error: restriction };
   }
 
   const updated = await updateItemQuery(session.user.id, itemId, parsed.data);
@@ -119,6 +128,12 @@ export async function createItem(
 ): Promise<ActionResult<ItemDetail>> {
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
+
+  // The shared demo account: no links, no huge pastes (everyone sees what is saved)
+  if (isDemoEmail(session.user.email)) {
+    const restriction = demoItemRestriction(input);
+    if (restriction) return { success: false, error: restriction };
+  }
 
   const limited = await checkActionRateLimit('create', session.user.id, 'new items');
   if (limited) return limited;

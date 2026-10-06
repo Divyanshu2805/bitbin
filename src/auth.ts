@@ -5,6 +5,7 @@ import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { SESSION_MAX_AGE_SECONDS, SESSION_UPDATE_AGE_SECONDS } from '@/lib/constants/session'
 
 /** Too many sign-in attempts; the form reads `code === 'rate_limited'`. */
 class RateLimitedSignin extends CredentialsSignin {
@@ -20,7 +21,7 @@ class RateLimitedSignin extends CredentialsSignin {
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE_SECONDS, updateAge: SESSION_UPDATE_AGE_SECONDS },
   pages: {
     signIn: '/sign-in',
   },

@@ -141,3 +141,23 @@ describe('POST /api/auth/change-password', () => {
     expect(JSON.stringify(await res.json())).not.toContain('10.0.0.1');
   });
 });
+
+describe('POST /api/auth/change-password from another site', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('is refused before the account is touched', async () => {
+    mockAuth.mockResolvedValue(session());
+
+    const res = await POST(
+      new Request('http://localhost/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'sec-fetch-site': 'cross-site' },
+        body: JSON.stringify({ currentPassword: 'password123', newPassword: 'another-password' }),
+      })
+    );
+
+    expect(res.status).toBe(403);
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+});

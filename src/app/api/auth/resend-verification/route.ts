@@ -25,6 +25,12 @@ export async function POST(request: Request) {
       return rateLimitResponse(rateLimit.retryAfter)
     }
 
+    // And at most 3 an hour per address whatever the IP
+    const emailLimit = await checkRateLimit('resendVerificationEmail', email.trim().toLowerCase(), { ignoreIp: true })
+    if (!emailLimit.success) {
+      return rateLimitResponse(emailLimit.retryAfter)
+    }
+
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },

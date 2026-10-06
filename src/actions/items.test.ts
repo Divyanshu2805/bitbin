@@ -24,6 +24,7 @@ vi.mock('@/lib/db/items', () => ({
   toggleItemPin: vi.fn(),
   getCollectionsForItem: vi.fn(),
   setItemInCollection: vi.fn(),
+  getItemById: vi.fn(),
   VALID_ITEM_TYPES: ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'] as const,
 }));
 
@@ -35,7 +36,7 @@ vi.mock('@/lib/usage', () => ({
 
 import { updateItem, deleteItem, createItem, toggleItemFavorite, toggleItemPin, getItemCollections, setItemCollection } from './items';
 import { auth } from '@/auth';
-import { updateItem as updateItemQuery, deleteItem as deleteItemQuery, createItem as createItemQuery, toggleItemFavorite as toggleItemFavoriteQuery, toggleItemPin as toggleItemPinQuery, getCollectionsForItem, setItemInCollection } from '@/lib/db/items';
+import { getItemById, updateItem as updateItemQuery, deleteItem as deleteItemQuery, createItem as createItemQuery, toggleItemFavorite as toggleItemFavoriteQuery, toggleItemPin as toggleItemPinQuery, getCollectionsForItem, setItemInCollection } from '@/lib/db/items';
 import { canCreateItem } from '@/lib/usage';
 
 const mockAuth = auth as unknown as Mock<() => Promise<Session | null>>;
@@ -1099,5 +1100,68 @@ describe('createItem rate limit', () => {
     expect(result.error).toBe('Too many new items. Please try again in 3 minutes.');
     expect(mockCheckRateLimit).toHaveBeenCalledWith('create', 'user-123');
     expect(mockCreateItemQuery).not.toHaveBeenCalled();
+  });
+});
+
+describe('the shared demo account on item actions', () => {
+  const demo = { user: { id: 'demo-1', email: 'demo@bitbin.dev', isPro: false }, expires: '' } as Session;
+  const item = {
+    typeName: 'note' as const,
+    title: 'Hello',
+    description: null,
+    content: 'text',
+    url: null,
+    language: null,
+    tags: [],
+    fileUrl: null,
+    fileName: null,
+    fileSize: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue(demo);
+    vi.mocked(canCreateItem).mockResolvedValue(true);
+  });
+
+  it('cannot create a link item', async () => {
+    const result = await createItem({ ...item, typeName: 'link', url: 'https://evil.example' });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('links');
+    expect(createItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('cannot create an item with a URL, or one longer than the demo limit', async () => {
+    expect((await createItem({ ...item, url: 'https://evil.example' })).success).toBe(false);
+    expect((await createItem({ ...item, content: 'a'.repeat(5001) })).success).toBe(false);
+    expect(createItemQuery).not.toHaveBeenCalled();
+  });
+
+  it('can still create an ordinary note', async () => {
+    vi.mocked(createItemQuery).mockResolvedValue({ id: 'i1' } as never);
+
+    expect((await createItem(item)).success).toBe(true);
+  });
+
+  it('cannot point an existing link item somewhere else, but can edit its other fields', async () => {
+    vi.mocked(getItemById).mockResolvedValue({ id: 'i1', url: 'https://example.com/docs' } as never);
+    vi.mocked(updateItemQuery).mockResolvedValue({ id: 'i1' } as never);
+    const edit = { title: 'T', description: null, content: null, language: null, tags: [] };
+
+    const moved = await updateItem('i1', { ...edit, url: 'https://evil.example' });
+    expect(moved.success).toBe(false);
+    expect(updateItemQuery).not.toHaveBeenCalled();
+
+    const renamed = await updateItem('i1', { ...edit, url: 'https://example.com/docs' });
+    expect(renamed.success).toBe(true);
+  });
+
+  it('does not apply to other accounts', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-9', email: 'someone@example.com', isPro: false }, expires: '' } as Session);
+    vi.mocked(createItemQuery).mockResolvedValue({ id: 'i2' } as never);
+
+    expect((await createItem({ ...item, typeName: 'link', url: 'https://example.com' })).success).toBe(true);
+    expect(getItemById).not.toHaveBeenCalled();
   });
 });

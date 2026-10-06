@@ -83,3 +83,22 @@ describe('POST /api/stripe/checkout rate limit', () => {
     expect(sessionsCreate).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/stripe/checkout from another site', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('is refused before a Stripe session is created', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', email: 'u@example.com', isPro: false }, expires: '' } as Session);
+
+    const res = await POST(
+      new Request('http://localhost/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'sec-fetch-site': 'cross-site' },
+        body: JSON.stringify({ plan: 'monthly' }),
+      })
+    );
+
+    expect(res.status).toBe(403);
+    expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+});

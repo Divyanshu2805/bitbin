@@ -3,9 +3,16 @@ import { auth } from '@/auth';
 import { contentTypeForFile, uploadToR2, validateFile, validateFileContent } from '@/lib/r2';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
+import { rejectCrossSite } from '@/lib/same-origin';
+import { sanitizeImage } from '@/lib/image-sanitize';
+import { checkKnownMalware } from '@/lib/virus-check';
 
 export async function POST(request: Request) {
   try {
+    // A second line of defence behind SameSite=Lax: refuse requests a browser says are cross-site
+    const crossSite = rejectCrossSite(request);
+    if (crossSite) return crossSite;
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -63,8 +70,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: contentCheck.error }, { status: 400 });
     }
 
+    // Photos are written out again: metadata (GPS, device) is stripped and anything that isn't a
+    // real image is refused. Other types pass through unchanged.
+    const sanitized = await sanitizeImage(buffer, file.name);
+    if (!sanitized.ok) {
+      return NextResponse.json({ error: sanitized.error }, { status: 400 });
+    }
+    const bytes = sanitized.buffer;
+
+    // Optional: refuse a file whose hash VirusTotal knows as malware (off without VIRUSTOTAL_API_KEY)
+    const scan = await checkKnownMalware(bytes);
+    if (!scan.safe) {
+      return NextResponse.json({ error: scan.reason }, { status: 400 });
+    }
+
     const { fileUrl } = await uploadToR2(
-      buffer,
+      bytes,
       file.name,
       contentTypeForFile(file.name),
       session.user.id
@@ -75,7 +96,7 @@ export async function POST(request: Request) {
       data: {
         fileUrl,
         fileName: file.name,
-        fileSize: file.size,
+        fileSize: bytes.length,
       },
     });
   } catch (error) {
