@@ -70,17 +70,12 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
   return (
     <>
       <div
-        role="link"
-        tabIndex={0}
-        aria-label={`Open ${collection.name}`}
-        className="card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--brand-lime)_22%,var(--border))] bg-card p-5 shadow-[var(--shadow-soft)] outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+        // Mouse users click anywhere on the card; keyboard and screen-reader users get the name button below
+        className="card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--brand-lime)_22%,var(--border))] bg-card p-5 shadow-[var(--shadow-soft)] outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
         style={{ "--accent-color": "var(--brand-lime)" } as React.CSSProperties}
         // Drop an item here to add it to this collection
         {...drop}
         onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.target === e.currentTarget && e.key === "Enter") handleCardClick();
-        }}
       >
         {/* Lime, like an item card: a rule along the top edge and a soft wash behind the header */}
         <span
@@ -106,7 +101,17 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             </span>
             <div className="min-w-0">
               <h3 className="flex items-center gap-1.5 font-sans text-[15px] font-semibold tracking-normal text-foreground">
-                <span className="truncate">{collection.name}</span>
+                <button
+                  type="button"
+                  data-card-open
+                  className="min-w-0 cursor-pointer truncate text-left outline-none"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick();
+                  }}
+                >
+                  {collection.name}
+                </button>
                 {isPinned && <Pin className="h-3 w-3 shrink-0 fill-destructive/30 text-destructive" aria-label="Pinned" />}
                 {isFavorite && (
                   <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-500 dark:text-amber-400" aria-label="Favorite" />

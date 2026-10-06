@@ -5,6 +5,7 @@ import { AuthFallback } from '@/components/auth/auth-fallback'
 export const metadata = {
   title: 'Verify email',
   description: 'Verify your BitBin email address',
+  robots: { index: false, follow: false },
 }
 
 export default function VerifyEmailPage() {

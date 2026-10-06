@@ -1,9 +1,13 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import { getSidebarCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
 import { getEditorPreferences, getUserById } from '@/lib/db/users';
+
+// Nothing behind a sign-in belongs in a search index.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 // The app shell for every signed-in page: sidebar, top bar, status bar and the
 // window-wide backdrop. It stays mounted across navigations, so the sidebar

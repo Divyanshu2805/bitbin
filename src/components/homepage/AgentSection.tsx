@@ -191,7 +191,7 @@ export default function AgentSection() {
               <div className="rounded-lg border border-border px-3 py-2 font-mono text-[13px] text-muted-foreground">
                 &gt; <span className={now < TYPE_END ? "" : "caret"} />
               </div>
-              <p className="mt-1.5 flex justify-between font-mono text-[11px] text-muted-foreground/70">
+              <p className="mt-1.5 flex justify-between font-mono text-[11px] text-muted-foreground/85">
                 <span>? for shortcuts</span>
                 <span className={saved ? "text-lime" : ""}>{saved ? "✓ synced to bitbin" : "bitbin connected"}</span>
               </p>
@@ -300,7 +300,7 @@ export default function AgentSection() {
 
             {/* The API's side of the conversation */}
             <div className="shrink-0 border-t border-border bg-surface px-4 py-3 font-mono text-[11px]">
-              <p className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
+              <p className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-muted-foreground/85">
                 <span>API log</span>
                 <span className="normal-case tracking-normal">tokens are Pro · 60 req/min</span>
               </p>

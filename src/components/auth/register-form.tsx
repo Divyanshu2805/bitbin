@@ -121,6 +121,16 @@ export function RegisterForm() {
               Create account
             </AuthSubmit>
           </div>
+          <p className="text-center text-xs text-muted-foreground">
+            By creating an account you agree to the{" "}
+            <Link href="/terms" className="underline hover:text-lime">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline hover:text-lime">
+              Privacy Policy
+            </Link>.
+          </p>
         </form>
       </div>
 

@@ -55,7 +55,10 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
 
         {/* Cards or rows, by the shared grid / list choice */}
         {collections.length > 0 ? (
-          <CollectionsView collections={collections} />
+          <>
+            <h2 className="sr-only">All collections</h2>
+            <CollectionsView collections={collections} />
+          </>
         ) : (
           <EmptyState
             title="No collections yet"

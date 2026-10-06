@@ -579,19 +579,15 @@ export default function IdeDemo() {
       <div className="relative pt-7">
         <div aria-hidden className="absolute -inset-x-10 -top-10 -bottom-16 -z-10 rounded-[3rem] bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--brand-lime)_13%,transparent),transparent)] blur-2xl" />
 
-        {/* Click (or Enter / Space) to shuffle the other window to the front */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label={`BitBin demo, showing the ${front}. Shuffle to the ${front === "dashboard" ? "editor" : "dashboard"}.`}
-          onClick={shuffle}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter" && e.key !== " ") return;
-            e.preventDefault();
-            shuffle();
-          }}
-          className="relative isolate h-[480px] cursor-pointer select-none outline-none focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-lime/50 sm:h-[528px] md:h-[568px]"
-        >
+        {/* Click (or Enter / Space) to shuffle the other window to the front. The button is an overlay
+            with no text of its own, so its accessible name is exactly its label. */}
+        <div className="relative isolate h-[480px] select-none sm:h-[528px] md:h-[568px]">
+          <button
+            type="button"
+            aria-label={`BitBin demo, showing the ${front}. Shuffle to the ${front === "dashboard" ? "editor" : "dashboard"}.`}
+            onClick={shuffle}
+            className="absolute inset-0 z-10 cursor-pointer rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-lime/50"
+          />
           {(["dashboard", "editor"] as const).map((name) =>
             still && name !== front ? null : (
               <div

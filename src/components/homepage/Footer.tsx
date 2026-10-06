@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 import { TransitionLink } from "@/components/shared/transition-link";
 import FooterWordmark from "./FooterWordmark";
@@ -58,6 +59,14 @@ export default function Footer() {
       <div>
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 py-5 font-mono text-xs text-muted-foreground sm:px-8">
           <span>© {new Date().getFullYear()} BitBin</span>
+          <nav aria-label="Legal" className="flex gap-5">
+            <Link href="/privacy" className="transition-colors hover:text-lime">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-lime">
+              Terms
+            </Link>
+          </nav>
           <span>{"// made for developers who hoard snippets"}</span>
         </div>
       </div>

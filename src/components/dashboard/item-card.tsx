@@ -205,11 +205,9 @@ export default function ItemCard({ item }: ItemCardProps) {
   return (
     <>
       <div
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${item.title}`}
+        // Mouse users click anywhere on the card; keyboard and screen-reader users get the title button below
         className={cn(
-          "card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)] outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+          "card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)] outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
           "border-[color-mix(in_srgb,var(--accent-color)_22%,var(--border))]",
           menuOpen && "card-glow-active"
         )}
@@ -218,13 +216,6 @@ export default function ItemCard({ item }: ItemCardProps) {
         // Drag onto a collection (sidebar or collection card) to add it there
         {...itemDragProps(item.id, item.title, item.itemType.name, color)}
         onClick={() => openDrawer(item.id)}
-        onKeyDown={(e) => {
-          if (e.target !== e.currentTarget) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openDrawer(item.id);
-          }
-        }}
       >
         {/* Lime: a rule along the top edge and a soft wash behind the header */}
         <span
@@ -357,7 +348,19 @@ export default function ItemCard({ item }: ItemCardProps) {
         </div>
 
         <div className="relative px-4 pt-1">
-          <h3 className="truncate font-sans text-base font-semibold tracking-tight text-foreground">{item.title}</h3>
+          <h3 className="font-sans text-base font-semibold tracking-tight text-foreground">
+            <button
+              type="button"
+              data-card-open
+              className="block w-full cursor-pointer truncate text-left outline-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDrawer(item.id);
+              }}
+            >
+              {item.title}
+            </button>
+          </h3>
           {item.description && (
             <p className="text-desc mt-1 line-clamp-2 text-sm leading-snug [overflow-wrap:anywhere]">{item.description}</p>
           )}

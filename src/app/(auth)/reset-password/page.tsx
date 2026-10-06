@@ -5,6 +5,7 @@ import { AuthFallback } from "@/components/auth/auth-fallback";
 export const metadata = {
   title: "Reset password",
   description: "Set a new password for your BitBin account",
+  robots: { index: false, follow: false },
 };
 
 export default function ResetPasswordPage() {

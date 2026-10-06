@@ -67,7 +67,10 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
 
         {/* Cards or rows, by the shared grid / list choice */}
         {items.length > 0 ? (
-          <ItemsView items={items} />
+          <>
+            <h2 className="sr-only">{displayName}</h2>
+            <ItemsView items={items} />
+          </>
         ) : (
           <EmptyState
             title={`No ${typeName}s yet`}
