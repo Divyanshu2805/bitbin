@@ -18,7 +18,7 @@ The live site runs on Vercel at a subdomain of a domain you own (for example `bi
    DATABASE_URL="postgresql://..." npm run db:seed
    ```
 
-   The demo user the seed also creates is optional in production.
+   The demo user the seed also creates is the public sandbox account (see [the demo account](../schema/migrations-and-seeding.md#the-demo-account)). If you keep it, set `CRON_SECRET` (below) so it is reset daily.
 
 Use a separate Neon branch for local development, so test accounts and experimental migrations never reach live data.
 
@@ -44,6 +44,8 @@ Every variable from [configuration](../local-development/configuration.md), with
 | `STRIPE_WEBHOOK_SECRET` | The signing secret of the **dashboard** webhook endpoint, not the one `stripe listen` prints locally |
 | `STRIPE_*` keys and price ids | Test-mode values until the Stripe account is activated for live mode — see [providers](providers.md#stripe-test-mode-in-production) |
 | `UPSTASH_*` | Set them — without them production has no rate limiting at all |
+| `SENTRY_DSN` | The DSN of your Sentry project; without it errors are only in Vercel's logs. See [Sentry](providers.md#sentry) |
+| `CRON_SECRET` | A long random string (for example `openssl rand -hex 32`). Vercel's cron sends it to `/api/cron/reset-demo`, which resets the public demo account once a day (`vercel.json`). Without it that route refuses to run |
 | `DATABASE_URL` | The Neon pooled URL |
 
 Vercel keeps separate values for Production, Preview and Development. Point previews at a separate Neon branch and Stripe test keys, so preview deployments never touch production data.

@@ -75,6 +75,10 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **Free-plan limits are enforced under a lock.** A new way to create items or collections must pass `maxItems` / `maxCollections` so the count and insert run in one transaction (`lockUserForLimit`).
 - **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
 
+- **`demo@bitbin.dev` is a public sandbox.** Its password is published, so anything that changes an account itself (password, name, deletion, billing, email) must refuse it with `isDemoEmail` (`lib/demo.ts`). A daily cron (`/api/cron/reset-demo`, needs `CRON_SECRET`) restores its library.
+- **Expensive or abusable endpoints get a rate limit** (`checkRateLimit`, or `checkActionRateLimit` in actions); the table is in `docs/api/errors-and-rate-limits.md`.
+- **Scripts that delete or overwrite data call `assertSafeToRunDestructive`** (`lib/db-safety.ts`). `console.error` is the error channel: Sentry captures it, so log the real error there and return a generic message.
+- **Email tokens are stored hashed** (`lib/tokens.ts`); only the emailed link holds the raw value.
 ## Practices
 
 The following are imported in full.

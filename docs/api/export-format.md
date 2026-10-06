@@ -36,7 +36,7 @@ Built by `getUserExportData` (`src/lib/db/export.ts`):
       "collections": ["React Patterns"],
       "isFavorite": true,
       "isPinned": false,
-      "createdAt": "…",
+      "createdAt": "…",   // kept on import
       "updatedAt": "…"
     }
   ],
@@ -52,7 +52,19 @@ Built by `getUserExportData` (`src/lib/db/export.ts`):
 
 ## The ZIP
 
-`bitbin-export.json` (the manifest above) plus a `files/` folder containing every file and image item's binary, fetched from R2 and compressed with `archiver`.
+`bitbin-export.json` (the manifest above), then the same items as ordinary files so they can be read without BitBin, then a `files/` folder with every file and image item's binary (read from the private R2 bucket by key and compressed with `archiver`):
+
+```
+bitbin-export.json
+snippets/   one file per snippet, extension from its language (.ts, .py, .sh, .sql, …; .txt if none)
+prompts/    one .md per prompt
+commands/   one .sh per command (or its language's extension)
+notes/      one .md per note
+links.md    every link as a Markdown list, with descriptions
+files/      the uploaded files and images
+```
+
+File names come from the item titles with path separators and characters Windows refuses replaced by `-`, cut to 80 characters; two items with the same title in a folder become `name.ext` and `name-2.ext`. Only the JSON can be imported again.
 
 ## Importing
 

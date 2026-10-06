@@ -24,6 +24,13 @@ npm run test:watch   # watch mode
 | `src/app/api/download/[...path]/route.test.ts` | File download: `401` / `403` (another user's file), attachment headers, and the `?inline=1` preview (PDF kept, everything else sandboxed plain text) |
 | `src/lib/db/items.test.ts`, `collections.test.ts` | Query shaping, ownership (including foreign collection ids), dominant colour, pinned-first ordering |
 | `src/lib/detect-language.test.ts` | Language detection for each picker language, commands, the shell fallback, TS vs JS |
+| `src/lib/export-files.test.ts`, `src/app/api/export/route.test.ts` | The ZIP's text files (folders, extensions, safe and unique names, links list) and what the export route reads from storage |
+| `src/lib/import-utils.test.ts`, `src/actions/import.test.ts` | Which items count as duplicates, date handling, limits and input hardening |
+| `src/lib/demo.test.ts`, `src/app/api/cron/reset-demo/route.test.ts` | The demo account check and the daily reset: secret handling, no demo account, failures |
+| `src/lib/db/search-items.test.ts`, `plan-limits.test.ts`, `update-item.test.ts` | Search previews cut in SQL, the locked plan-limit checks (including a race), and `updateItem`'s transaction |
+| `src/lib/tokens.test.ts`, `src/app/api/auth/reset-password/route.test.ts`, `verify/route.test.ts` | Tokens stored as a hash, single use under a race, expiry, the prefix check; the reset and verify routes |
+| `src/lib/db-url.test.ts`, `db-safety.test.ts` | `sslmode` rewriting and the guard on the destructive scripts |
+| `src/lib/monitoring.test.ts`, `monitoring-start.test.ts` | What is stripped from an error event, the options, off without a DSN, and a real `console.error` becoming an event |
 | `src/lib/r2.test.ts` | File validation, size formatting, key parsing |
 | `src/lib/rate-limit.test.ts` | Failing open with unset, placeholder and invalid Upstash config |
 | `src/lib/usage.test.ts` | Free / Pro limits |

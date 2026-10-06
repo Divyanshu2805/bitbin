@@ -36,9 +36,9 @@ With JWT sessions, deleting a user or changing a password doesn't sign anyone ou
 
 Actions don't revalidate; components call `router.refresh()` after a successful action. A new component that forgets leaves the page showing stale server-rendered data until the next navigation.
 
-## The search index doesn't refresh
+## The search index reloads when the palette opens
 
-`SearchProvider` loads the ⌘K index once when the dashboard layout mounts. `refreshSearchData` exists but nothing calls it, so a just-created item isn't searchable until a reload. Call it after mutations if you're fixing this — see [search](../../architecture/flows/search.md).
+`SearchProvider` loads the ⌘K index on mount and again, quietly, each time the palette opens (at most every two seconds), so mutations don't need to refresh it. If you make the index bigger, remember it is one request that sends everything to the browser; see [search](../../architecture/flows/search.md).
 
 ## `'use server'` files may only export async functions
 

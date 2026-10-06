@@ -44,7 +44,7 @@ When GitHub sign-in is refused for an email that has a password account, the `si
 | `token` | Unique; 32 random bytes, hex |
 | `expires` | 24 hours for verification, 1 hour for password reset |
 
-Unique on (`identifier`, `token`). Creating a token first deletes any earlier token with the same identifier, so each email has at most one live token of each kind. Tokens are deleted when used; expired tokens are deleted only when someone tries to use them.
+Unique on (`identifier`, `token`). **`token` holds the SHA-256 of the token, never the token itself**: the raw value exists only in the emailed link, so reading this table doesn't give anyone a working link. Creating a token first deletes any earlier token with the same identifier, so each email has at most one live token of each kind. A token is deleted by the same statement that checks it exists, so it works exactly once even if the link is opened twice at the same moment; expired tokens are deleted only when someone tries to use them (`lib/tokens.ts`).
 
 ## `api_tokens`
 

@@ -31,7 +31,8 @@ CommandPalette (cmdk dialog)
 
 ## Limitations
 
-- The index isn't refreshed after a mutation. `SearchProvider` exposes `refreshSearchData`, but nothing calls it, so items created, renamed or deleted since the page loaded don't show up correctly until a reload.
+- The index is reloaded each time the palette opens (unless it was loaded in the last two seconds), quietly, with the old results still showing, so an item you just created, renamed or deleted is found without a reload. It's still one request that sends every item and collection to the browser, which is fine for hundreds of items and not for tens of thousands.
+- The previews come from `left(content, 101)` in SQL, so the full text of every item is never loaded to build a one-line preview.
 - Every item and collection the user has is sent to the browser. That's fine at Free-plan sizes; a Pro account with thousands of items pays for it on every page load.
 
 ## Related

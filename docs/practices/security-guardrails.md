@@ -12,6 +12,6 @@ The boundaries no change may weaken. The reasoning behind them is in the [securi
 8. **Errors don't leak.** Log the real error server-side; return a generic message. No stack traces, provider responses or keys in a response.
 9. **Auth responses don't reveal accounts.** Forgot-password and resend-verification answer identically whether or not the email exists; a bad email and a bad password fail the same way.
 10. **Passwords are bcrypt-hashed (cost 12)**, minimum 8 characters, and never logged or returned.
-11. **Tokens are random, expiring and single-use** — `crypto.randomBytes(32)`, deleted on use.
+11. **Tokens are random, hashed, expiring and single-use** — `crypto.randomBytes(32)`; only the SHA-256 is stored (`lib/tokens.ts`); consumed with a delete that must remove exactly one row, so a link can't be used twice. Check a password before spending its link, so a typo doesn't burn it.
 12. **Rate limits stay on the public auth endpoints, uploads, AI and the token API.** Adding a new public or expensive endpoint means adding a limit to it.
 13. **API tokens are hashed and Pro-checked per request.** Store only the SHA-256 of a `bb_` token and show the token once. Every `/api/v1` handler starts with `authenticateApiRequest`, which re-reads the plan. A new `/api/v1` route that skips it is an unauthenticated endpoint.

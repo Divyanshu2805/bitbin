@@ -43,6 +43,20 @@ Email links are built from `NEXT_PUBLIC_APP_URL`.
 - `R2_PUBLIC_URL` is only the name stored file URLs are built from (and what the ownership check compares them to). It doesn't have to be reachable. Don't change it once users have uploaded files: stored URLs and deletes are derived from it.
 - **Turning public access off on an existing bucket:** deploy this code first, check that images, downloads and the ZIP export work for a signed-in user, then disable the `r2.dev` URL (or custom domain) in the Cloudflare dashboard. Doing it in that order means there is no moment when images break.
 
+## Sentry
+
+Server errors go to [Sentry](https://sentry.io) (`lib/monitoring.ts`). Both Next.js's own error hook and every `console.error` are captured, which includes the failures worth an alert: a 500 from any route, a Stripe webhook that failed, `Rate limit check failed`, `Upstash Redis not configured`. Cookies, auth headers, request bodies, query strings (reset and verification links carry their token there), IPs and user data are stripped before an event leaves the server, and no performance traces are sent.
+
+1. Create a Sentry project (platform: Next.js) and copy its DSN.
+2. Add it to Vercel as `SENTRY_DSN` (Production) and redeploy.
+3. In Sentry: **Alerts → Create alert → Issues**, notify you by email when *a new issue is created* and when *an issue is seen more than 10 times in an hour*. Add a second rule filtered on the message `Stripe webhook` so a failing webhook is never missed.
+
+Without `SENTRY_DSN` nothing is sent and nothing changes.
+
+## GitHub
+
+`.github/dependabot.yml` has Dependabot open a weekly pull request for npm and GitHub Actions updates (routine bumps grouped in one). Two switches in the repository's **Settings → Advanced Security** are still yours: **Dependabot security updates** and **Secret scanning** with **Push protection**.
+
 ## Upstash and the AI provider
 
 No callbacks — only the keys (and, for the AI provider, `OPENAI_BASE_URL` / `AI_MODEL` if you don't use OpenAI's defaults).

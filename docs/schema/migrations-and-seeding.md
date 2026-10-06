@@ -31,13 +31,13 @@ npm run db:migrate:deploy     # prisma migrate deploy — apply pending migratio
 
 ## Seeding
 
-`npm run db:seed` runs `prisma/seed.ts` with `tsx`. It's idempotent:
+`npm run db:seed` runs `prisma/seed.ts` with `tsx`. It overwrites the demo account, so it refuses to run until the database is marked safe (`SAFE_DATABASE_HOSTS`) or confirmed once (`CONFIRM_DATABASE_HOST`): see [resetting data](../local-development/resetting-data.md#before-you-run-either-script). It's idempotent:
 
 1. **System item types** — creates each of the seven types that doesn't exist yet. Existing rows are left as they are, so changing an icon or colour in the seed doesn't update a database that already has the type.
 2. **Demo user** — upserts `demo@bitbin.dev` with password `12345678` (bcrypt), Free plan, email verified.
-3. **Demo content** — deletes the demo user's items and collections, then recreates the sample collections (React patterns, AI workflows, DevOps, …) and items.
+3. **Demo content** — `resetDemoContent` (`prisma/demo-content.ts`) deletes the demo user's items and collections in a transaction, then recreates the sample library: three collections (React patterns, AI workflows, DevOps) and eighteen items. The same function is what the daily demo reset runs.
 
-Production needs step 1; the demo user is optional there.
+Production needs step 1. The demo user is the public sandbox account: see [the demo account](#the-demo-account).
 
 `npm run db:cleanup` (`scripts/cleanup-users.ts`) deletes every user except the demo user — handy after testing sign-ups locally, never for production.
 
@@ -45,3 +45,12 @@ Production needs step 1; the demo user is optional there.
 
 - [Setup](../local-development/setup.md) · [Resetting data](../local-development/resetting-data.md)
 - [Deployment](../deployment/vercel.md#database)
+
+## The demo account
+
+`demo@bitbin.dev` / `12345678` is published (README, setup docs) so anyone can try BitBin, which makes it a sandbox rather than a real account:
+
+- **What visitors can do:** add, edit, delete, favorite and pin items and collections, import and export, search, change editor preferences. They stay a Free user, so no files, images, AI or tokens.
+- **What is blocked** (`403` or an error message, `lib/demo.ts`): changing its password or name, deleting the account, starting a checkout, and the forgot-password email.
+- **The daily reset:** `GET /api/cron/reset-demo`, called once a day by the cron in `vercel.json` (21:00 UTC), puts the library back to the seeded one in a transaction. It requires `Authorization: Bearer $CRON_SECRET` and refuses to run at all if `CRON_SECRET` isn't set. Vercel sends that header itself when the variable exists in the project.
+- **Never seed against production by hand without meaning to:** the seed also resets this account's password.

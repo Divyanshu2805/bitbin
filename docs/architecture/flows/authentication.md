@@ -55,7 +55,7 @@ Code reads the caller with `getAuthedSession()` (server actions) or `auth()` (pa
 
 ## Password reset
 
-1. `POST /api/auth/forgot-password` (3 / hour per IP) always returns 200 with the same message. If the account exists, it creates a reset token — stored in `verification_tokens` with the identifier `password-reset:{email}`, valid 1 hour — and emails a link to `/reset-password?token=…`.
+1. `POST /api/auth/forgot-password` (3 / hour per IP) always returns 200 with the same message. If the account exists, it creates a reset token — only its SHA-256 is stored in `verification_tokens`, with the identifier `password-reset:{email}`, valid 1 hour — and emails a link to `/reset-password?token=…` holding the raw token.
 2. `POST /api/auth/reset-password` (5 / 15 min per IP) checks the token is a reset token and unexpired, requires matching passwords of at least 8 characters, stores the new bcrypt hash, and deletes the token.
 
 ## Account management

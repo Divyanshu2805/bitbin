@@ -18,7 +18,7 @@
 | "AI returned an unexpected format" | The model in `AI_MODEL` doesn't support JSON mode, which tags and descriptions need — see [provider and model](../architecture/flows/ai-features.md#provider-and-model) |
 | Upgrading succeeds in Stripe but the app still says Free | The webhook didn't arrive. Locally, `stripe listen` must be running and its `whsec_…` must be in `STRIPE_WEBHOOK_SECRET` (restart the dev server after changing it) |
 | "Too many attempts" while testing sign-in | You hit a rate limit. Wait, or [clear the counters](resetting-data.md#clear-rate-limits) |
-| A new item doesn't appear in ⌘K search | The search index is loaded once per page load. Reload. See [search](../architecture/flows/search.md) |
+| ⌘K search doesn't show something just saved | The index reloads when the palette opens; close it and reopen it after a moment. See [search](../architecture/flows/search.md) |
 | Schema changes aren't picked up | Run `npm run db:migrate` — not `db push`, which is disabled |
 
 ## Related

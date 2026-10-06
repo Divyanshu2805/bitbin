@@ -44,6 +44,12 @@ Actions never throw to the client. They return:
 | `resetPassword` | 5 / 15 min | IP | `POST /api/auth/reset-password` |
 | `resendVerification` | 3 / 15 min | IP + email | `POST /api/auth/resend-verification` |
 | `changePassword` | 5 / 15 min | IP + user id | `POST /api/auth/change-password` |
+| `import` | 5 / hour | IP + user id | the `importData` action |
+| `importPreview` | 20 / hour | IP + user id | the `previewImport` action |
+| `export` | 10 / hour | IP + user id | `GET /api/export` (JSON and ZIP) |
+| `checkout` | 10 / hour | IP + user id | `POST /api/stripe/checkout` |
+| `portal` | 20 / hour | IP + user id | `POST /api/stripe/portal` |
+| `create` | 120 / minute | IP + user id | the `createItem` and `createCollection` actions |
 | `upload` | 10 / hour | IP + user id | `POST /api/upload` |
 | `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` and `/ai/description` |
 | `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
@@ -58,7 +64,7 @@ Route handlers answer `429` through `rateLimitResponse(retryAfter)`:
 
 with `Retry-After` in seconds. AI actions return "Too many AI requests. Please try again in …" as their `error`.
 
-Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`), export, checkout and portal, and every server action other than the AI ones.
+Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`) and the server actions that change one existing thing (favorite, pin, rename, delete, collection membership). Server actions answer an over-limit call with an `error` such as "Too many imports. Please try again in 3 minutes."
 
 ### Failure mode
 

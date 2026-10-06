@@ -10,6 +10,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `AUTH_SECRET` | Yes | NextAuth | Signs the session JWT. Generate with `npx auth secret`. Rotating it signs everyone out |
 | `AUTH_URL` | Yes | NextAuth | Base URL of the app — `http://localhost:3000` locally |
 | `NEXT_PUBLIC_APP_URL` | Yes | Email links, Stripe redirect URLs | Public URL used to build absolute links |
+| `CRON_SECRET` | Production, if you keep the demo account | `/api/cron/reset-demo` | A long random string. Vercel's cron sends it as `Authorization: Bearer …`. Without it the reset route refuses every request, so the demo account is never reset. Not needed locally |
 
 ## Authentication
 
@@ -33,6 +34,13 @@ All configuration comes from environment variables, read from `.env` locally (gi
 |---|---|
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), rate limiting is **disabled** — a warning or error is logged and every check passes. See [rate limits](../api/errors-and-rate-limits.md#failure-mode) |
 
+## Safety and monitoring
+
+| Variable | Required | Used by | Notes |
+|---|---|---|---|
+| `SAFE_DATABASE_HOSTS` | No | `db:seed`, `db:cleanup` | Comma-separated database hosts that are fine to reset, such as a Neon development branch. Any host not listed needs a one-off `CONFIRM_DATABASE_HOST` |
+| `SENTRY_DSN` | Production | `instrumentation.ts`, `lib/monitoring.ts` | The DSN of a Sentry project. Unset, nothing is sent. Set it on Vercel, not locally |
+
 ## File storage (Cloudflare R2)
 
 | Variable | Notes |
@@ -40,8 +48,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `R2_ACCOUNT_ID` | Cloudflare account ID; the S3 endpoint is built from it |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 → Manage API tokens, with *Object Read & Write* on the bucket |
 | `R2_BUCKET_NAME` | The bucket uploads go to |
-| `R2_PUBLIC_URL` | A name for the bucket that stored item URLs are built from, such as `https://pub-….r2.dev`. The bucket itself is private and nothing fetches this URL, but don't change it once files exist: ownership checks and deletes derive keys from it |
-
+$&
 ## Billing (Stripe)
 
 | Variable | Notes |
@@ -72,6 +79,7 @@ See [AI features](../architecture/flows/ai-features.md#provider-and-model) for c
 | `FROM_EMAIL` on a verified domain | Emails reach only the Resend account owner's address |
 | GitHub | The GitHub button fails; email + password still works |
 | Upstash | No rate limiting anywhere |
+| `SENTRY_DSN` | Errors are only in Vercel's function logs; nobody is told |
 | R2 | File and image uploads and ZIP exports fail |
 | Stripe | Checkout and the billing portal fail. The build still passes with a placeholder key |
 | AI key | AI buttons show an error toast |

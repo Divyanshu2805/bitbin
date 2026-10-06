@@ -38,7 +38,7 @@ Upstash sliding windows, keyed by client IP plus an optional identifier (email o
 
 There is no client-side data cache. After a successful mutation, the component calls `router.refresh()`, which re-renders the server components on the current route with fresh data. Actions don't call `revalidatePath`.
 
-The ⌘K search index is the exception: it's loaded once when the dashboard layout mounts and is not refreshed after mutations — see [search](flows/search.md).
+The ⌘K search index is the exception, because it isn't server-rendered: it's loaded when the dashboard layout mounts and again each time the palette opens, so it needs no `router.refresh()` — see [search](flows/search.md).
 
 ## Pagination
 

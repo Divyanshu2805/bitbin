@@ -1,5 +1,20 @@
 # Resetting Data
 
+## Before you run either script
+
+`db:seed` and `db:cleanup` overwrite or delete data, and they read the same `DATABASE_URL` as the app. Today that is the live database, so both **refuse to run** until you say which database you mean (`lib/db-safety.ts`):
+
+- **A development database** (a Neon branch, a local Postgres): add its host to `SAFE_DATABASE_HOSTS` in `.env`, comma separated. Scripts then run without asking.
+- **Any other database, once:** set `CONFIRM_DATABASE_HOST` to the exact host. The error message prints the host and the command.
+
+```powershell
+$env:CONFIRM_DATABASE_HOST="your-host.neon.tech"; npm run db:seed
+```
+
+```bash
+CONFIRM_DATABASE_HOST=your-host.neon.tech npm run db:seed
+```
+
 ## Restore the demo account
 
 ```bash

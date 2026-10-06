@@ -13,7 +13,7 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 ## Items
 
 - [ ] Create a snippet with tags and a collection; pin it; favorite it.
-- [ ] Find it with ⌘K (after a reload — the index loads once per page).
+- [ ] Find it with ⌘K (no reload needed: the index reloads when the palette opens).
 - [ ] Edit it in the drawer; delete it.
 
 ## Pro
@@ -25,7 +25,7 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 
 ## Data
 
-- [ ] Export JSON downloads; export ZIP (Pro) includes `files/`.
+- [ ] Export JSON downloads; export ZIP (Pro) includes `files/` and the `snippets/`, `prompts/`, `commands/`, `notes/` folders and `links.md`.
 - [ ] Importing the JSON export with **Skip duplicates** on reports everything skipped.
 
 ## Platform

@@ -38,7 +38,7 @@ List queries select only what a card needs (`ItemWithType`); only the drawer loa
 
 ## Update
 
-The drawer switches to edit mode in place. `updateItem` checks ownership, then replaces the item's collection links (delete all, recreate) and its tag set, so a save always mirrors the form. The collection links and the item update are separate statements, not one transaction.
+The drawer switches to edit mode in place. `updateItem` checks ownership, filters the collection ids to the caller's own, then — in one transaction — replaces the item's collection links (delete all, recreate) and updates its fields and tags, so a failure part-way can't leave an item without its collections.
 
 ## Delete
 

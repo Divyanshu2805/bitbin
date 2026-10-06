@@ -22,9 +22,9 @@ The build is `prisma generate && next build`; it never touches the database. Dep
 
 The seed creates a system type only if it's missing. Changing an icon or colour in `prisma/seed.ts` has no effect on a database that already has the type — write a migration (or a one-off update) instead.
 
-## Multi-step writes aren't transactional by default
+## Multi-step writes need a transaction
 
-`updateItem` deletes an item's collection links, recreates them, then updates the item — three statements, no transaction. Only `importData` uses `prisma.$transaction`. When several writes must succeed together, wrap them.
+Prisma runs each call on its own. `updateItem` (collection links plus the item), `importData`, `createItem` / `createCollection` for Free users and the demo reset wrap their steps in `prisma.$transaction`; a new write that must succeed or fail as a whole has to do the same. Do reads that don't need to be atomic (ownership filters, lookups) before the transaction to keep it short: Neon's pooled connections give an interactive transaction five seconds by default.
 
 ## Limits are checked, then written under a lock
 
