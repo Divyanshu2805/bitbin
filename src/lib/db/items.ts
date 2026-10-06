@@ -432,52 +432,60 @@ export async function updateItem(
     return null;
   }
 
-  // Update collections if provided (delete all existing, then create new)
-  if (data.collectionIds !== undefined) {
-    const collectionIds = await filterOwnedCollectionIds(userId, data.collectionIds);
+  // Only the collections the caller owns (a read, so it stays outside the transaction)
+  const collectionIds =
+    data.collectionIds !== undefined
+      ? await filterOwnedCollectionIds(userId, data.collectionIds)
+      : undefined;
 
-    await prisma.itemCollection.deleteMany({
-      where: { itemId },
-    });
-
-    if (collectionIds.length > 0) {
-      await prisma.itemCollection.createMany({
-        data: collectionIds.map((collectionId) => ({
-          itemId,
-          collectionId,
-        })),
+  // The collection links and the item's own fields change together or not at all:
+  // a failure part-way used to leave an item with its collections wiped
+  const updated = await prisma.$transaction(async (tx) => {
+    // Update collections if provided (delete all existing, then create new)
+    if (collectionIds !== undefined) {
+      await tx.itemCollection.deleteMany({
+        where: { itemId },
       });
-    }
-  }
 
-  // Update item with tag disconnect/connect-or-create
-  const updated = await prisma.item.update({
-    where: { id: itemId },
-    data: {
-      title: data.title,
-      description: data.description,
-      content: data.content,
-      url: data.url,
-      language: data.language,
-      tags: {
-        set: [], // Disconnect all existing tags
-        connectOrCreate: data.tags.map((tagName) => ({
-          where: { name: tagName },
-          create: { name: tagName },
-        })),
+      if (collectionIds.length > 0) {
+        await tx.itemCollection.createMany({
+          data: collectionIds.map((collectionId) => ({
+            itemId,
+            collectionId,
+          })),
+        });
+      }
+    }
+
+    // Update item with tag disconnect/connect-or-create
+    return tx.item.update({
+      where: { id: itemId },
+      data: {
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        url: data.url,
+        language: data.language,
+        tags: {
+          set: [], // Disconnect all existing tags
+          connectOrCreate: data.tags.map((tagName) => ({
+            where: { name: tagName },
+            create: { name: tagName },
+          })),
+        },
       },
-    },
-    include: {
-      itemType: true,
-      tags: true,
-      collections: {
-        include: {
-          collection: {
-            select: { id: true, name: true },
+      include: {
+        itemType: true,
+        tags: true,
+        collections: {
+          include: {
+            collection: {
+              select: { id: true, name: true },
+            },
           },
         },
       },
-    },
+    });
   });
 
   return toItemDetail(updated);
@@ -562,29 +570,41 @@ export interface SearchableItem {
 export async function getSearchableItems(
   userId: string
 ): Promise<SearchableItem[]> {
-  const items = await prisma.item.findMany({
-    where: { userId },
-    orderBy: { updatedAt: 'desc' },
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      description: true,
-      url: true,
-      tags: { select: { name: true } },
-      itemType: {
-        select: {
-          name: true,
-          icon: true,
-          color: true,
+  const [items, snippets] = await Promise.all([
+    prisma.item.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        url: true,
+        tags: { select: { name: true } },
+        itemType: {
+          select: {
+            name: true,
+            icon: true,
+            color: true,
+          },
         },
       },
-    },
-  });
+    }),
+    // Only the first 101 characters of each item's content leave the database
+    // (101, so a 100-character preview can tell whether it was cut). Loading
+    // every item's whole text just to show a one-line preview was the slow part
+    // of opening the app.
+    prisma.$queryRaw<{ id: string; snippet: string }[]>`
+      SELECT id, left(content, 101) AS snippet
+      FROM "items"
+      WHERE "userId" = ${userId} AND content IS NOT NULL AND content <> ''
+    `,
+  ]);
+
+  const snippetById = new Map(snippets.map((row) => [row.id, row.snippet]));
 
   return items.map((item) => {
     // Create a content preview (first 100 chars of content, description, or url)
-    const previewSource = item.content || item.description || item.url || '';
+    const previewSource = snippetById.get(item.id) || item.description || item.url || '';
     const contentPreview = previewSource.length > 100
       ? previewSource.slice(0, 100) + '...'
       : previewSource || null;

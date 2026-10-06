@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { getFromR2, isOwnedFileUrl } from '@/lib/r2';
 import { fileKeyFromUrl } from '@/lib/file-url';
+import { buildTextEntries } from '@/lib/export-files';
 import { getUserExportData } from '@/lib/db/export';
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
@@ -28,6 +30,12 @@ export async function GET(request: NextRequest) {
       { error: 'ZIP export requires a Pro subscription' },
       { status: 403 }
     );
+  }
+
+  // 10 exports an hour per user: a ZIP reads every file from storage
+  const rateLimit = await checkRateLimit('export', session.user.id);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.retryAfter);
   }
 
   const data = await getUserExportData(session.user.id);
@@ -68,6 +76,11 @@ export async function GET(request: NextRequest) {
 
   // Add JSON manifest
   archive.append(JSON.stringify(data, null, 2), { name: 'bitbin-export.json' });
+
+  // Snippets, prompts, commands, notes and links as plain files next to the manifest
+  for (const entry of buildTextEntries(data.items)) {
+    archive.append(entry.content, { name: entry.path });
+  }
 
   // Fetch and add files from R2 for file/image items
   const fileItems = data.items.filter((item) =>

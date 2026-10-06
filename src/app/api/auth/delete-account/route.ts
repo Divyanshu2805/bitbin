@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
 import { deleteUserFilesFromR2 } from '@/lib/r2'
+import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
 
 export async function DELETE(request: Request) {
   try {
@@ -14,6 +15,11 @@ export async function DELETE(request: Request) {
         { error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // Deleting the shared demo account would end the demo for everyone
+    if (isDemoEmail(session.user.email)) {
+      return NextResponse.json({ error: demoBlockedMessage('be deleted') }, { status: 403 })
     }
 
     const user = await prisma.user.findUnique({

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { VALID_ITEM_TYPES } from '@/lib/db/items';
 import { MAX_ITEMS, MAX_COLLECTIONS } from '@/lib/usage';
-import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
 import {
   isValidUrlProtocol,
   MAX_CONTENT_LENGTH,
@@ -20,6 +20,7 @@ import {
 const MAX_IMPORT_ENTRIES = 5000;
 import { isOwnedFileUrl } from '@/lib/r2';
 import { lockUserForLimit } from '@/lib/limit-error';
+import { isDuplicateItem, parseExportDate, type ItemIdentity } from '@/lib/import-utils';
 
 const importItemSchema = z.object({
   title: z.string().min(1).max(MAX_TITLE_LENGTH),
@@ -93,8 +94,9 @@ export async function previewImport(
 ): Promise<ActionResult<ImportPreview>> {
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
-  // session used for auth check only
-  void session;
+
+  const limited = await checkActionRateLimit('importPreview', session.user.id, 'import previews');
+  if (limited) return limited;
 
   let raw: unknown;
   try {
@@ -140,6 +142,9 @@ export async function importData(
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
 
+  const limited = await checkActionRateLimit('import', session.user.id, 'imports');
+  if (limited) return limited;
+
   let raw: unknown;
   try {
     raw = JSON.parse(jsonString);
@@ -182,7 +187,7 @@ export async function importData(
   }
 
   // Get existing items for duplicate detection
-  let existingItems: { title: string; typeName: string; content: string | null; url: string | null }[] = [];
+  let existingItems: ItemIdentity[] = [];
   if (skipDuplicates) {
     existingItems = await prisma.item.findMany({
       where: { userId },
@@ -190,14 +195,16 @@ export async function importData(
         title: true,
         content: true,
         url: true,
+        fileName: true,
         itemType: { select: { name: true } },
       },
     }).then((items) =>
       items.map((i) => ({
         title: i.title,
-        typeName: i.itemType.name,
+        type: i.itemType.name,
         content: i.content,
         url: i.url,
+        fileName: i.fileName,
       }))
     );
   }
@@ -283,14 +290,16 @@ export async function importData(
       const item = importableItems[i];
 
       // Check for duplicates
+      const identity: ItemIdentity = {
+        title: item.title,
+        type: item.type,
+        content: item.content,
+        url: item.url,
+        fileName: item.fileName,
+      };
       if (skipDuplicates) {
-        const isDuplicate = existingItems.some(
-          (existing) =>
-            existing.title === item.title &&
-            existing.typeName === item.type &&
-            (existing.content === item.content || existing.url === item.url)
-        );
-        if (isDuplicate) {
+        // Against what's already saved, and against earlier entries of this same file
+        if (existingItems.some((existing) => isDuplicateItem(existing, identity))) {
           itemsSkipped++;
           continue;
         }
@@ -329,6 +338,9 @@ export async function importData(
           contentType,
           isFavorite: item.isFavorite,
           isPinned: item.isPinned,
+          // Keep the original dates when the file has them (updatedAt falls back to createdAt)
+          createdAt: parseExportDate(item.createdAt),
+          updatedAt: parseExportDate(item.updatedAt) ?? parseExportDate(item.createdAt),
           fileUrl: isFileType && isOwnedFileUrl(userId, item.fileUrl) ? item.fileUrl : null,
           fileName: isFileType ? item.fileName : null,
           fileSize: isFileType ? item.fileSize : null,
@@ -348,6 +360,7 @@ export async function importData(
         },
       });
 
+      if (skipDuplicates) existingItems.push(identity);
       itemsImported++;
     }
   });

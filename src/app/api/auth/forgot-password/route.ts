@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { generatePasswordResetToken } from '@/lib/tokens'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { isDemoEmail } from '@/lib/demo'
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +21,14 @@ export async function POST(request: Request) {
         { error: 'Email is required' },
         { status: 400 }
       )
+    }
+
+    // The demo account's password can't be reset (and it has no mailbox); answer as for any other address
+    if (typeof email === 'string' && isDemoEmail(email)) {
+      return NextResponse.json({
+        success: true,
+        message: 'If an account exists with this email, a password reset link has been sent.',
+      })
     }
 
     // Find user by email

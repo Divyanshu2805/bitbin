@@ -220,3 +220,19 @@ describe('updateName server action', () => {
     expect(result.error).toBe('Could not update your name. Try again.');
   });
 });
+
+describe('updateName for the public demo account', () => {
+  it('is refused, and nothing is saved', async () => {
+    mockUpdateUserName.mockClear();
+    mockAuth.mockResolvedValue({
+      user: { id: 'demo-1', email: 'demo@bitbin.dev', isPro: false },
+      expires: new Date().toISOString(),
+    });
+
+    const result = await updateName({ name: 'Vandalised' });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('demo account');
+    expect(mockUpdateUserName).not.toHaveBeenCalled();
+  });
+});

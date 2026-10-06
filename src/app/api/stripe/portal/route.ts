@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 
@@ -9,6 +10,12 @@ export async function POST() {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // 20 portal sessions an hour per user
+    const rateLimit = await checkRateLimit('portal', session.user.id)
+    if (!rateLimit.success) {
+      return rateLimitResponse(rateLimit.retryAfter)
     }
 
     const user = await prisma.user.findUnique({

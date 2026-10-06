@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
+import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
 import { prisma } from '@/lib/prisma'
 
 const PRICE_MAP: Record<string, string | undefined> = {
@@ -14,6 +16,17 @@ export async function POST(request: Request) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // A shared account can't hold a subscription
+    if (isDemoEmail(session.user.email)) {
+      return NextResponse.json({ error: demoBlockedMessage('be upgraded') }, { status: 403 })
+    }
+
+    // 10 checkouts an hour per user: each one creates a Stripe session
+    const rateLimit = await checkRateLimit('checkout', session.user.id)
+    if (!rateLimit.success) {
+      return rateLimitResponse(rateLimit.retryAfter)
     }
 
     const body = await request.json()

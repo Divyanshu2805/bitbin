@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+
+const { mockCheckRateLimit } = vi.hoisted(() => ({
+  mockCheckRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 }),
+}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/rate-limit')>()),
+  checkRateLimit: mockCheckRateLimit,
+}));
+const overLimit = { success: false, remaining: 0, reset: 0, retryAfter: 180 };
 import type { NextRequest } from 'next/server';
 import type { Session } from 'next-auth';
 
@@ -90,6 +99,29 @@ describe('GET /api/export', () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
+  it('puts snippets, prompts, commands, notes and links in the ZIP as files, next to the JSON', async () => {
+    mockExportData.mockResolvedValue({
+      version: 1,
+      exportedAt: '2026-01-01T00:00:00.000Z',
+      items: [
+        { ...item('snippet', null, 'x'), title: 'Debounce', language: 'typescript', content: 'export const x = 1' },
+        { ...item('prompt', null, 'x'), title: 'Review', content: 'You are a reviewer' },
+        { ...item('command', null, 'x'), title: 'Reset', content: 'git reset --hard' },
+        { ...item('note', null, 'x'), title: 'Todo', content: '- milk' },
+        { ...item('link', null, 'x'), title: 'Docs', url: 'https://docs.example.com' },
+      ],
+      collections: [],
+    });
+
+    const res = await get('zip');
+    // File names are stored uncompressed in a ZIP's headers
+    const names = Buffer.from(await res.arrayBuffer()).toString('latin1');
+
+    for (const name of ['bitbin-export.json', 'snippets/Debounce.ts', 'prompts/Review.md', 'commands/Reset.sh', 'notes/Todo.md', 'links.md']) {
+      expect(names).toContain(name);
+    }
+  });
+
   it('still produces the ZIP when a file is missing from storage', async () => {
     mockExportData.mockResolvedValue({
       version: 1,
@@ -100,5 +132,20 @@ describe('GET /api/export', () => {
     mockGetFromR2.mockResolvedValue(null);
 
     expect((await get('zip')).status).toBe(200);
+  });
+});
+
+describe('GET /api/export rate limit', () => {
+  it('answers 429 with Retry-After and reads nothing when over the limit', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', isPro: true }, expires: new Date().toISOString() });
+    mockCheckRateLimit.mockResolvedValueOnce(overLimit);
+    mockExportData.mockClear();
+
+    const res = await get('json');
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('180');
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('export', 'user-1');
+    expect(mockExportData).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,7 @@ import {
 } from '@/lib/constants/editor';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
 import { parseZodErrors } from '@/lib/validation';
+import { demoBlockedMessage, isDemoEmail } from '@/lib/demo';
 
 const editorPreferencesSchema = z.object({
   fontSize: z.number().refine((val) => FONT_SIZES.includes(val), {
@@ -61,6 +62,10 @@ export async function updateName(
 ): Promise<ActionResult<{ name: string }>> {
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
+
+  if (isDemoEmail(session.user.email)) {
+    return { success: false, error: demoBlockedMessage('change its name') };
+  }
 
   const parsed = nameSchema.safeParse(input);
   if (!parsed.success) {

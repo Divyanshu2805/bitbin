@@ -24,7 +24,7 @@ import {
   validateId,
 } from '@/lib/validation';
 import { createItemForUser, type CreateItemInput } from '@/lib/item-create';
-import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
 
 const updateItemSchema = z.object({
   title: titleSchema,
@@ -119,6 +119,9 @@ export async function createItem(
 ): Promise<ActionResult<ItemDetail>> {
   const { session, unauthorized } = await getAuthedSession();
   if (unauthorized) return unauthorized;
+
+  const limited = await checkActionRateLimit('create', session.user.id, 'new items');
+  if (limited) return limited;
 
   return createItemForUser(session.user.id, session.user.isPro ?? false, input);
 }

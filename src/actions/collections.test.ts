@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+
+const { mockCheckRateLimit } = vi.hoisted(() => ({
+  mockCheckRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 }),
+}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/rate-limit')>()),
+  checkRateLimit: mockCheckRateLimit,
+}));
+const overLimit = { success: false, remaining: 0, reset: 0, retryAfter: 180 };
 import type { Session } from 'next-auth';
 
 // Mock the auth module
@@ -608,5 +617,20 @@ describe('createCollection when the cap is hit during the insert', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('free tier limit of 3 collections');
+  });
+});
+
+describe('createCollection rate limit', () => {
+  it('refuses new collections over the limit, without creating anything', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+    mockCheckRateLimit.mockResolvedValueOnce(overLimit);
+    mockCreateCollectionQuery.mockClear();
+
+    const result = await createCollection({ name: 'React', description: null });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Too many new collections. Please try again in 3 minutes.');
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('create', 'user-123');
+    expect(mockCreateCollectionQuery).not.toHaveBeenCalled();
   });
 });

@@ -66,6 +66,35 @@ export const rateLimitConfigs = {
     limiter: Ratelimit.slidingWindow(5, '15 m'),
     prefix: 'ratelimit:change-password',
   },
+  // Import: 5 imports per hour, and 20 previews, per user (parsing a big file is real work)
+  import: {
+    limiter: Ratelimit.slidingWindow(5, '1 h'),
+    prefix: 'ratelimit:import',
+  },
+  importPreview: {
+    limiter: Ratelimit.slidingWindow(20, '1 h'),
+    prefix: 'ratelimit:import-preview',
+  },
+  // Export: 10 per hour per user (a ZIP reads every file from storage)
+  export: {
+    limiter: Ratelimit.slidingWindow(10, '1 h'),
+    prefix: 'ratelimit:export',
+  },
+  // Stripe: 10 checkouts and 20 portal sessions per hour per user
+  checkout: {
+    limiter: Ratelimit.slidingWindow(10, '1 h'),
+    prefix: 'ratelimit:checkout',
+  },
+  portal: {
+    limiter: Ratelimit.slidingWindow(20, '1 h'),
+    prefix: 'ratelimit:portal',
+  },
+  // Creating items and collections from the app: 120 a minute per user, far more
+  // than a person types, so a script or a runaway client is what hits it
+  create: {
+    limiter: Ratelimit.slidingWindow(120, '1 m'),
+    prefix: 'ratelimit:create',
+  },
   // File upload: 10 uploads per hour (keyed by user ID)
   upload: {
     limiter: Ratelimit.slidingWindow(10, '1 h'),

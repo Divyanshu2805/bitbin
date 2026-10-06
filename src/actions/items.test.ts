@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+
+const { mockCheckRateLimit } = vi.hoisted(() => ({
+  mockCheckRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 }),
+}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/rate-limit')>()),
+  checkRateLimit: mockCheckRateLimit,
+}));
+const overLimit = { success: false, remaining: 0, reset: 0, retryAfter: 180 };
 import type { Session } from 'next-auth';
 
 // Mock the auth module
@@ -1073,5 +1082,22 @@ describe('createItem when the cap is hit during the insert', () => {
     });
 
     expect(mockCreateItemQuery.mock.calls.at(-1)?.[1]).not.toHaveProperty('maxItems');
+  });
+});
+
+describe('createItem rate limit', () => {
+  it('refuses new items over the limit, without creating anything', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+    mockCheckRateLimit.mockResolvedValueOnce(overLimit);
+    mockCreateItemQuery.mockClear();
+
+    const result = await createItem({
+      typeName: 'note', title: 'T', description: null, content: null, url: null, language: null, tags: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Too many new items. Please try again in 3 minutes.');
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('create', 'user-123');
+    expect(mockCreateItemQuery).not.toHaveBeenCalled();
   });
 });

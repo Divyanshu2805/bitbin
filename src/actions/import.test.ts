@@ -1,4 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+
+const { mockCheckRateLimit } = vi.hoisted(() => ({
+  mockCheckRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 }),
+}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/rate-limit')>()),
+  checkRateLimit: mockCheckRateLimit,
+}));
+const overLimit = { success: false, remaining: 0, reset: 0, retryAfter: 180 };
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({
@@ -450,5 +459,139 @@ describe('importData input hardening', () => {
     );
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe('importData duplicates and dates', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+    vi.mocked(prisma.item.count).mockResolvedValue(0);
+    vi.mocked(prisma.collection.count).mockResolvedValue(0);
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.itemType.findMany).mockResolvedValue([
+      { id: 'type-1', name: 'note', icon: 'StickyNote', color: '#fde047', isSystem: true, userId: null },
+      { id: 'type-2', name: 'link', icon: 'Link', color: '#10b981', isSystem: true, userId: null },
+    ]);
+  });
+
+  function captureCreates() {
+    const create = vi.fn().mockResolvedValue({ id: 'new-item' });
+    vi.mocked(prisma.$transaction).mockImplementation(async (fn: unknown) => {
+      const tx = {
+        $queryRaw: vi.fn(),
+        collection: { findMany: vi.fn().mockResolvedValue([]), create: vi.fn(), count: vi.fn() },
+        item: { create, count: vi.fn() },
+      };
+      return (fn as (t: typeof tx) => Promise<void>)(tx);
+    });
+    return create;
+  }
+
+  const exportOf = (items: object[]) => JSON.stringify({ version: 1, items, collections: [] });
+  const note = (over: object) => ({ title: 'Shopping', type: 'note', tags: [], collections: [], ...over });
+
+  it('imports a note that has the same title as a saved one but different text', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([
+      { title: 'Shopping', content: 'milk', url: null, fileName: null, itemType: { name: 'note' } },
+    ] as never);
+    const create = captureCreates();
+
+    const result = await importData(exportOf([note({ content: 'eggs' })]), true);
+
+    expect(result.data?.itemsImported).toBe(1);
+    expect(result.data?.itemsSkipped).toBe(0);
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips a note that really is already saved', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([
+      { title: 'Shopping', content: 'milk', url: null, fileName: null, itemType: { name: 'note' } },
+    ] as never);
+    const create = captureCreates();
+
+    const result = await importData(exportOf([note({ content: 'milk' })]), true);
+
+    expect(result.data?.itemsSkipped).toBe(1);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('skips a repeat inside the same file', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+    const create = captureCreates();
+
+    const result = await importData(exportOf([note({ content: 'milk' }), note({ content: 'milk' })]), true);
+
+    expect(result.data?.itemsImported).toBe(1);
+    expect(result.data?.itemsSkipped).toBe(1);
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the dates from the file', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+    const create = captureCreates();
+
+    await importData(
+      exportOf([note({ content: 'a', createdAt: '2025-01-02T03:04:05.000Z', updatedAt: '2025-02-03T04:05:06.000Z' })]),
+      false
+    );
+
+    const data = create.mock.calls[0][0].data;
+    expect(data.createdAt).toEqual(new Date('2025-01-02T03:04:05.000Z'));
+    expect(data.updatedAt).toEqual(new Date('2025-02-03T04:05:06.000Z'));
+  });
+
+  it('uses the creation date for updatedAt when the file has no other, and defaults when it has neither', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+    const create = captureCreates();
+
+    await importData(
+      exportOf([note({ content: 'a', createdAt: '2025-01-02T03:04:05.000Z' }), note({ title: 'Two', content: 'b' })]),
+      false
+    );
+
+    expect(create.mock.calls[0][0].data.updatedAt).toEqual(new Date('2025-01-02T03:04:05.000Z'));
+    expect(create.mock.calls[1][0].data.createdAt).toBeUndefined();
+    expect(create.mock.calls[1][0].data.updatedAt).toBeUndefined();
+  });
+
+  it('ignores an unreadable date instead of failing the import', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue([]);
+    const create = captureCreates();
+
+    const result = await importData(exportOf([note({ content: 'a', createdAt: 'garbage' })]), false);
+
+    expect(result.success).toBe(true);
+    expect(create.mock.calls[0][0].data.createdAt).toBeUndefined();
+  });
+});
+
+describe('import rate limits', () => {
+  const exportJson = JSON.stringify({ version: 1, items: [], collections: [] });
+
+  beforeEach(() => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() });
+  });
+
+  it('refuses an import over the limit before reading the file or touching the database', async () => {
+    mockCheckRateLimit.mockResolvedValueOnce(overLimit);
+    vi.mocked(prisma.item.count).mockClear();
+
+    const result = await importData(exportJson, true);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Too many imports. Please try again in 3 minutes.');
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('import', 'user-123');
+    expect(prisma.item.count).not.toHaveBeenCalled();
+  });
+
+  it('refuses a preview over its own, looser limit', async () => {
+    mockCheckRateLimit.mockResolvedValueOnce(overLimit);
+
+    const result = await previewImport(exportJson);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Too many import previews. Please try again in 3 minutes.');
+    expect(mockCheckRateLimit).toHaveBeenCalledWith('importPreview', 'user-123');
   });
 });

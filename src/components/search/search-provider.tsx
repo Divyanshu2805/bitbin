@@ -6,6 +6,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
 import { getSearchData, type SearchData } from "@/actions/search";
 
@@ -17,6 +18,9 @@ interface SearchContextValue {
   isLoading: boolean;
   refreshSearchData: () => Promise<void>;
 }
+
+// Opening the palette refetches the index unless it was loaded this recently
+const MIN_REFRESH_MS = 2000;
 
 const SearchContext = createContext<SearchContextValue | null>(null);
 
@@ -36,13 +40,16 @@ export default function SearchProvider({
   const [isOpen, setIsOpen] = useState(false);
   const [searchData, setSearchData] = useState<SearchData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const lastFetchedAt = useRef(0);
 
-  const fetchSearchData = useCallback(async () => {
-    setIsLoading(true);
+  // `silent` keeps the current results on screen instead of showing the spinner
+  const fetchSearchData = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setIsLoading(true);
     try {
       const result = await getSearchData();
       if (result.success && result.data) {
         setSearchData(result.data);
+        lastFetchedAt.current = Date.now();
       }
     } catch (error) {
       console.error("Failed to fetch search data:", error);
@@ -55,6 +62,14 @@ export default function SearchProvider({
   useEffect(() => {
     fetchSearchData();
   }, [fetchSearchData]);
+
+  // Items change while the page stays mounted (create, edit, delete, import), so
+  // reload the index each time the palette opens: what you just saved is found
+  useEffect(() => {
+    if (!isOpen) return;
+    if (Date.now() - lastFetchedAt.current < MIN_REFRESH_MS) return;
+    fetchSearchData({ silent: true });
+  }, [isOpen, fetchSearchData]);
 
   // Listen for Cmd+K / Ctrl+K
   useEffect(() => {
@@ -80,7 +95,7 @@ export default function SearchProvider({
         closeSearch,
         searchData,
         isLoading,
-        refreshSearchData: fetchSearchData,
+        refreshSearchData: () => fetchSearchData(),
       }}
     >
       {children}

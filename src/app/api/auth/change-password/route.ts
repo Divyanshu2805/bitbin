@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation'
+import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +15,11 @@ export async function POST(request: Request) {
         { error: 'Unauthorized' },
         { status: 401 }
       )
+    }
+
+    // The public demo account's password is published; it can't be changed
+    if (isDemoEmail(session.user.email)) {
+      return NextResponse.json({ error: demoBlockedMessage('change its password') }, { status: 403 })
     }
 
     // 5 attempts per 15 minutes: the current-password check can't be brute-forced from a stolen session

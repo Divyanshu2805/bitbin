@@ -14,7 +14,7 @@ import {
 import { parseZodErrors, validateId } from '@/lib/validation';
 import { canCreateCollection, MAX_COLLECTIONS } from '@/lib/usage';
 import { LimitReachedError } from '@/lib/limit-error';
-import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
+import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
 
 const COLLECTION_LIMIT_MESSAGE =
   'You have reached the free tier limit of 3 collections. Upgrade to Pro for unlimited collections.';
@@ -37,6 +37,9 @@ export async function createCollection(
   if (!parsed.success) {
     return { success: false, error: 'Validation failed', fieldErrors: parseZodErrors(parsed.error) };
   }
+
+  const limited = await checkActionRateLimit('create', session.user.id, 'new collections');
+  if (limited) return limited;
 
   // Usage limit check
   const isPro = session.user.isPro ?? false;
