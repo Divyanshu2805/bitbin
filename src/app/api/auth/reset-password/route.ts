@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { getPasswordResetToken, deletePasswordResetToken } from '@/lib/tokens'
+import { consumePasswordResetToken } from '@/lib/tokens'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation'
 
@@ -51,21 +51,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get and validate the token
-    const resetToken = await getPasswordResetToken(token)
+    // Use the link up before changing anything: it works once, even if it is submitted twice at the same moment
+    const resetToken = await consumePasswordResetToken(token)
 
     if (!resetToken) {
       return NextResponse.json(
-        { error: 'Invalid or expired reset token' },
-        { status: 400 }
-      )
-    }
-
-    // Check if token has expired
-    if (new Date() > resetToken.expires) {
-      await deletePasswordResetToken(token)
-      return NextResponse.json(
-        { error: 'Reset token has expired. Please request a new one.' },
+        { error: 'This reset link is invalid, expired or already used. Please request a new one.' },
         { status: 400 }
       )
     }
@@ -91,9 +82,6 @@ export async function POST(request: Request) {
       // Bumping sessionVersion ends every session issued before the reset
       data: { password: hashedPassword, sessionVersion: { increment: 1 } },
     })
-
-    // Delete the used token
-    await deletePasswordResetToken(token)
 
     return NextResponse.json({
       success: true,

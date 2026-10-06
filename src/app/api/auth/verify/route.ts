@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getVerificationToken, deleteVerificationToken } from '@/lib/tokens'
+import { consumeVerificationToken } from '@/lib/tokens'
 
 export async function GET(request: Request) {
   try {
@@ -14,27 +14,19 @@ export async function GET(request: Request) {
       )
     }
 
-    const verificationToken = await getVerificationToken(token)
+    // Use the link up first: it works once
+    const verified = await consumeVerificationToken(token)
 
-    if (!verificationToken) {
+    if (!verified) {
       return NextResponse.json(
-        { error: 'Invalid verification token' },
-        { status: 400 }
-      )
-    }
-
-    // Check if token has expired
-    if (new Date() > verificationToken.expires) {
-      await deleteVerificationToken(token)
-      return NextResponse.json(
-        { error: 'Verification token has expired' },
+        { error: 'This verification link is invalid, expired or already used' },
         { status: 400 }
       )
     }
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email: verificationToken.identifier },
+      where: { email: verified.email },
     })
 
     if (!user) {
@@ -46,7 +38,6 @@ export async function GET(request: Request) {
 
     // Check if already verified
     if (user.emailVerified) {
-      await deleteVerificationToken(token)
       return NextResponse.json({
         success: true,
         message: 'Email already verified',
@@ -58,9 +49,6 @@ export async function GET(request: Request) {
       where: { id: user.id },
       data: { emailVerified: new Date() },
     })
-
-    // Delete the used token
-    await deleteVerificationToken(token)
 
     return NextResponse.json({
       success: true,
