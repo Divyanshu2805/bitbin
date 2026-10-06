@@ -7,6 +7,15 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     exclude: ['node_modules', '.next'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'json-summary', 'html'],
+      // Server code is what the unit tests cover; components and generated code are checked in the browser
+      include: ['src/actions/**/*.ts', 'src/lib/**/*.ts', 'src/app/api/**/*.ts'],
+      exclude: ['**/*.test.ts', 'src/generated/**', 'src/lib/constants/**'],
+      // The floor sits just under today's numbers (about 79 / 80 / 70 / 79) so a drop fails CI
+      thresholds: { statements: 75, branches: 75, functions: 65, lines: 75 },
+    },
   },
   resolve: {
     alias: {
