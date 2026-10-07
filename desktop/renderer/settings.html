@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'">
+  <title>BitBin settings</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="shell" id="shell">
+
+    <div class="hero">
+      <img class="hero-logo" src="logo.png" alt="">
+      <div class="hero-text">
+        <h1>BitBin</h1>
+        <p>Desktop quick save</p>
+      </div>
+      <span id="pill" class="pill off" role="status"><span class="dot"></span><span id="pill-text">Not connected</span></span>
+    </div>
+
+    <div class="grid">
+
+    <section class="card" aria-labelledby="account-title">
+      <div class="card-head">
+        <h2 id="account-title">Account</h2>
+        <span class="tag">Pro</span>
+      </div>
+
+      <div id="connected" hidden>
+        <div class="person">
+          <div class="avatar" id="avatar" aria-hidden="true">B</div>
+          <div class="person-text">
+            <div class="name" id="name">Connected</div>
+            <div class="email" id="email"></div>
+          </div>
+        </div>
+        <div class="buttons">
+          <button id="open-bitbin" class="primary" type="button">Open BitBin</button>
+          <button id="disconnect" class="danger" type="button">Disconnect</button>
+        </div>
+      </div>
+
+      <form id="connect-form" hidden>
+        <ol class="steps">
+          <li><span>In BitBin, open <strong>Settings → Browser extension</strong>.</span></li>
+          <li><span>Create a token and copy it. It's shown only once.</span></li>
+          <li><span>Paste it here and connect.</span></li>
+        </ol>
+
+        <label>BitBin site
+          <select id="base-url"></select>
+        </label>
+
+        <label>API token
+          <div class="reveal">
+            <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="bb_…">
+            <button id="toggle-token" type="button" aria-label="Show token">Show</button>
+          </div>
+        </label>
+
+        <div class="buttons">
+          <button id="connect" class="primary" type="submit">Connect</button>
+          <button id="open-tokens" type="button">Get a token</button>
+        </div>
+        <p id="storage-note" class="note" hidden>This system has no secure storage, so the token is kept only until you quit BitBin.</p>
+      </form>
+
+      <div id="status" class="status" role="status"></div>
+    </section>
+
+    <div class="col">
+
+    <section class="card" aria-labelledby="shortcut-title">
+      <div class="card-head">
+        <h2 id="shortcut-title">Shortcut</h2>
+      </div>
+      <div class="row">
+        <div class="row-text">
+          <div id="keys" class="keys" aria-live="polite"></div>
+          <p class="note" id="shortcut-help">Works from any app. Saves what's on your clipboard.</p>
+        </div>
+        <button id="change-shortcut" type="button">Change</button>
+      </div>
+      <div id="shortcut-status" class="status" role="status"></div>
+    </section>
+
+    <section class="card" aria-labelledby="general-title">
+      <div class="card-head">
+        <h2 id="general-title">General</h2>
+      </div>
+      <label class="row switch-row" for="login">
+        <span class="row-text">
+          <span class="label">Start BitBin when I sign in</span>
+          <span class="note" id="login-note">Keeps the shortcut ready after a restart.</span>
+        </span>
+        <input id="login" class="switch" type="checkbox" role="switch">
+      </label>
+    </section>
+
+    </div>
+    </div>
+
+    <div class="footer">
+      <span>Version <span id="version"></span> · closing this window keeps BitBin in the tray</span>
+      <button id="quit" class="link" type="button">Quit BitBin</button>
+    </div>
+
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

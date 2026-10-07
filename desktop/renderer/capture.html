@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; font-src 'self'">
+  <title>Save to BitBin</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="capture.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <img src="logo.png" alt="">
+      <h1>Save to BitBin</h1>
+      <span class="eyebrow">Pro</span>
+      <button id="close" class="link" type="button" aria-label="Close">×</button>
+    </header>
+
+    <div id="loading" class="panel"><p>Loading…</p></div>
+
+    <div id="setup" class="panel" hidden>
+      <p id="setup-message">Connect BitBin to your account first.</p>
+      <button id="open-settings" class="primary" type="button">Open settings</button>
+    </div>
+
+    <div id="done" class="panel" hidden>
+      <p><strong>Saved to BitBin.</strong></p>
+      <button id="open-bitbin" class="link" type="button">Open BitBin</button>
+    </div>
+
+    <form id="form" hidden>
+      <main>
+        <div class="row">
+          <label>Type
+            <select id="type"></select>
+          </label>
+          <label>Collection
+            <select id="collection">
+              <option value="">No collection</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Title
+          <input id="title" required maxlength="200">
+        </label>
+
+        <label id="content-field">Content
+          <textarea id="content" spellcheck="false"></textarea>
+        </label>
+
+        <label id="url-field">URL
+          <input id="url" type="url" placeholder="https://">
+        </label>
+
+        <label>Tags
+          <div class="tags-row">
+            <input id="tags" placeholder="comma, separated">
+            <button id="suggest" type="button" title="Suggest tags and a description with AI">✦ Suggest</button>
+          </div>
+        </label>
+
+        <label>Description
+          <textarea id="description" class="description" maxlength="1000" placeholder="Optional. ✦ Suggest writes one for you."></textarea>
+        </label>
+
+        <div id="status" class="status" role="status"></div>
+
+        <div class="actions">
+          <span class="hint"><kbd>Ctrl</kbd><kbd>Enter</kbd> save<span class="sep">·</span><kbd>Esc</kbd> close</span>
+          <button id="save" class="primary" type="submit">Save</button>
+        </div>
+      </main>
+    </form>
+  </div>
+
+  <script src="capture.js"></script>
+</body>
+</html>
