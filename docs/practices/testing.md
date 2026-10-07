@@ -50,6 +50,7 @@ Check these by hand when a change touches them:
 
 - Route handlers other than `/api/v1`: auth flows, upload / download, export, Stripe checkout and webhook. Adding tests for these is [tracked](../known-gaps/not-yet-built.md#code-health). The `/api/v1` route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/lib/api-auth` and the library underneath.
 - The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
+- The desktop app (`desktop/`): `cd desktop && npm test` runs its `node:test` suites (type guessing, the API client and body builders, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
 - NextAuth callbacks and `proxy.ts`.
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.
