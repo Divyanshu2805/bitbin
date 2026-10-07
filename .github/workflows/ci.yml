@@ -32,6 +32,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # The Prisma client is generated, not committed; some tests import it
+      - name: Generate the Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/bitbin
+
       - name: Tests with coverage floor
         run: npm run test:coverage
 
