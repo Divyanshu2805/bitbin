@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Browser extension: plain JS for Chrome, not part of the Next app
     "extension/**",
+    // Desktop tray app: plain CommonJS for Electron, with its own package.json
+    "desktop/**",
   ]),
 ]);
 
