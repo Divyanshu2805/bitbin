@@ -16,6 +16,7 @@ If you are new to the codebase, read these in order:
    - [Import and export](flows/import-export.md) — JSON and ZIP exports, transactional imports.
    - [Search](flows/search.md) — the ⌘K command palette.
    - [Save from anywhere](flows/save-from-extension.md) — the browser extension, API tokens and `/api/v1`.
+   - [Save from the desktop](flows/save-from-desktop.md) — the tray app: a global shortcut that saves the clipboard through the same token API.
 
 ## Reference
 

@@ -36,6 +36,7 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | Export / import format | `src/lib/db/export.ts` and the Zod schema in `src/actions/import.ts` — bump `version` if the shape changes incompatibly |
 | ⌘K search | `src/actions/search.ts`, `components/search/*` |
 | The browser extension | `extension/` (popup, options, type guessing in `lib.js`); its endpoints in `src/app/api/v1/*` and the token check in `src/lib/api-auth.ts`. See the [token API](../api/token-api.md) before changing a response. The Settings download is packaged by `src/lib/extension-package.ts`; bump `version` in `extension/manifest.json` for every extension change |
+| The desktop tray app | `desktop/` (`main.js` for tray, shortcut and IPC; `src/` for the API client, config store and type guessing; `renderer/` for the two windows). It uses the [token API](../api/token-api.md) like the extension, so check a response change against both. `src/guess.js` mirrors `extension/lib.js`; change them together. See [save from the desktop](flows/save-from-desktop.md) |
 
 ## Look and feel
 

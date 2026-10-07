@@ -1,6 +1,6 @@
 # Token API (`/api/v1`)
 
-The one API meant for clients other than the BitBin website: today the [browser extension](../../extension/README.md), and later possibly a desktop app or CLI. Why it exists and how it's shaped is in [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md).
+The one API meant for clients other than the BitBin website: today the [browser extension](../../extension/README.md) and the [desktop tray app](../../desktop/README.md), and later possibly a CLI. Why it exists and how it's shaped is in [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md).
 
 ## Authentication
 
@@ -25,7 +25,7 @@ Errors are `{ "error": "…" }`, as for every [route handler](errors-and-rate-li
 
 ## `GET /api/v1/me`
 
-Checks a token. Used by the extension's options page.
+Checks a token. Used by the extension's options page and the desktop app's settings window.
 
 ```json
 { "data": { "email": "you@example.com", "name": "You", "isPro": true } }

@@ -56,7 +56,7 @@ Missing features and open issues — found while deploying BitBin and while docu
 
 Planned additions, not bugs:
 
-- **Save from anywhere: desktop app (Pro).** The browser extension is built ([flow](../architecture/flows/save-from-extension.md)). A desktop tray app with a system-wide shortcut could follow and would use the same [token API](../api/token-api.md) without server changes.
+- **Publish and sign the desktop app.** The tray app is built ([flow](../architecture/flows/save-from-desktop.md)) and uses the same [token API](../api/token-api.md), but builds are unsigned (SmartScreen and Gatekeeper warn), there is no auto-update, and there's no download in Settings. It saves text only ([limits](../../desktop/README.md#known-limits)).
 - **Publish the extension** to the Chrome Web Store and Edge Add-ons. Today Pro users download a ZIP from Settings and load it unpacked, which needs Developer mode and has no automatic updates. See [`extension/README.md`](../../extension/README.md#publishing).
 - **Firefox support** for the extension. It needs a `browser_specific_settings` block and a background script instead of a service worker.
 - **A separate development database** (item 19).
