@@ -10,6 +10,7 @@ const {
   Menu,
   Tray,
   clipboard,
+  dialog,
   globalShortcut,
   ipcMain,
   nativeImage,
@@ -24,6 +25,15 @@ const {
 const { ApiError, apiRequest, baseUrls, buildItemBody, buildSuggestBody, PRODUCTION_URL } = require('./src/api');
 const { createConfigStore } = require('./src/config');
 const { ITEM_TYPES, parseTags, prefillFrom } = require('./src/guess');
+const {
+  MAX_UPLOAD_BYTES,
+  baseName,
+  buildFileForm,
+  checkFile,
+  classifyFile,
+  clipboardImageName,
+  PICKER_EXTENSIONS,
+} = require('./src/files');
 
 // The app's pages are served from ./renderer over this scheme rather than file://:
 // a CSP `'self'` doesn't match file:// pages, and the IPC handlers below only
@@ -50,6 +60,8 @@ let tray = null;
 let captureWindow = null;
 let settingsWindow = null;
 let pendingCapture = prefillFrom('');
+/** A file or image waiting to be saved: `{ name, type, bytes }`. Lives in this process only. */
+let attachment = null;
 let shortcutActive = false;
 let quitting = false;
 
@@ -95,8 +107,46 @@ async function readClipboardText() {
   }
 }
 
+/** What the capture window shows for the attachment: never the bytes. */
+function attachmentInfo() {
+  return attachment ? { name: attachment.name, type: attachment.type, size: attachment.bytes.length } : null;
+}
+
+/** Holds a file for saving after the same checks the server makes. Throws a message safe to show. */
+function setAttachment(name, bytes) {
+  const fileName = baseName(name);
+  const problem = checkFile(fileName, bytes.length);
+  if (problem) throw new ApiError(problem, 400);
+  attachment = { name: fileName, type: classifyFile(fileName), bytes };
+  return attachmentInfo();
+}
+
+/** The clipboard's image as a PNG, or null when it holds none (or one too big to save). */
+async function readClipboardImage() {
+  try {
+    const image = await clipboard.readImage();
+    if (!image || image.isEmpty()) return null;
+    const bytes = image.toPNG();
+    return bytes.length > 0 && bytes.length <= MAX_UPLOAD_BYTES ? bytes : null;
+  } catch (error) {
+    console.error('Could not read an image from the clipboard:', error);
+    return null;
+  }
+}
+
 async function showCapture({ fromClipboard }) {
-  pendingCapture = prefillFrom(fromClipboard ? await readClipboardText() : '');
+  attachment = null;
+  const text = fromClipboard ? await readClipboardText() : '';
+  pendingCapture = prefillFrom(text);
+
+  // A copied screenshot or image becomes an image item; text on the clipboard wins when both are there
+  if (fromClipboard && !text.trim()) {
+    const png = await readClipboardImage();
+    if (png) {
+      const info = setAttachment(clipboardImageName(), png);
+      pendingCapture = { type: 'note', title: info.name.replace(/\.png$/, ''), content: '', url: '' };
+    }
+  }
 
   if (!captureWindow) {
     captureWindow = createWindow('capture.html', {
@@ -273,10 +323,49 @@ function registerIpc() {
 
   handle('capture:init', () => {
     const { token, lastCollectionId } = config.load();
-    return { connected: Boolean(token), prefill: pendingCapture, itemTypes: ITEM_TYPES, lastCollectionId };
+    return {
+      connected: Boolean(token),
+      prefill: pendingCapture,
+      itemTypes: ITEM_TYPES,
+      lastCollectionId,
+      attachment: attachmentInfo(),
+    };
+  });
+  handle('capture:pick-file', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const picked = await dialog.showOpenDialog(win, {
+      title: 'Attach a file or image',
+      properties: ['openFile'],
+      filters: [{ name: 'BitBin files', extensions: PICKER_EXTENSIONS }],
+    });
+    if (picked.canceled || !picked.filePaths[0]) return attachmentInfo();
+
+    const file = picked.filePaths[0];
+    const stat = await fs.promises.stat(file);
+    if (!stat.isFile()) throw new ApiError('Pick a file, not a folder.', 400);
+    // Checked before reading, so a huge file is never loaded
+    const problem = checkFile(baseName(file), stat.size);
+    if (problem) throw new ApiError(problem, 400);
+    return setAttachment(file, await fs.promises.readFile(file));
+  });
+  // A file dropped on the window: the page reads its bytes (it has no path) and hands them over
+  handle('capture:attach', (_event, name, data) => {
+    if (typeof name !== 'string' || !(data instanceof ArrayBuffer)) throw new ApiError('Could not read that file.', 400);
+    const problem = checkFile(baseName(name), data.byteLength);
+    if (problem) throw new ApiError(problem, 400);
+    return setAttachment(name, Buffer.from(data));
+  });
+  handle('capture:clear-attachment', () => {
+    attachment = null;
   });
   handle('capture:collections', () => api('/collections'));
   handle('capture:save', async (_event, form) => {
+    if (attachment) {
+      const saved = await api('/files', { method: 'POST', form: buildFileForm(attachment, form) });
+      attachment = null;
+      config.save({ lastCollectionId: typeof form?.collectionId === 'string' ? form.collectionId : '' });
+      return saved;
+    }
     const body = buildItemBody(form, ITEM_TYPES);
     const item = await api('/items', { method: 'POST', body });
     config.save({ lastCollectionId: body.collectionIds[0] ?? '' });

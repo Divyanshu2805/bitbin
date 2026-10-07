@@ -7,6 +7,8 @@ const SECTIONS = [
   { id: "editor", label: "editor" },
   { id: "billing", label: "billing" },
   { id: "extension", label: "extension" },
+  { id: "desktop", label: "desktop" },
+  { id: "tags", label: "tags" },
   { id: "data", label: "data" },
   { id: "account", label: "account" },
 ] as const;
@@ -116,7 +118,7 @@ export default function SettingsNav() {
   return (
     <nav ref={navRef} aria-label="Settings sections" className="hidden self-start lg:sticky lg:top-2 lg:block">
       <p className="mb-2 px-3 font-mono text-[11px] text-muted-foreground">
-        <span className="text-muted-foreground/50">{"// "}</span>sections
+        <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>sections
       </p>
       <ul className="relative space-y-0.5 border-l border-border">
         {marker && (

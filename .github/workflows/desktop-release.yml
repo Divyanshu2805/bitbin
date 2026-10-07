@@ -1,0 +1,50 @@
+name: Desktop release
+
+# Builds the Windows installer and publishes it as a GitHub Release, which Settings links to.
+# Run it by pushing a tag: git tag desktop-v0.2.0 && git push origin desktop-v0.2.0
+# (bump "version" in desktop/package.json first; the app shows it in its settings window).
+
+on:
+  push:
+    tags: ['desktop-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - run: npm ci
+
+      - name: Tests
+        run: npm test
+
+      - name: Build the installer (unsigned)
+        run: npm run dist
+        env:
+          # No certificate: SmartScreen warns on first launch, which Settings tells people about
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      # The installer has a fixed name (BitBin-Setup.exe) so releases/latest/download/BitBin-Setup.exe always works
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/BitBin-Setup.exe \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "BitBin desktop ${GITHUB_REF_NAME#desktop-v}" \
+            --notes "Unsigned Windows installer. Windows SmartScreen may warn on first launch: choose More info, then Run anyway. Requires BitBin Pro."

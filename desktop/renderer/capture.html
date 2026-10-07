@@ -41,6 +41,13 @@
           </label>
         </div>
 
+        <div id="attachment" class="attachment" hidden>
+          <span class="clip" aria-hidden="true">▤</span>
+          <span id="attachment-name" class="name"></span>
+          <span id="attachment-size" class="size"></span>
+          <button id="attachment-clear" class="link" type="button" aria-label="Remove the file">×</button>
+        </div>
+
         <label>Title
           <input id="title" required maxlength="200">
         </label>
@@ -52,6 +59,8 @@
         <label id="url-field">URL
           <input id="url" type="url" placeholder="https://">
         </label>
+
+        <button id="attach" class="link attach" type="button">+ Attach a file or image <span class="sub">or drop one here</span></button>
 
         <label>Tags
           <div class="tags-row">

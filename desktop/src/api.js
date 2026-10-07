@@ -28,7 +28,7 @@ class ApiError extends Error {
  * message is safe to show (the server's `error` string) and whose `status` is the
  * HTTP status (0 when the request never got an answer).
  */
-async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET', body } = {}) {
+async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET', body, form } = {}) {
   if (!token) throw new ApiError('Add your BitBin token in Settings.', 401);
 
   let res;
@@ -37,9 +37,10 @@ async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET',
       method,
       headers: {
         Authorization: `Bearer ${token}`,
+        // A multipart form sets its own Content-Type (with the boundary)
         ...(body ? { 'Content-Type': 'application/json' } : {}),
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: form ?? (body ? JSON.stringify(body) : undefined),
       credentials: 'omit',
       redirect: 'error',
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -49,6 +50,10 @@ async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET',
   }
 
   const json = await res.json().catch(() => ({}));
+  if (res.status === 413) {
+    // The host refuses a body that is too big before BitBin sees it, so there is no JSON to read
+    throw new ApiError('That file is too large for the server.', 413);
+  }
   if (!res.ok) {
     const fieldError = json.fieldErrors && Object.values(json.fieldErrors).flat()[0];
     throw new ApiError(fieldError || json.error || `Request failed (${res.status})`, res.status);

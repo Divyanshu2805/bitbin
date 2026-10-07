@@ -4,6 +4,11 @@ const desktop = window.bitbin;
 let itemTypes = [];
 let lastCollectionId = '';
 let collectionsLoaded = false;
+/** The file or image waiting to be saved, as the main process describes it (never its bytes) */
+let attached = null;
+
+/** The biggest file the window will read when one is dropped on it; the main process checks the real limits. */
+const MAX_DROP_BYTES = 12 * 1024 * 1024;
 
 function show(panel) {
   for (const id of ['loading', 'setup', 'done', 'form']) $(id).hidden = id !== panel;
@@ -21,10 +26,57 @@ function showSetup(message) {
   show('setup');
 }
 
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** Show the attached file (or take it away): a file replaces the type picker and the text fields. */
+function applyAttachment(info) {
+  attached = info;
+  $('attachment').hidden = !info;
+  $('attach').hidden = Boolean(info);
+  $('type').closest('label').hidden = Boolean(info);
+  if (info) {
+    $('attachment-name').textContent = info.name;
+    $('attachment-name').title = info.name;
+    $('attachment-size').textContent = `${info.type} · ${formatSize(info.size)}`;
+    if (!$('title').value.trim()) $('title').value = info.name.replace(/\.[^.]+$/, '');
+  }
+  applyType($('type').value);
+}
+
+async function attachFromPicker() {
+  setStatus('');
+  const result = await desktop.capture.pickFile();
+  if (!result.ok) {
+    setStatus(result.error, 'error');
+    return;
+  }
+  if (result.data) applyAttachment(result.data);
+}
+
+async function attachDropped(file) {
+  setStatus('');
+  if (file.size > MAX_DROP_BYTES) {
+    setStatus('That file is too large.', 'error');
+    return;
+  }
+  const result = await desktop.capture.attach(file.name, await file.arrayBuffer());
+  if (result.ok) applyAttachment(result.data);
+  else setStatus(result.error, 'error');
+}
+
+async function removeAttachment() {
+  await desktop.capture.clearAttachment();
+  applyAttachment(null);
+}
+
 function applyType(type) {
-  const isLink = type === 'link';
+  const isLink = type === 'link' && !attached;
   $('url-field').hidden = !isLink;
-  $('content-field').hidden = isLink;
+  $('content-field').hidden = isLink || Boolean(attached);
   $('url').required = isLink;
   $('content').placeholder = type === 'command' ? 'npm run dev' : '';
   requestAnimationFrame(() => desktop.fitWindow(document.getElementById('app').offsetHeight));
@@ -136,7 +188,7 @@ async function open() {
   $('description').value = '';
   $('save').disabled = false;
   setStatus('');
-  applyType(prefill.type);
+  applyAttachment(init.data.attachment);
 
   // The picker is filled once; later captures reuse it
   if (collectionsLoaded) {
@@ -151,6 +203,23 @@ async function open() {
 }
 
 $('type').addEventListener('change', () => applyType($('type').value));
+$('attach').addEventListener('click', attachFromPicker);
+$('attachment-clear').addEventListener('click', removeAttachment);
+
+// Drop a file anywhere on the window to attach it
+document.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  if (!$('form').hidden) $('app').classList.add('dropping');
+});
+document.addEventListener('dragleave', (event) => {
+  if (!event.relatedTarget) $('app').classList.remove('dropping');
+});
+document.addEventListener('drop', (event) => {
+  event.preventDefault();
+  $('app').classList.remove('dropping');
+  const file = event.dataTransfer?.files?.[0];
+  if (file && !$('form').hidden) attachDropped(file);
+});
 $('suggest').addEventListener('click', suggest);
 $('form').addEventListener('submit', save);
 $('close').addEventListener('click', () => desktop.closeWindow());

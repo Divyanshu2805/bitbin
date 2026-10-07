@@ -1,7 +1,7 @@
 {
   "name": "bitbin-desktop",
   "productName": "BitBin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "private": true,
   "description": "Save the clipboard to BitBin from the system tray. Requires BitBin Pro.",
@@ -31,9 +31,11 @@
     "directories": {
       "output": "dist"
     },
+    "publish": null,
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.png",
+      "artifactName": "BitBin-Setup.${ext}"
     },
     "mac": {
       "target": "dmg",

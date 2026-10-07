@@ -112,3 +112,25 @@ test('buildSuggestBody uses the url as content for links', () => {
     url: 'https://a.dev',
   });
 });
+
+test('apiRequest sends a multipart form as is, without forcing a Content-Type', async () => {
+  let init;
+  const form = new FormData();
+  form.set('itemType', 'file');
+  await apiRequest(async (_url, i) => { init = i; return { ok: true, status: 201, json: async () => ({ data: { id: '1' } }) }; },
+    settings, '/files', { method: 'POST', form });
+
+  assert.equal(init.method, 'POST');
+  assert.equal(init.body, form);
+  // fetch adds the multipart boundary itself
+  assert.equal(init.headers['Content-Type'], undefined);
+  assert.equal(init.headers.Authorization, 'Bearer bb_secret');
+});
+
+test('apiRequest turns the host refusing a big body (413, no JSON) into a clear message', async () => {
+  const fetchImpl = async () => ({ ok: false, status: 413, json: async () => { throw new Error('not json'); } });
+  await assert.rejects(
+    apiRequest(fetchImpl, settings, '/files', { method: 'POST', form: new FormData() }),
+    (error) => error instanceof ApiError && error.status === 413 && /too large/.test(error.message)
+  );
+});

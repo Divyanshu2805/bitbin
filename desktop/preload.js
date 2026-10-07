@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('bitbin', {
     collections: call('capture:collections'),
     suggest: call('capture:suggest'),
     save: call('capture:save'),
+    pickFile: call('capture:pick-file'),
+    attach: call('capture:attach'),
+    clearAttachment: call('capture:clear-attachment'),
     onOpen: on('capture:open'),
   },
 

@@ -311,6 +311,57 @@ export async function deleteUserFilesFromR2(userId: string): Promise<void> {
   } while (continuationToken);
 }
 
+export interface StoredObject {
+  key: string;
+  lastModified: Date;
+}
+
+/**
+ * Every object in the bucket, page by page (a generator, so a big bucket is never held in memory).
+ * Used by the orphan sweeper; user-facing code reads one user's folder only.
+ */
+export async function* listR2Objects(): AsyncGenerator<StoredObject> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+  if (!bucketName) throw new Error('R2 bucket configuration missing');
+
+  let continuationToken: string | undefined;
+  do {
+    const listed = await client.send(
+      new ListObjectsV2Command({ Bucket: bucketName, ContinuationToken: continuationToken })
+    );
+    for (const object of listed.Contents ?? []) {
+      if (object.Key && object.LastModified) yield { key: object.Key, lastModified: object.LastModified };
+    }
+    continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while (continuationToken);
+}
+
+/** Largest batch one DeleteObjects call takes */
+const DELETE_BATCH_SIZE = 1000;
+
+/**
+ * Delete objects by key, in batches. Returns how many were deleted; keys the store refused are
+ * left out of the count (and logged), so a partial failure doesn't pass for success.
+ */
+export async function deleteR2Keys(keys: string[]): Promise<number> {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+  if (!bucketName) throw new Error('R2 bucket configuration missing');
+
+  let deleted = 0;
+  for (let i = 0; i < keys.length; i += DELETE_BATCH_SIZE) {
+    const batch = keys.slice(i, i + DELETE_BATCH_SIZE);
+    const response = await client.send(
+      new DeleteObjectsCommand({ Bucket: bucketName, Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true } })
+    );
+    const failed = response.Errors?.length ?? 0;
+    if (failed > 0) console.error(`R2 refused to delete ${failed} object(s):`, response.Errors?.[0]?.Message);
+    deleted += batch.length - failed;
+  }
+  return deleted;
+}
+
 /**
  * Delete file from R2 by URL
  */

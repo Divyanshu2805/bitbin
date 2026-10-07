@@ -61,6 +61,21 @@ header .eyebrow {
 .tags-row { gap: 10px; }
 .tags-row button { height: 42px; padding: 0 16px; font-size: 13px; }
 
+/* ------------------------------------------------------------ attachment */
+.attachment {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--input); border-radius: 4px; background: var(--card);
+}
+.attachment .clip { color: var(--lime); font-size: 16px; }
+.attachment .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 13px var(--mono); }
+.attachment .size { font: 12px var(--mono); color: var(--muted); }
+.attachment button { width: 24px; height: 24px; padding: 0; font-size: 16px; line-height: 1; color: var(--muted); }
+.attachment button:hover { color: var(--fg); }
+#form button.attach { align-self: flex-start; justify-self: start; padding: 0; font: 600 12px var(--mono); letter-spacing: 0.04em; }
+#form button.attach .sub { margin-left: 8px; font-weight: 400; color: var(--muted); }
+/* A file dragged over the window */
+#app.dropping { outline: 2px dashed var(--lime); outline-offset: -8px; }
+
 /* ------------------------------------------------------------ footer */
 .actions { padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--border); }
 .hint { display: flex; align-items: center; gap: 6px; font: 11px var(--mono); color: var(--muted); }

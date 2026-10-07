@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { contentTypeForFile, uploadToR2, validateFile, validateFileContent } from '@/lib/r2';
+import { ingestFile } from '@/lib/file-ingest';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
-import { prisma } from '@/lib/prisma';
+import { getUserPlan } from '@/lib/db/billing';
 import { rejectCrossSite } from '@/lib/same-origin';
-import { sanitizeImage } from '@/lib/image-sanitize';
-import { checkKnownMalware } from '@/lib/virus-check';
 
 export async function POST(request: Request) {
   try {
@@ -20,10 +18,7 @@ export async function POST(request: Request) {
     }
 
     // Check Pro status (file uploads require Pro)
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isPro: true },
-    });
+    const user = await getUserPlan(session.user.id);
 
     if (!user?.isPro) {
       return NextResponse.json(
@@ -53,50 +48,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file
-    const validation = validateFile(
-      { name: file.name, size: file.size, type: file.type },
-      itemType
-    );
-
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+    // Size, type, content, image re-encoding, malware lookup and the upload itself
+    const result = await ingestFile({
+      userId: session.user.id,
+      itemType,
+      fileName: file.name,
+      bytes: Buffer.from(await file.arrayBuffer()),
+      mimeType: file.type,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
-
-    // The bytes must match the extension; the stored type comes from the extension, not the client
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const contentCheck = validateFileContent(buffer, file.name);
-    if (!contentCheck.valid) {
-      return NextResponse.json({ error: contentCheck.error }, { status: 400 });
-    }
-
-    // Photos are written out again: metadata (GPS, device) is stripped and anything that isn't a
-    // real image is refused. Other types pass through unchanged.
-    const sanitized = await sanitizeImage(buffer, file.name);
-    if (!sanitized.ok) {
-      return NextResponse.json({ error: sanitized.error }, { status: 400 });
-    }
-    const bytes = sanitized.buffer;
-
-    // Optional: refuse a file whose hash VirusTotal knows as malware (off without VIRUSTOTAL_API_KEY)
-    const scan = await checkKnownMalware(bytes);
-    if (!scan.safe) {
-      return NextResponse.json({ error: scan.reason }, { status: 400 });
-    }
-
-    const { fileUrl } = await uploadToR2(
-      bytes,
-      file.name,
-      contentTypeForFile(file.name),
-      session.user.id
-    );
 
     return NextResponse.json({
       success: true,
       data: {
-        fileUrl,
-        fileName: file.name,
-        fileSize: bytes.length,
+        fileUrl: result.fileUrl,
+        fileName: result.fileName,
+        fileSize: result.fileSize,
       },
     });
   } catch (error) {
