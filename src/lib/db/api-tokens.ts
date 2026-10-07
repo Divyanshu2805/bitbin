@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { normalizeScopes, type ApiScope } from '@/lib/api-scopes';
 
 /** Most tokens a user can hold at once. */
 export const MAX_API_TOKENS = 10;
@@ -8,8 +9,10 @@ export interface ApiTokenSummary {
   name: string;
   prefix: string;
   lastUsedAt: Date | null;
-  /** null = never expires */
+  /** null only on a legacy row: new tokens always expire */
   expiresAt: Date | null;
+  /** What the token may do */
+  scopes: ApiScope[];
   createdAt: Date;
 }
 
@@ -19,18 +22,24 @@ const summarySelect = {
   prefix: true,
   lastUsedAt: true,
   expiresAt: true,
+  scopes: true,
   createdAt: true,
 } as const;
+
+function toSummary<T extends { scopes: string[] }>(row: T): Omit<T, 'scopes'> & { scopes: ApiScope[] } {
+  return { ...row, scopes: normalizeScopes(row.scopes) };
+}
 
 /**
  * List a user's API tokens (never the hash)
  */
 export async function getApiTokens(userId: string): Promise<ApiTokenSummary[]> {
-  return prisma.apiToken.findMany({
+  const rows = await prisma.apiToken.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
     select: summarySelect,
   });
+  return rows.map(toSummary);
 }
 
 export async function countApiTokens(userId: string): Promise<number> {
@@ -41,17 +50,20 @@ export interface CreateApiTokenData {
   name: string;
   tokenHash: string;
   prefix: string;
-  expiresAt?: Date | null;
+  /** Every token expires */
+  expiresAt: Date;
+  scopes: ApiScope[];
 }
 
 export async function createApiToken(
   userId: string,
   data: CreateApiTokenData
 ): Promise<ApiTokenSummary> {
-  return prisma.apiToken.create({
+  const row = await prisma.apiToken.create({
     data: { userId, ...data },
     select: summarySelect,
   });
+  return toSummary(row);
 }
 
 /**
@@ -68,6 +80,7 @@ export interface ApiTokenOwner {
   tokenId: string;
   lastUsedAt: Date | null;
   expiresAt: Date | null;
+  scopes: ApiScope[];
   user: {
     id: string;
     email: string;
@@ -87,6 +100,7 @@ export async function findApiTokenByHash(tokenHash: string): Promise<ApiTokenOwn
       id: true,
       lastUsedAt: true,
       expiresAt: true,
+      scopes: true,
       user: { select: { id: true, email: true, name: true, isPro: true } },
     },
   });
@@ -96,6 +110,7 @@ export async function findApiTokenByHash(tokenHash: string): Promise<ApiTokenOwn
     tokenId: token.id,
     lastUsedAt: token.lastUsedAt,
     expiresAt: token.expiresAt,
+    scopes: normalizeScopes(token.scopes),
     user: token.user,
   };
 }

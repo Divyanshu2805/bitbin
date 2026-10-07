@@ -22,7 +22,7 @@ model User {
   isPro                Boolean   @default(false)
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
-  editorPreferences    Json?     // User's Monaco editor preferences
+  editorPreferences    Json? // User's Monaco editor preferences
   sessionVersion       Int       @default(0) // Bumped on password change/reset; sessions issued earlier stop working
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -91,6 +91,7 @@ model ApiToken {
   prefix     String // First characters of the token, shown in the UI to tell tokens apart
   lastUsedAt DateTime?
   expiresAt  DateTime? // null = never expires; checked on every API request
+  scopes     String[]  @default([]) // What the token may do: collections:read, items:write, ai (see lib/api-scopes.ts)
   createdAt  DateTime  @default(now())
 
   userId String

@@ -27,11 +27,19 @@ function request(authorization?: string) {
   });
 }
 
-function owner(isPro: boolean, lastUsedAt: Date | null = null, expiresAt: Date | null = null) {
+const ALL_SCOPES = ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[];
+
+function owner(
+  isPro: boolean,
+  lastUsedAt: Date | null = null,
+  expiresAt: Date | null = null,
+  scopes = ALL_SCOPES
+) {
   return {
     tokenId: 'token-1',
     lastUsedAt,
     expiresAt,
+    scopes,
     user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro },
   };
 }
@@ -103,8 +111,50 @@ describe('authenticateApiRequest', () => {
     const result = await authenticateApiRequest(request(`Bearer ${TOKEN}`));
 
     expect(result.response).toBeUndefined();
-    expect(result.user).toEqual({ id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true });
+    expect(result.user).toEqual({ id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true, scopes: ALL_SCOPES });
     expect(mockTouch).toHaveBeenCalledWith('token-1');
+  });
+
+  describe('scopes', () => {
+    it('lets a token through an endpoint it has the scope for', async () => {
+      mockFind.mockResolvedValue(owner(true, null, null, ['items:write']));
+
+      const result = await authenticateApiRequest(request(`Bearer ${TOKEN}`), 'items:write');
+
+      expect(result.response).toBeUndefined();
+      expect(result.user?.scopes).toEqual(['items:write']);
+    });
+
+    it('returns 403 for an endpoint the token lacks the scope for, before the rate limit and the touch', async () => {
+      mockFind.mockResolvedValue(owner(true, null, null, ['items:write']));
+
+      const { response } = await authenticateApiRequest(request(`Bearer ${TOKEN}`), 'ai');
+
+      expect(response?.status).toBe(403);
+      expect((await response?.json()).error).toContain('AI suggestions');
+      expect(mockRateLimit).not.toHaveBeenCalled();
+      expect(mockTouch).not.toHaveBeenCalled();
+    });
+
+    it('treats a token with no scopes as able to do nothing that needs one', async () => {
+      mockFind.mockResolvedValue(owner(true, null, null, []));
+
+      expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`), 'collections:read')).response?.status).toBe(403);
+    });
+
+    it('asks for no scope on an endpoint that needs none (checking a token)', async () => {
+      mockFind.mockResolvedValue(owner(true, null, null, []));
+
+      expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`))).user).toBeDefined();
+    });
+
+    it('still reports an expired or non-Pro token before the scope', async () => {
+      mockFind.mockResolvedValue(owner(false, null, null, []));
+
+      expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`), 'ai')).response?.status).toBe(403);
+      mockFind.mockResolvedValue(owner(true, null, new Date(Date.now() - 1000), ALL_SCOPES));
+      expect((await authenticateApiRequest(request(`Bearer ${TOKEN}`), 'ai')).response?.status).toBe(401);
+    });
   });
 
   it('skips the lastUsedAt write when it was updated recently', async () => {

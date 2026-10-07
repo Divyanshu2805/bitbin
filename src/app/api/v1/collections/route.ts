@@ -7,7 +7,7 @@ import { getUserCollections } from '@/lib/db/collections'
  */
 export async function GET(request: Request) {
   try {
-    const { user, response } = await authenticateApiRequest(request)
+    const { user, response } = await authenticateApiRequest(request, 'collections:read')
     if (response) return response
 
     const collections = await getUserCollections(user.id)

@@ -19,7 +19,7 @@ import { suggestTagsForUser } from '@/lib/ai-tags';
 const mockAuthenticate = vi.mocked(authenticateApiRequest);
 const mockSuggest = vi.mocked(suggestTagsForUser);
 
-const apiUser = { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true as const };
+const apiUser = { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true as const, scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[] };
 
 function post(body: unknown) {
   return new Request('http://localhost/api/v1/ai/tags', {

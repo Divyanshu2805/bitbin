@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { findApiTokenByHash, touchApiToken } from '@/lib/db/api-tokens';
 import { hashApiToken, readBearerToken } from '@/lib/api-tokens';
 import { checkRateLimit, formatRetryTime } from '@/lib/rate-limit';
+import { API_SCOPE_INFO, type ApiScope } from '@/lib/api-scopes';
 
 /** How stale `lastUsedAt` may get before a request writes it again. */
 const TOUCH_INTERVAL_MS = 60 * 1000;
@@ -11,6 +12,8 @@ export interface ApiUser {
   email: string;
   name: string | null;
   isPro: true;
+  /** What the token may do */
+  scopes: ApiScope[];
 }
 
 export type ApiAuthResult =
@@ -27,8 +30,11 @@ export function apiError(error: string, status: number, headers?: HeadersInit): 
  * The plan is read from the database on every call, so a cancelled
  * subscription loses API access on its next request. Cookies are ignored:
  * the token API is Bearer-only.
+ *
+ * Pass the scope the endpoint needs; a token without it gets a 403. (Only `GET /api/v1/me`, which
+ * just proves a token works, takes none.)
  */
-export async function authenticateApiRequest(request: Request): Promise<ApiAuthResult> {
+export async function authenticateApiRequest(request: Request, scope?: ApiScope): Promise<ApiAuthResult> {
   const token = readBearerToken(request.headers.get('authorization'));
   if (!token) {
     return { response: apiError('Missing or malformed API token', 401) };
@@ -45,6 +51,15 @@ export async function authenticateApiRequest(request: Request): Promise<ApiAuthR
 
   if (!found.user.isPro) {
     return { response: apiError('The BitBin extension requires a Pro subscription', 403) };
+  }
+
+  if (scope && !found.scopes.includes(scope)) {
+    return {
+      response: apiError(
+        `This token isn't allowed to do that. Create a token with the "${API_SCOPE_INFO[scope].label}" permission.`,
+        403
+      ),
+    };
   }
 
   const rateLimit = await checkRateLimit('api', found.user.id);
@@ -67,7 +82,7 @@ export async function authenticateApiRequest(request: Request): Promise<ApiAuthR
   }
 
   return {
-    user: { ...found.user, isPro: true },
+    user: { ...found.user, isPro: true, scopes: found.scopes },
     tokenId: found.tokenId,
   };
 }

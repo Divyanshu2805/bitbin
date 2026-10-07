@@ -9,19 +9,25 @@ import {
   type ApiTokenSummary,
 } from '@/lib/db/api-tokens';
 import { generateApiToken } from '@/lib/api-tokens';
+import { API_SCOPES } from '@/lib/api-scopes';
 import { parseZodErrors, validateId } from '@/lib/validation';
 import { getAuthedSession, type ActionResult } from '@/lib/action-utils';
 
 // Not exported: a 'use server' file may only export async functions.
-/** Lifetimes a token can be given are 30, 90 or 365 days, or `null` for never. */
+/** A token lives 30, 90 or 365 days. There is no "never": a leaked token must eventually stop working. */
 const DEFAULT_TOKEN_LIFETIME_DAYS = 90;
 
 const createApiTokenSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(50, 'Name must be 50 characters or fewer'),
   expiresInDays: z
-    .union([z.literal(30), z.literal(90), z.literal(365), z.null()], { message: 'Invalid expiry' })
+    .union([z.literal(30), z.literal(90), z.literal(365)], { message: 'Invalid expiry' })
     .optional()
     .default(DEFAULT_TOKEN_LIFETIME_DAYS),
+  // What the token may do (least privilege: the caller picks, and must pick at least one)
+  scopes: z
+    .array(z.enum(API_SCOPES, { message: 'Invalid permission' }))
+    .min(1, 'Choose at least one permission')
+    .transform((scopes) => [...new Set(scopes)]),
 });
 
 export type CreateApiTokenInput = z.input<typeof createApiTokenSchema>;
@@ -57,10 +63,8 @@ export async function createApiToken(
     name: parsed.data.name,
     tokenHash,
     prefix,
-    expiresAt:
-      parsed.data.expiresInDays === null
-        ? null
-        : new Date(Date.now() + parsed.data.expiresInDays * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + parsed.data.expiresInDays * 24 * 60 * 60 * 1000),
+    scopes: parsed.data.scopes,
   });
 
   return { success: true, data: { token, summary } };

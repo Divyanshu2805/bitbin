@@ -32,7 +32,7 @@ describe('GET /api/v1/collections', () => {
 
   it("lists the token owner's collections only", async () => {
     mockAuthenticate.mockResolvedValue({
-      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true },
+      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true, scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[] },
       tokenId: 'token-1',
     });
     mockCollections.mockResolvedValue([{ id: 'c1', name: 'DevOps' }] as never);
@@ -46,7 +46,7 @@ describe('GET /api/v1/collections', () => {
 
   it('returns a generic 500 when the query fails', async () => {
     mockAuthenticate.mockResolvedValue({
-      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true },
+      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true, scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[] },
       tokenId: 'token-1',
     });
     mockCollections.mockRejectedValue(new Error('connection to 10.0.0.5 refused'));

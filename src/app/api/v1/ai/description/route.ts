@@ -8,7 +8,7 @@ import { describeItemForUser } from '@/lib/ai-description'
  */
 export async function POST(request: Request) {
   try {
-    const { user, response } = await authenticateApiRequest(request)
+    const { user, response } = await authenticateApiRequest(request, 'ai')
     if (response) return response
 
     let body: unknown

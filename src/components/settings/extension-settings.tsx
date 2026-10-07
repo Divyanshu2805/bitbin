@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { createApiToken, revokeApiToken } from '@/actions/api-tokens';
 import { formatExpiry, formatRelativeDate } from '@/lib/utils/date';
 import type { ApiTokenSummary } from '@/lib/db/api-tokens';
+import { API_SCOPES, API_SCOPE_INFO, type ApiScope } from '@/lib/api-scopes';
 
 interface ExtensionSettingsProps {
   isPro: boolean;
@@ -31,6 +32,8 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
   const router = useRouter();
   const [name, setName] = useState('Browser extension');
   const [lifetime, setLifetime] = useState('90');
+  // Least privilege: pick what the token may do (all three suit the extension and the desktop app)
+  const [scopes, setScopes] = useState<ApiScope[]>([...API_SCOPES]);
   const [creating, setCreating] = useState(false);
   const [newToken, setNewToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -42,11 +45,16 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
     try {
       const result = await createApiToken({
         name,
-        expiresInDays: lifetime === 'never' ? null : (Number(lifetime) as 30 | 90 | 365),
+        expiresInDays: Number(lifetime) as 30 | 90 | 365,
+        scopes,
       });
       if (!result.success || !result.data) {
         toast.error(
-          result.fieldErrors?.name?.[0] ?? result.fieldErrors?.expiresInDays?.[0] ?? result.error ?? 'Failed to create token'
+          result.fieldErrors?.name?.[0] ??
+            result.fieldErrors?.expiresInDays?.[0] ??
+            result.fieldErrors?.scopes?.[0] ??
+            result.error ??
+            'Failed to create token'
         );
         return;
       }
@@ -159,11 +167,10 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                     <SelectItem value="30">In 30 days</SelectItem>
                     <SelectItem value="90">In 90 days</SelectItem>
                     <SelectItem value="365">In 1 year</SelectItem>
-                    <SelectItem value="never">Never</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={creating || name.trim().length === 0}>
+              <Button type="submit" disabled={creating || name.trim().length === 0 || scopes.length === 0}>
                 {creating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -172,6 +179,30 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                 Create token
               </Button>
             </form>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium text-foreground">What this token can do</legend>
+              {API_SCOPES.map((scope) => (
+                <label key={scope} className="flex cursor-pointer items-start gap-2.5 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 size-4 accent-[var(--brand-lime)]"
+                    checked={scopes.includes(scope)}
+                    onChange={(e) =>
+                      setScopes((current) =>
+                        e.target.checked ? [...current, scope] : current.filter((s) => s !== scope)
+                      )
+                    }
+                  />
+                  <span>
+                    <span className="font-medium text-foreground">{API_SCOPE_INFO[scope].label}</span>
+                    <span className="block text-xs text-muted-foreground">{API_SCOPE_INFO[scope].description}</span>
+                  </span>
+                </label>
+              ))}
+              {scopes.length === 0 && (
+                <p className="text-xs text-destructive">Choose at least one permission.</p>
+              )}
+            </fieldset>
             </>
           )}
 
@@ -202,6 +233,10 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                         <p className="truncate font-mono text-xs text-muted-foreground">
                           {token.prefix}… · created {formatRelativeDate(token.createdAt)} ·{' '}
                           {token.lastUsedAt ? `used ${formatRelativeDate(token.lastUsedAt)}` : 'never used'} ·{' '}
+                          {token.scopes.length > 0
+                            ? token.scopes.map((scope) => API_SCOPE_INFO[scope].label.toLowerCase()).join(', ')
+                            : 'no permissions'}{' '}
+                          ·{' '}
                           <span
                             className={
                               token.expiresAt && token.expiresAt.getTime() <= Date.now()

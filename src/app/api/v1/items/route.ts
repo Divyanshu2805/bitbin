@@ -11,7 +11,7 @@ const API_ITEM_TYPES = ['snippet', 'prompt', 'command', 'note', 'link']
  */
 export async function POST(request: Request) {
   try {
-    const { user, response } = await authenticateApiRequest(request)
+    const { user, response } = await authenticateApiRequest(request, 'items:write')
     if (response) return response
 
     let body: unknown

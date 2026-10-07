@@ -38,9 +38,12 @@ const summary = {
   name: 'Chrome',
   prefix: 'bb_abcdefg',
   lastUsedAt: null,
-  expiresAt: null,
+  expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+  scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[],
   createdAt: new Date(),
 };
+
+const ALL = ['collections:read', 'items:write', 'ai'] as const;
 
 describe('createApiToken server action', () => {
   beforeEach(() => {
@@ -52,7 +55,7 @@ describe('createApiToken server action', () => {
   it('returns error when not authenticated', async () => {
     mockAuth.mockResolvedValue(null);
 
-    const result = await createApiToken({ name: 'Chrome' });
+    const result = await createApiToken({ name: 'Chrome', scopes: [...ALL] });
 
     expect(result).toEqual({ success: false, error: 'Unauthorized' });
   });
@@ -60,7 +63,7 @@ describe('createApiToken server action', () => {
   it('requires Pro', async () => {
     signIn(false);
 
-    const result = await createApiToken({ name: 'Chrome' });
+    const result = await createApiToken({ name: 'Chrome', scopes: [...ALL] });
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('The browser extension requires a Pro subscription');
@@ -70,7 +73,7 @@ describe('createApiToken server action', () => {
   it('validates the name', async () => {
     signIn(true);
 
-    const result = await createApiToken({ name: '   ' });
+    const result = await createApiToken({ name: '   ', scopes: [...ALL] });
 
     expect(result.success).toBe(false);
     expect(result.fieldErrors?.name).toBeDefined();
@@ -80,7 +83,7 @@ describe('createApiToken server action', () => {
     signIn(true);
     mockCount.mockResolvedValue(10);
 
-    const result = await createApiToken({ name: 'Chrome' });
+    const result = await createApiToken({ name: 'Chrome', scopes: [...ALL] });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('up to 10 tokens');
@@ -90,7 +93,7 @@ describe('createApiToken server action', () => {
   it('stores only the hash and returns the plain token once', async () => {
     signIn(true);
 
-    const result = await createApiToken({ name: '  Chrome  ' });
+    const result = await createApiToken({ name: '  Chrome  ', scopes: [...ALL] });
 
     expect(result.success).toBe(true);
     const token = result.data!.token;
@@ -100,6 +103,7 @@ describe('createApiToken server action', () => {
       tokenHash: hashApiToken(token),
       prefix: token.slice(0, 10),
       expiresAt: expect.any(Date),
+      scopes: [...ALL],
     });
     expect(JSON.stringify(mockCreate.mock.calls[0])).not.toContain(token);
   });
@@ -110,7 +114,7 @@ describe('createApiToken server action', () => {
     signIn(true);
     const before = Date.now();
 
-    await createApiToken({ name: 'Chrome' });
+    await createApiToken({ name: 'Chrome', scopes: [...ALL] });
 
     const expiresAt = mockCreate.mock.calls[0][1].expiresAt as Date;
     expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + 90 * DAY);
@@ -121,25 +125,54 @@ describe('createApiToken server action', () => {
     signIn(true);
     const before = Date.now();
 
-    await createApiToken({ name: 'Chrome', expiresInDays: days as 30 | 365 });
+    await createApiToken({ name: 'Chrome', scopes: [...ALL], expiresInDays: days as 30 | 365 });
 
     const expiresAt = mockCreate.mock.calls[0][1].expiresAt as Date;
     expect(expiresAt.getTime()).toBeGreaterThanOrEqual(before + days * DAY);
     expect(expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + days * DAY);
   });
 
-  it('lets a token never expire when asked', async () => {
+  it('has no never-expires option: null is refused', async () => {
     signIn(true);
 
-    await createApiToken({ name: 'Chrome', expiresInDays: null });
+    const result = await createApiToken({ name: 'Chrome', scopes: [...ALL], expiresInDays: null as unknown as 30 });
 
-    expect(mockCreate.mock.calls[0][1].expiresAt).toBeNull();
+    expect(result.success).toBe(false);
+    expect(result.fieldErrors?.expiresInDays).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('stores exactly the permissions asked for, once each', async () => {
+    signIn(true);
+
+    await createApiToken({ name: 'Saver', scopes: ['items:write', 'items:write'] });
+
+    expect(mockCreate.mock.calls[0][1].scopes).toEqual(['items:write']);
+  });
+
+  it('requires at least one permission', async () => {
+    signIn(true);
+
+    const result = await createApiToken({ name: 'Nothing', scopes: [] });
+
+    expect(result.success).toBe(false);
+    expect(result.fieldErrors?.scopes).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a permission that does not exist', async () => {
+    signIn(true);
+
+    const result = await createApiToken({ name: 'Admin', scopes: ['admin' as unknown as 'ai'] });
+
+    expect(result.success).toBe(false);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it('rejects a lifetime that is not on the list', async () => {
     signIn(true);
 
-    const result = await createApiToken({ name: 'Chrome', expiresInDays: 7 as unknown as 30 });
+    const result = await createApiToken({ name: 'Chrome', scopes: [...ALL], expiresInDays: 7 as unknown as 30 });
 
     expect(result.success).toBe(false);
     expect(result.fieldErrors?.expiresInDays).toBeDefined();

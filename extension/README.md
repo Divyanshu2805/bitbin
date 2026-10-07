@@ -23,7 +23,7 @@ Pro users download it from **Settings → Browser extension → Download extensi
 
 1. Open `chrome://extensions` (or `edge://extensions`) and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this `extension/` folder. The options page opens.
-3. In BitBin (as a Pro user), go to **Settings → Browser extension**, create a token and copy it.
+3. In BitBin (as a Pro user), go to **Settings → Browser extension**, create a token and copy it. Leave all three permissions ticked (list collections, save items, AI suggestions): the picker needs the first, saving needs the second and ✦ Suggest needs the third. A token without one of them still works, but the matching feature answers with a permission error.
 4. In the options page, pick the site (use **Local development** with `npm run dev`), paste the token and click **Save and test**.
 5. Select text on any page and press **Ctrl+Shift+B**, or right-click it and choose **Save selection to BitBin**.
 

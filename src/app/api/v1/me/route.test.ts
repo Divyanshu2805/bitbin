@@ -28,14 +28,14 @@ describe('GET /api/v1/me', () => {
 
   it('returns only the email, name and plan of the token owner', async () => {
     mockAuthenticate.mockResolvedValue({
-      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true },
+      user: { id: 'user-1', email: 'a@b.dev', name: 'A', isPro: true, scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[] },
       tokenId: 'token-1',
     });
 
     const res = await GET(request());
 
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ data: { email: 'a@b.dev', name: 'A', isPro: true } });
+    expect(await res.json()).toEqual({ data: { email: 'a@b.dev', name: 'A', isPro: true, scopes: ['collections:read', 'items:write', 'ai'] as ('collections:read' | 'items:write' | 'ai')[] } });
   });
 
   it('returns a generic 500 on an unexpected failure', async () => {
