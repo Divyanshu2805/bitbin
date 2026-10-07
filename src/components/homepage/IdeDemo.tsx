@@ -208,7 +208,7 @@ function TypedCode({ n }: { n: number }) {
     lines.push(
       // Long lines wrap under their own number on a narrow card instead of running off its edge
       <div key={i} className="flex whitespace-pre-wrap">
-        <span className="mr-3 w-5 shrink-0 sm:mr-5 select-none text-right text-muted-foreground/40">{i + 1}</span>
+        <span className="mr-3 w-5 shrink-0 sm:mr-5 select-none text-right text-faint dark:text-muted-foreground/40">{i + 1}</span>
         <span className="min-w-0">
           {parts}
           {typing ? <span className="caret" /> : null}
@@ -318,7 +318,7 @@ function RecentRow({ row, fresh = false }: { row: Row; fresh?: boolean }) {
       <span className="ml-auto hidden shrink-0 gap-2 font-mono text-[10.5px] text-muted-foreground sm:flex">
         {row.tags.map((tag) => (
           <span key={tag}>
-            <span className="text-muted-foreground/50">#</span>
+            <span className="text-faint dark:text-muted-foreground/50">#</span>
             {tag}
           </span>
         ))}
@@ -398,8 +398,8 @@ function DashboardFace({ t }: { t: number }) {
 
         {/* `// recent`, as the list view draws it; the saved snippet lands on top */}
         <p className="mt-5 mb-2 font-mono text-[11px] text-muted-foreground">
-          <span className="text-muted-foreground/50">{"// "}</span>recent{" "}
-          <span className="text-muted-foreground/60">[{landed ? 5 : 4}]</span>
+          <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>recent{" "}
+          <span className="text-faint dark:text-muted-foreground/60">[{landed ? 5 : 4}]</span>
         </p>
         <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)]">
           {landed ? <RecentRow row={SAVED} fresh /> : null}
@@ -488,7 +488,7 @@ function EditorFace({ t }: { t: number }) {
             <span
               className={cn(
                 "ml-1 inline-flex items-center gap-1 font-mono text-[11px]",
-                thinking ? "text-lime" : "text-muted-foreground/60"
+                thinking ? "text-lime" : "text-faint dark:text-muted-foreground/60"
               )}
             >
               <Sparkles className={cn("size-3.5", thinking && "animate-pulse")} />

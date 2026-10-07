@@ -129,7 +129,7 @@ function TagInput({
         }}
         onBlur={() => draft.trim() && add(draft)}
         placeholder={tags.length ? "" : "react, hooks…"}
-        className="min-w-[6rem] flex-1 bg-transparent px-1 text-base outline-none lg:text-sm placeholder:text-muted-foreground/65"
+        className="min-w-[6rem] flex-1 bg-transparent px-1 text-base outline-none lg:text-sm placeholder:text-faint dark:placeholder:text-muted-foreground/65"
       />
     </div>
   );

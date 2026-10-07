@@ -81,28 +81,6 @@ export function usePagePaused() {
   );
 }
 
-/** Counts from 0 to `target` with an ease-out once `active` turns true. */
-export function useCountUp(target: number, active: boolean, duration = 1300) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let frame = 0;
-    if (prefersReducedMotion()) {
-      frame = requestAnimationFrame(() => setValue(target));
-      return () => cancelAnimationFrame(frame);
-    }
-    const start = performance.now();
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - start) / duration);
-      setValue(Math.round(target * (1 - (1 - progress) ** 3)));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, active, duration]);
-  return value;
-}
-
 /** Whether the page has scrolled past `threshold`. */
 export function useScrolled(threshold = 24) {
   const [scrolled, setScrolled] = useState(false);

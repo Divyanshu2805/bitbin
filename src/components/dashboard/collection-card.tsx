@@ -175,7 +175,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             {collection.description}
           </p>
         ) : (
-          <p className="mt-3 font-mono text-xs text-muted-foreground/50">{"// no description"}</p>
+          <p className="mt-3 font-mono text-xs text-faint dark:text-muted-foreground/50">{"// no description"}</p>
         )}
 
         {/* What's inside, by type: a thin stacked bar and the type icons */}

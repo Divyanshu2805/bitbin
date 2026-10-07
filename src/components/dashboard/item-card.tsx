@@ -72,7 +72,7 @@ function ContentPreview({ item }: { item: ItemWithType }) {
         <div className="py-2">
           {shown.map((line) => (
             <div key={line.number} className="flex whitespace-pre pr-3">
-              <span className="w-9 shrink-0 select-none pr-3 text-right tabular-nums text-muted-foreground/60">
+              <span className="w-9 shrink-0 select-none pr-3 text-right tabular-nums text-faint dark:text-muted-foreground/60">
                 {type === "command" ? <span className="text-lime">$</span> : line.number}
               </span>
               <span className="min-w-0 truncate text-foreground">{line.text}</span>
@@ -383,12 +383,12 @@ export default function ItemCard({ item }: ItemCardProps) {
                 key={tag}
                 className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-foreground/80 transition-colors group-hover:border-[color-mix(in_srgb,var(--accent-color)_35%,var(--border))]"
               >
-                <span className="text-muted-foreground/50">#</span>
+                <span className="text-faint dark:text-muted-foreground/50">#</span>
                 {tag}
               </span>
             ))}
             {item.tags.length > 3 && (
-              <span className="px-1 py-0.5 text-muted-foreground/50">+{item.tags.length - 3}</span>
+              <span className="px-1 py-0.5 text-faint dark:text-muted-foreground/50">+{item.tags.length - 3}</span>
             )}
           </div>
           <span className="shrink-0 font-mono text-[11px] text-muted-foreground md:hidden">

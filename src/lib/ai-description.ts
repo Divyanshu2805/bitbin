@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getOpenAIClient, AI_MODEL } from '@/lib/openai'
+import { extractJson, requestJsonText } from '@/lib/ai-json'
 import { checkAiRateLimit, type ActionResult } from '@/lib/action-utils'
 
 const MAX_CONTENT_LENGTH = 2000
@@ -51,28 +52,25 @@ export async function describeItemForUser(
   try {
     const client = getOpenAIClient()
 
-    const response = await client.responses.create({
+    const text = await requestJsonText(client, {
       model: AI_MODEL,
       instructions:
         'You are a developer tool assistant that writes concise descriptions for code snippets, prompts, commands, notes, and links. Return a JSON object with a "description" key containing a 1-2 sentence description. The description should be clear, informative, and summarize what the item is or does. Only return valid JSON.',
       input: `Write a concise 1-2 sentence description for this developer item. Respond in json format with a "description" string.\n\n${contextParts}`,
-      text: {
-        format: { type: 'json_object' },
-      },
     })
 
-    const text = response.output_text
     if (!text) {
       return { success: false, error: 'AI returned an empty response' }
     }
 
-    const parsed_response = JSON.parse(text)
+    // The reply may be bare JSON, fenced, or wrapped in a sentence
+    const parsed_response = extractJson(text) as { description?: unknown } | string | null | undefined
 
     // Handle both { description: "..." } and plain string
     let description: string
     if (typeof parsed_response === 'string') {
       description = parsed_response
-    } else if (parsed_response.description && typeof parsed_response.description === 'string') {
+    } else if (parsed_response && typeof parsed_response.description === 'string') {
       description = parsed_response.description
     } else {
       return { success: false, error: 'AI returned an unexpected format' }

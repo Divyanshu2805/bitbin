@@ -86,7 +86,7 @@ function DrawerSkeleton() {
 function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
     <Label htmlFor={htmlFor} className="gap-0 font-mono text-[11px] font-normal text-muted-foreground">
-      <span className="mr-[1ch] text-muted-foreground/50">{"//"}</span>
+      <span className="mr-[1ch] text-faint dark:text-muted-foreground/50">{"//"}</span>
       {children}
     </Label>
   );
@@ -96,7 +96,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-2 font-mono text-[11px] text-muted-foreground">
-      <span className="text-muted-foreground/50">{"// "}</span>
+      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
       {children}
     </p>
   );
@@ -129,7 +129,7 @@ function Description({ text }: { text: string }) {
       {/* The section label, with a copy button for the description */}
       <div className="mb-2 flex items-center gap-2">
         <p className="font-mono text-[11px] text-muted-foreground">
-          <span className="text-muted-foreground/50">{"// "}</span>
+          <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
           description
         </p>
         <button
@@ -137,7 +137,7 @@ function Description({ text }: { text: string }) {
           onClick={() => copy(text)}
           className={cn(
             "flex items-center gap-1 rounded px-1 font-mono text-[11px] transition-colors",
-            copied ? "text-lime" : "text-muted-foreground/60 hover:text-(--grid-color)"
+            copied ? "text-lime" : "text-faint dark:text-muted-foreground/60 hover:text-(--grid-color)"
           )}
           aria-label="Copy description"
           title="Copy description"
@@ -557,11 +557,11 @@ export default function ItemDrawer() {
                     <span style={{ color: iconColor }}>{item.itemType.name}</span>
                     {!isEditing && item.language && (
                       <>
-                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-faint dark:text-muted-foreground/40">·</span>
                         <span className="text-muted-foreground">{item.language}</span>
                       </>
                     )}
-                    <span className="text-muted-foreground/40">·</span>
+                    <span className="text-faint dark:text-muted-foreground/40">·</span>
                     <span className="text-muted-foreground">updated {formatRelativeDate(item.updatedAt)}</span>
                   </div>
                 </div>
@@ -877,7 +877,7 @@ export default function ItemDrawer() {
                             key={tag}
                             className="max-w-full rounded-md border border-border bg-card px-2 py-0.5 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]"
                           >
-                            <span className="text-muted-foreground/50">#</span>
+                            <span className="text-faint dark:text-muted-foreground/50">#</span>
                             {tag}
                           </span>
                         ))}

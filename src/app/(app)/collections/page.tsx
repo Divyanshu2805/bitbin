@@ -11,11 +11,11 @@ import { COLLECTIONS_PER_PAGE } from '@/lib/constants/pagination';
 import { FolderOpen } from 'lucide-react';
 
 interface CollectionsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ after?: string; before?: string }>;
 }
 
 export default async function CollectionsPage({ searchParams }: CollectionsPageProps) {
-  const { page: pageParam } = await searchParams;
+  const { after, before } = await searchParams;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -28,12 +28,9 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
     redirect('/sign-in');
   }
 
-  // Parse page number (default to 1)
-  const currentPage = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+  const paginatedCollections = await getAllCollections(user.id, { after, before }, COLLECTIONS_PER_PAGE);
 
-  const paginatedCollections = await getAllCollections(user.id, currentPage, COLLECTIONS_PER_PAGE);
-
-  const { collections, totalCount, totalPages } = paginatedCollections;
+  const { collections, totalCount, pageInfo } = paginatedCollections;
 
   return (
     <>
@@ -67,11 +64,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
         )}
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          baseUrl="/collections"
-        />
+        <Pagination pageInfo={pageInfo} baseUrl="/collections" />
       </div>
     </>
   );

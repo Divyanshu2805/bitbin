@@ -56,7 +56,7 @@ export default function ProfileInfo({ user, isPro }: ProfileInfoProps) {
           {tiles.map((tile) => (
             <div key={tile.key} className="rounded-lg border border-border bg-background/50 px-4 py-3">
               <p className="font-mono text-[11px] text-muted-foreground">
-                <span className="text-muted-foreground/50">{"// "}</span>
+                <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
                 {tile.key}
               </p>
               <p className="mt-1.5 flex items-center gap-2 text-sm font-medium [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
@@ -73,7 +73,7 @@ export default function ProfileInfo({ user, isPro }: ProfileInfoProps) {
             )}
           >
             <p className="font-mono text-[11px] text-muted-foreground">
-              <span className="text-muted-foreground/50">{"// "}</span>
+              <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
               plan
             </p>
             <div className="mt-1.5 flex items-center justify-between gap-2">

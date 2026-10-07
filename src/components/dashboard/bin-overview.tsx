@@ -28,7 +28,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
       limit: isPro ? undefined : MAX_COLLECTIONS,
       color: "var(--brand-cyan)",
     },
-    { label: "starred items", value: stats.favoriteItems, color: "light-dark(#a16207, #ffc857)" },
+    { label: "starred items", value: stats.favoriteItems, color: "light-dark(#7f4d06, #ffc857)" },
     { label: "starred collections", value: stats.favoriteCollections, color: "var(--brand-coral)" },
   ];
 
@@ -86,7 +86,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
       <div className="border-t border-border px-5 pt-4 pb-5">
         <div className="mb-3 flex items-center justify-between font-mono text-[11px] text-muted-foreground">
           <span>
-            <span className="text-muted-foreground/50">{"// "}</span>by type
+            <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>by type
           </span>
           <span className="tabular-nums">{total} total</span>
         </div>
@@ -129,7 +129,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
                   {type.name}s
                   <span className="tabular-nums text-muted-foreground">{type.count}</span>
                   {total > 0 && type.count > 0 && (
-                    <span className="hidden tabular-nums text-muted-foreground/50 sm:inline">
+                    <span className="hidden tabular-nums text-faint dark:text-muted-foreground/50 sm:inline">
                       {Math.round((type.count / total) * 100)}%
                     </span>
                   )}

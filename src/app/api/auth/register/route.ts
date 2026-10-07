@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import {
+  createUser,
+  deleteUserQuietly,
+  findUserByEmail,
+  replaceUnverifiedRegistration,
+} from '@/lib/db/accounts';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/email';
 import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit';
@@ -95,9 +100,7 @@ export async function POST(request: Request) {
     // Check if email verification should be skipped (development only)
     const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true';
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await findUserByEmail(email);
 
     if (existingUser) {
       if (skipVerification) {
@@ -116,13 +119,7 @@ export async function POST(request: Request) {
       // An unverified password account: whoever registers last, with access to
       // the mailbox, owns it. A password set by someone who never could verify
       // the address (a pre-registration squat) is replaced, not kept.
-      await prisma.user.update({
-        where: { id: existingUser.id },
-        data: {
-          name: name || null,
-          password: await bcrypt.hash(password, 12),
-        },
-      });
+      await replaceUnverifiedRegistration(existingUser.id, name || null, await bcrypt.hash(password, 12));
       const token = await generateVerificationToken(email);
       await sendVerificationEmail(email, token);
       return NextResponse.json(CHECK_EMAIL, { status: 201 });
@@ -132,13 +129,11 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user (emailVerified is set if skipping verification)
-    const user = await prisma.user.create({
-      data: {
-        name: name || null,
-        email,
-        password: hashedPassword,
-        emailVerified: skipVerification ? new Date() : null,
-      },
+    const user = await createUser({
+      name: name || null,
+      email,
+      passwordHash: hashedPassword,
+      emailVerified: skipVerification ? new Date() : null,
     });
 
     // Generate verification token and send email (unless skipped)
@@ -148,7 +143,7 @@ export async function POST(request: Request) {
         await sendVerificationEmail(email, token);
       } catch (error) {
         // Don't leave an account the user can't verify and can't re-register
-        await prisma.user.delete({ where: { id: user.id } }).catch(() => {});
+        await deleteUserQuietly(user.id);
         throw error;
       }
     }

@@ -18,12 +18,12 @@ import { readableColor } from '@/lib/utils/color';
 
 interface CollectionDetailPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ after?: string; before?: string }>;
 }
 
 export default async function CollectionDetailPage({ params, searchParams }: CollectionDetailPageProps) {
   const { id: collectionId } = await params;
-  const { page: pageParam } = await searchParams;
+  const { after, before } = await searchParams;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -42,12 +42,9 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
     notFound();
   }
 
-  // Parse page number (default to 1)
-  const currentPage = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+  const paginatedItems = await getItemsByCollection(user.id, collectionId, { after, before }, ITEMS_PER_PAGE);
 
-  const paginatedItems = await getItemsByCollection(user.id, collectionId, currentPage, ITEMS_PER_PAGE);
-
-  const { items, totalPages } = paginatedItems;
+  const { items, pageInfo } = paginatedItems;
   const accent = readableColor(collection.dominantColor || '#6b7280');
   // A readable path segment for the header pill, e.g. "react-patterns"
   const slug = collection.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'collection';
@@ -144,11 +141,7 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
         )}
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          baseUrl={`/collections/${collectionId}`}
-        />
+        <Pagination pageInfo={pageInfo} baseUrl={`/collections/${collectionId}`} />
       </div>
     </>
   );

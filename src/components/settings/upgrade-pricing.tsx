@@ -86,7 +86,7 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
             {FREE_FEATURES.map((f) => (
               <li
                 key={f.text}
-                className={cn('flex items-start gap-2.5 text-[13.5px] leading-snug', f.included ? 'text-foreground/85' : 'text-muted-foreground/50')}
+                className={cn('flex items-start gap-2.5 text-[13.5px] leading-snug', f.included ? 'text-foreground/85' : 'text-faint dark:text-muted-foreground/50')}
               >
                 {f.included ? (
                   <Check className="mt-0.5 size-4 shrink-0 text-lime" strokeWidth={2.5} />

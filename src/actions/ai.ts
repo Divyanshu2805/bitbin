@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { getOpenAIClient, AI_MODEL } from '@/lib/openai'
+import { extractJson, requestJsonText } from '@/lib/ai-json'
 import { suggestTagsForUser, type GenerateAutoTagsInput } from '@/lib/ai-tags'
 import { describeItemForUser, type GenerateDescriptionInput } from '@/lib/ai-description'
 import { getAuthedSession, requirePro, checkAiRateLimit, type ActionResult } from '@/lib/action-utils'
@@ -68,13 +69,9 @@ export type OptimizePromptInput = z.infer<typeof optimizePromptSchema>
  * sections become markdown ("Context:" + a list); anything else is null.
  */
 function readOptimizedPrompt(text: string): string | null {
-  const unfenced = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
-  let value: unknown
-  try {
-    value = JSON.parse(unfenced)
-  } catch {
-    return null
-  }
+  const value = extractJson(text)
+  // A model without JSON mode may just answer with the rewritten prompt
+  if (value === undefined) return text.trim().replace(/^```(?:markdown|md)?\s*/i, '').replace(/\s*```$/, '')
   if (typeof value === 'string') return value
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
 
@@ -151,7 +148,7 @@ export async function optimizePrompt(
   try {
     const client = getOpenAIClient()
 
-    const response = await client.responses.create({
+    const text = await requestJsonText(client, {
       model: AI_MODEL,
       instructions:
         [
@@ -164,12 +161,8 @@ export async function optimizePrompt(
           'Return a JSON object with one key, "optimizedPrompt", whose value is the whole rewritten prompt as a single markdown string (not an object or array). Only return valid JSON.',
         ].join('\n'),
       input: `Optimize the following prompt. Return a JSON object with an "optimizedPrompt" key.\n\n${contextParts}`,
-      text: {
-        format: { type: 'json_object' },
-      },
     })
 
-    const text = response.output_text
     if (!text) {
       return { success: false, error: 'AI returned an empty response' }
     }

@@ -24,8 +24,9 @@ export function readableTint(hex: string, percent: number): string {
 
 type Rgb = [number, number, number];
 
-// Contrast of 4.5:1 against white needs a relative luminance of at most ~0.183.
-const LIGHT_MAX_LUMINANCE = 0.18;
+// Contrast of 4.5:1 against white needs a relative luminance of at most ~0.183; the type chips set
+// this text on a tint of its own colour (a darker background), which needs about 0.13.
+const LIGHT_MAX_LUMINANCE = 0.13;
 
 function parseHex(hex: string): Rgb | null {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());

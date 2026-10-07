@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { findUserByEmail, setPasswordAndRevokeSessions } from '@/lib/db/accounts'
 import { consumePasswordResetToken } from '@/lib/tokens'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation'
@@ -62,9 +62,7 @@ export async function POST(request: Request) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email: resetToken.email },
-    })
+    const user = await findUserByEmail(resetToken.email)
 
     if (!user) {
       return NextResponse.json(
@@ -77,11 +75,8 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     // Update user's password
-    await prisma.user.update({
-      where: { id: user.id },
-      // Bumping sessionVersion ends every session issued before the reset
-      data: { password: hashedPassword, sessionVersion: { increment: 1 } },
-    })
+    // Also ends every session issued before the reset
+    await setPasswordAndRevokeSessions(user.id, hashedPassword)
 
     return NextResponse.json({
       success: true,

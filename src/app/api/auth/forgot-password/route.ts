@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { findUserByEmail } from '@/lib/db/accounts'
 import { generatePasswordResetToken } from '@/lib/tokens'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit'
@@ -49,9 +49,7 @@ export async function POST(request: Request) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    const user = await findUserByEmail(email)
 
     // Always return success to prevent email enumeration
     if (!user) {

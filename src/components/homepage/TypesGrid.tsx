@@ -74,7 +74,7 @@ const CARDS: Card[] = [
           <><span className="text-tok-kw">await</span> <span className="text-tok-fn">sleep</span>(<span className="text-tok-num">250</span>); <span className="caret" /></>,
         ].map((line, i) => (
           <span key={i} className={cn("block whitespace-pre", ON_ACTIVE)} style={{ animationDelay: `${250 + i * 180}ms` }}>
-            <span className="mr-4 inline-block w-3 select-none text-right text-muted-foreground/40">{i + 1}</span>
+            <span className="mr-4 inline-block w-3 select-none text-right text-faint dark:text-muted-foreground/40">{i + 1}</span>
             {line}
           </span>
         ))}
@@ -305,7 +305,7 @@ function AppWindow({ card, index }: { card: Card; index: number }) {
         <span className="size-2.5 rounded-full bg-[#febc2e]" />
         <span className="size-2.5 rounded-full bg-[#28c840]" />
         <MockSearch className="mx-auto hidden h-6 w-56 @[420px]:flex" />
-        <span className="ml-auto font-mono text-[10.5px] text-muted-foreground/60 tabular-nums @[420px]:ml-0">
+        <span className="ml-auto font-mono text-[10.5px] text-faint dark:text-muted-foreground/60 tabular-nums @[420px]:ml-0">
           {String(index + 1).padStart(2, "0")} / {String(CARDS.length).padStart(2, "0")}
         </span>
       </div>

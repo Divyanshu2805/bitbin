@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MoreHorizontal, Pencil, Pin, Star, Trash2 } from "lucide-react";
+import { Download, MoreHorizontal, Pencil, Pin, Star, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
 import EditCollectionDialog from "@/components/collections/edit-collection-dialog";
 import DeleteCollectionDialog from "@/components/collections/delete-collection-dialog";
 import { deleteCollection, toggleCollectionFavorite, toggleCollectionPin } from "@/actions/collections";
+import { downloadFrom } from "@/components/shared/download-file";
 import { cn } from "@/lib/utils";
 
 interface CollectionActionsMenuProps {
@@ -22,7 +23,7 @@ interface CollectionActionsMenuProps {
 }
 
 /**
- * A collection's ⋯ menu (edit, favorite, pin, delete) with its dialogs, shared by
+ * A collection's ⋯ menu (edit, favorite, pin, export, delete) with its dialogs, shared by
  * collection cards and list rows. Shown on hover (always on phones). Clicks
  * and keys stop here, so they never also open the collection.
  */
@@ -51,6 +52,15 @@ export function CollectionActionsMenu({ collection, className }: CollectionActio
     } else {
       toast.error(result.error || "Failed to update pin");
     }
+  };
+
+  const exportCollection = async (format: "json" | "zip") => {
+    const result = await downloadFrom(
+      `/api/export?collection=${encodeURIComponent(collection.id)}&format=${format}`,
+      `bitbin-collection.${format}`
+    );
+    if (result.ok) toast.success(`Exported ${result.filename}`);
+    else toast.error(result.error);
   };
 
   const handleDelete = async () => {
@@ -96,6 +106,15 @@ export function CollectionActionsMenu({ collection, className }: CollectionActio
           <DropdownMenuItem onSelect={togglePin}>
             <Pin className="h-4 w-4" />
             {collection.isPinned ? "Unpin" : "Pin to top"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => exportCollection("json")}>
+            <Download className="h-4 w-4" />
+            Export as JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => exportCollection("zip")}>
+            <Download className="h-4 w-4" />
+            Export as ZIP (Pro)
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>

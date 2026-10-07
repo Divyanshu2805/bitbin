@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="6 October 2026">
+    <LegalPage title="Privacy Policy" updated="7 October 2026">
       <p>
         BitBin is a personal store for developer knowledge, built and run by one person as a portfolio project.
         This page says what it collects, why, who handles it and how to get rid of it.
@@ -56,6 +56,14 @@ export default function PrivacyPage() {
         <li>Sentry: error monitoring, with personal data removed.</li>
         <li>GitHub: sign-in, if you choose it.</li>
         <li>
+          Cloudflare Turnstile: where it is switched on, a bot check on the sign-up and password-reset forms. Cloudflare
+          receives your IP address and browser signals to decide whether you are a person.
+        </li>
+        <li>
+          VirusTotal: where it is switched on, a check of uploaded files against known malware. Only a hash (a fingerprint)
+          of the file is sent, never the file.
+        </li>
+        <li>
           An AI provider (OpenAI or a compatible one): only when you use an AI feature (Pro). The text of the item you
           ask about is sent to it to produce tags, a description, an explanation or a rewritten prompt.
         </li>
@@ -64,6 +72,7 @@ export default function PrivacyPage() {
       <h2>Where your files live</h2>
       <p>
         Files are in a private bucket. They are served only to you, through the app, after checking that you own them.
+        Uploaded photos are saved again without their metadata, so location and device details in a photo are not kept.
       </p>
 
       <h2>Keeping and deleting your data</h2>

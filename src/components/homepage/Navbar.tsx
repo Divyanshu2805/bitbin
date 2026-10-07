@@ -266,7 +266,7 @@ export default function Navbar() {
                         <Icon className="size-4" />
                       </span>
                       {/* The index gives way to an arrow on hover */}
-                      <span className="relative font-mono text-[10.5px] text-muted-foreground/60">
+                      <span className="relative font-mono text-[10.5px] text-faint dark:text-muted-foreground/60">
                         <span className="block transition-[opacity,translate] duration-200 group-hover:-translate-y-1 group-hover:opacity-0">{feature.index}</span>
                         <ArrowUpRight className="absolute top-0 right-0 size-4 translate-y-1 text-(--c) opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-y-0 group-hover:opacity-100" />
                       </span>
@@ -314,7 +314,7 @@ export default function Navbar() {
                         <Icon className="size-3.5" style={{ color: feature.color }} />
                         {feature.name}
                         {feature.pro ? <span className="rounded border border-coral/30 px-1 font-mono text-[9.5px] text-coral">PRO</span> : null}
-                        <span className="ml-auto font-mono text-[11px] text-muted-foreground/60">{feature.index}</span>
+                        <span className="ml-auto font-mono text-[11px] text-faint dark:text-muted-foreground/60">{feature.index}</span>
                       </a>
                     );
                   })}

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getItemById, deleteItem, createItem, setItemInCollection, getCollectionsForItem } from './items';
+import { getItemById, getItemsByCollection, getItemsByType, deleteItem, createItem, setItemInCollection, getCollectionsForItem } from './items';
+import { decodeCursor, encodeCursor, keysetWhere } from '@/lib/keyset';
 
 // Mock Prisma client
 const mockDeleteFromR2 = vi.hoisted(() => vi.fn());
@@ -13,6 +14,8 @@ vi.mock('@/lib/prisma', () => ({
     item: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
       delete: vi.fn(),
       create: vi.fn(),
     },
@@ -344,5 +347,66 @@ describe('getCollectionsForItem', () => {
       { id: 'col-1', name: 'Infra', inCollection: false },
       { id: 'col-2', name: 'React', inCollection: true },
     ]);
+  });
+});
+
+
+describe('getItemsByType and getItemsByCollection (keyset pages)', () => {
+  const rows = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ ...basePrismaItem, id: `item-${i}`, updatedAt: new Date(10_000 - i) }));
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.item.count).mockResolvedValue(30);
+  });
+
+  it('lists a type pinned first, newest first, scoped to the user and the system type', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue(rows(2) as never);
+
+    const result = await getItemsByType('user-1', 'snippet', undefined, 5);
+
+    expect(prisma.item.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1', itemType: { name: 'snippet', isSystem: true } },
+        orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }, { id: 'desc' }],
+        take: 6,
+      })
+    );
+    expect(result.items).toHaveLength(2);
+    expect(result.totalCount).toBe(30);
+    expect(result.pageInfo).toEqual({ hasNext: false, hasPrev: false, nextCursor: null, prevCursor: null });
+  });
+
+  it('shows a page, and hands out a cursor to the next one when there is more', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue(rows(6) as never);
+
+    const result = await getItemsByType('user-1', 'snippet', undefined, 5);
+
+    expect(result.items.map((i) => i.id)).toEqual(['item-0', 'item-1', 'item-2', 'item-3', 'item-4']);
+    expect(result.pageInfo.hasNext).toBe(true);
+    expect(decodeCursor(result.pageInfo.nextCursor)).toMatchObject({ id: 'item-4', pinned: false });
+  });
+
+  it('applies the cursor on top of the user filter, never instead of it', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue(rows(1) as never);
+    const after = encodeCursor({ id: 'item-9', isPinned: true, updatedAt: new Date(7000) });
+
+    const result = await getItemsByCollection('user-1', 'col-1', { after }, 5);
+
+    const call = vi.mocked(prisma.item.findMany).mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(call.where.AND[0]).toEqual({ userId: 'user-1', collections: { some: { collectionId: 'col-1' } } });
+    expect(call.where.AND[1]).toEqual(keysetWhere({ pinned: true, updatedAt: new Date(7000), id: 'item-9' }, 'after'));
+    expect(result.pageInfo.hasPrev).toBe(true);
+  });
+
+  it('counts with the list filter only, so the total does not depend on the page', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValue(rows(1) as never);
+    const before = encodeCursor({ id: 'item-9', isPinned: false, updatedAt: new Date(7000) });
+
+    await getItemsByType('user-1', 'note', { before }, 5);
+
+    expect(prisma.item.count).toHaveBeenCalledWith({
+      where: { userId: 'user-1', itemType: { name: 'note', isSystem: true } },
+    });
   });
 });

@@ -98,7 +98,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     // Fades on the rail but keeps its height, so the icons below never move up or down
     <h3 className="sidebar-label mb-1 whitespace-nowrap px-2.5 font-mono text-[11.5px] font-normal text-muted-foreground">
-      <span className="text-muted-foreground/50">{"// "}</span>
+      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
       {children}
     </h3>
   );
@@ -234,7 +234,7 @@ export default function SidebarNav({ itemTypes, sidebarCollections, onLinkClick 
             className="mb-1 flex w-full items-center gap-1 rounded px-2.5 font-mono text-[11.5px] text-muted-foreground transition-colors hover:text-foreground"
             aria-expanded={collectionsExpanded}
           >
-            <span className="text-muted-foreground/50">{"//"}</span> collections
+            <span className="text-faint dark:text-muted-foreground/50">{"//"}</span> collections
             <ChevronRight
               className={cn(
                 "ml-auto h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",

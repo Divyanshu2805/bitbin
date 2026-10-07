@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
-import { prisma } from '@/lib/prisma'
+import { getCheckoutRecord, setStripeCustomerId } from '@/lib/db/billing'
 import { rejectCrossSite } from '@/lib/same-origin'
 
 const PRICE_MAP: Record<string, string | undefined> = {
@@ -47,10 +47,7 @@ export async function POST(request: Request) {
     const priceId = PRICE_MAP[plan]!
 
     // Find or create Stripe customer
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { stripeCustomerId: true, email: true, isPro: true },
-    })
+    const user = await getCheckoutRecord(session.user.id)
 
     // A second subscription would bill them twice; point them at the portal instead
     if (user?.isPro) {
@@ -69,10 +66,7 @@ export async function POST(request: Request) {
       })
       customerId = customer.id
 
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { stripeCustomerId: customerId },
-      })
+      await setStripeCustomerId(session.user.id, customerId)
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'

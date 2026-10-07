@@ -374,7 +374,7 @@ export default function OrganizeSection() {
                 <span className="text-coral">10 things · 8 places · good luck</span>
               )}
             </p>
-            <p className="ml-auto hidden font-mono text-[11px] text-muted-foreground/60 md:block">
+            <p className="ml-auto hidden font-mono text-[11px] text-faint dark:text-muted-foreground/60 md:block">
               {binned ? "press Before to make a mess again" : "move your cursor through the pile"}
             </p>
           </div>
@@ -451,7 +451,7 @@ export default function OrganizeSection() {
                   >
                     <Icon className="size-3.5" />
                     {panel.name}
-                    <span className={cn("tabular-nums transition-colors duration-500", binned ? "text-muted-foreground" : "text-muted-foreground/40")}>
+                    <span className={cn("tabular-nums transition-colors duration-500", binned ? "text-muted-foreground" : "text-faint dark:text-muted-foreground/40")}>
                       {binned ? count : 0}
                     </span>
                   </p>

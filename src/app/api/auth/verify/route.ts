@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { findUserByEmail, markEmailVerified } from '@/lib/db/accounts'
 import { consumeVerificationToken } from '@/lib/tokens'
 
 export async function GET(request: Request) {
@@ -25,9 +25,7 @@ export async function GET(request: Request) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email: verified.email },
-    })
+    const user = await findUserByEmail(verified.email)
 
     if (!user) {
       return NextResponse.json(
@@ -45,10 +43,7 @@ export async function GET(request: Request) {
     }
 
     // Update user's emailVerified timestamp
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { emailVerified: new Date() },
-    })
+    await markEmailVerified(user.id)
 
     return NextResponse.json({
       success: true,

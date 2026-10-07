@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { getOpenAIClient, AI_MODEL } from '@/lib/openai'
+import { extractJson, requestJsonText } from '@/lib/ai-json'
 import { checkAiRateLimit, type ActionResult } from '@/lib/action-utils'
 
 const MAX_CONTENT_LENGTH = 2000
@@ -49,28 +50,25 @@ export async function suggestTagsForUser(
   try {
     const client = getOpenAIClient()
 
-    const response = await client.responses.create({
+    const text = await requestJsonText(client, {
       model: AI_MODEL,
       instructions:
         'You are a developer tool assistant that suggests relevant tags for code snippets, prompts, commands, notes, and links. Return a JSON object with a "tags" key containing an array of 3-5 short, lowercase tag strings. Tags should be specific and useful for categorization. Only return valid JSON.',
       input: `Suggest 3-5 tags for this developer item. Respond in json format with a "tags" array.\n\n${contextParts}`,
-      text: {
-        format: { type: 'json_object' },
-      },
     })
 
-    const text = response.output_text
     if (!text) {
       return { success: false, error: 'AI returned an empty response' }
     }
 
-    const parsed_response = JSON.parse(text)
+    // The reply may be bare JSON, fenced, or wrapped in a sentence
+    const parsed_response = extractJson(text) as { tags?: unknown } | unknown[] | null | undefined
 
     // Handle both { tags: [...] } and [...] formats
     let tags: unknown[]
     if (Array.isArray(parsed_response)) {
       tags = parsed_response
-    } else if (parsed_response.tags && Array.isArray(parsed_response.tags)) {
+    } else if (parsed_response && Array.isArray(parsed_response.tags)) {
       tags = parsed_response.tags
     } else {
       return { success: false, error: 'AI returned an unexpected format' }

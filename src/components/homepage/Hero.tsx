@@ -82,7 +82,7 @@ export default function Hero() {
             Get started for free
           </CtaLink>
         </div>
-        <p className="mt-5 font-mono text-xs text-muted-foreground/70 animate-fade-up" style={{ animationDelay: "320ms" }}>
+        <p className="mt-5 font-mono text-xs text-faint dark:text-muted-foreground/70 animate-fade-up" style={{ animationDelay: "320ms" }}>
           free forever plan · no credit card
         </p>
       </div>

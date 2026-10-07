@@ -189,7 +189,7 @@ export default function MarkdownEditor({
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           placeholder={placeholder}
-          className={`w-full bg-[var(--editor-bg)] text-foreground font-mono text-base p-4 resize-none focus:outline-none placeholder:text-muted-foreground/50 editor-scrollbar overflow-y-auto ${fill ? "min-h-0 flex-1" : ""}`}
+          className={`w-full bg-[var(--editor-bg)] text-foreground font-mono text-base p-4 resize-none focus:outline-none placeholder:text-faint dark:placeholder:text-muted-foreground/50 editor-scrollbar overflow-y-auto ${fill ? "min-h-0 flex-1" : ""}`}
           style={fill ? undefined : { minHeight: `${minHeight}px`, maxHeight: `${maxHeight}px` }}
         />
       ) : (
@@ -213,7 +213,7 @@ export default function MarkdownEditor({
               {displayContent}
             </ReactMarkdown>
           ) : (
-            <p className="text-muted-foreground/50 text-sm italic">
+            <p className="text-faint dark:text-muted-foreground/50 text-sm italic">
               Nothing to preview
             </p>
           )}

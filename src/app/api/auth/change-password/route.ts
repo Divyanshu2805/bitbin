@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { auth } from '@/auth'
-import { prisma } from '@/lib/prisma'
+import { getPasswordRecord, setPasswordAndRevokeSessions } from '@/lib/db/accounts'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
@@ -58,10 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Get user with password
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, password: true },
-    })
+    const user = await getPasswordRecord(session.user.id)
 
     if (!user || !user.password) {
       return NextResponse.json(
@@ -83,11 +80,8 @@ export async function POST(request: Request) {
     // Hash new password and update
     const hashedPassword = await bcrypt.hash(newPassword, 12)
 
-    await prisma.user.update({
-      where: { id: user.id },
-      // Bumping sessionVersion signs out every session, including this one
-      data: { password: hashedPassword, sessionVersion: { increment: 1 } },
-    })
+    // Also signs out every session, including this one
+    await setPasswordAndRevokeSessions(user.id, hashedPassword)
 
     return NextResponse.json({
       success: true,

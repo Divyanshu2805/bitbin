@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'crypto'
-import { prisma } from './prisma'
+import { deleteToken, findToken, replaceToken } from '@/lib/db/verification-tokens'
 
 /**
  * Email verification and password reset tokens.
@@ -27,18 +27,8 @@ export async function generateVerificationToken(email: string) {
   const token = newToken()
   const expires = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000)
 
-  // Delete any existing tokens for this email
-  await prisma.verificationToken.deleteMany({
-    where: { identifier: email },
-  })
-
-  await prisma.verificationToken.create({
-    data: {
-      identifier: email,
-      token: hashToken(token),
-      expires,
-    },
-  })
+  // Replaces any existing token for this email
+  await replaceToken(email, hashToken(token), expires)
 
   // The raw token goes into the email; only its hash is stored
   return token
@@ -51,12 +41,12 @@ export async function generateVerificationToken(email: string) {
  */
 export async function consumeVerificationToken(token: string): Promise<{ email: string } | null> {
   const hashed = hashToken(token)
-  const record = await prisma.verificationToken.findUnique({ where: { token: hashed } })
+  const record = await findToken(hashed)
 
   // A password reset token must never verify an email, whatever its identifier looks like
   if (!record || record.identifier.startsWith(PASSWORD_RESET_PREFIX)) return null
 
-  const { count } = await prisma.verificationToken.deleteMany({ where: { token: hashed } })
+  const count = await deleteToken(hashed)
   if (count !== 1) return null // another request used it first
 
   if (new Date() > record.expires) return null
@@ -69,18 +59,8 @@ export async function generatePasswordResetToken(email: string) {
   const expires = new Date(Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000)
   const identifier = `${PASSWORD_RESET_PREFIX}${email}`
 
-  // Delete any existing password reset tokens for this email
-  await prisma.verificationToken.deleteMany({
-    where: { identifier },
-  })
-
-  await prisma.verificationToken.create({
-    data: {
-      identifier,
-      token: hashToken(token),
-      expires,
-    },
-  })
+  // Replaces any existing password reset token for this email
+  await replaceToken(identifier, hashToken(token), expires)
 
   return token
 }
@@ -92,11 +72,11 @@ export async function generatePasswordResetToken(email: string) {
  */
 export async function consumePasswordResetToken(token: string): Promise<{ email: string } | null> {
   const hashed = hashToken(token)
-  const record = await prisma.verificationToken.findUnique({ where: { token: hashed } })
+  const record = await findToken(hashed)
 
   if (!record || !record.identifier.startsWith(PASSWORD_RESET_PREFIX)) return null
 
-  const { count } = await prisma.verificationToken.deleteMany({ where: { token: hashed } })
+  const count = await deleteToken(hashed)
   if (count !== 1) return null // another request used it first
 
   if (new Date() > record.expires) return null

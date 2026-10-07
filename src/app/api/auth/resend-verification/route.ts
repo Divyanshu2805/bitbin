@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { findUserByEmail } from '@/lib/db/accounts'
 import { generateVerificationToken } from '@/lib/tokens'
 import { sendVerificationEmail } from '@/lib/email'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
@@ -32,9 +32,7 @@ export async function POST(request: Request) {
     }
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    const user = await findUserByEmail(email)
 
     if (!user) {
       // Don't reveal if user exists or not for security

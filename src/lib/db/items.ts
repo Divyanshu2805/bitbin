@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma/client';
+import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 
 // Maximum allowed limit for queries to prevent abuse
@@ -140,6 +142,11 @@ function toItemDetail(item: PrismaItemWithDetail): ItemDetail {
   };
 }
 
+/** How many items the user has (plan limits). */
+export async function countItems(userId: string): Promise<number> {
+  return prisma.item.count({ where: { userId } });
+}
+
 export interface DashboardStats {
   totalItems: number;
   totalCollections: number;
@@ -256,106 +263,69 @@ export type ValidItemType = typeof VALID_ITEM_TYPES[number];
 export interface PaginatedItems {
   items: ItemWithType[];
   totalCount: number;
-  totalPages: number;
-  currentPage: number;
+  pageInfo: PageInfo;
 }
 
 /**
- * Get items by type for a user with pagination
+ * One page of items matching `where`, pinned first then by last edit, found by position
+ * (`after` / `before` a row) rather than by skipping rows. See `lib/keyset.ts`.
+ */
+async function pageOfItems(
+  where: Prisma.ItemWhereInput,
+  request: PageRequest | undefined,
+  limit: number
+): Promise<PaginatedItems> {
+  const { cursor, direction } = readPageRequest(request);
+  const position = keysetWhere(cursor, direction);
+
+  const [fetched, totalCount] = await Promise.all([
+    prisma.item.findMany({
+      where: position ? { AND: [where, position] } : where,
+      orderBy: keysetOrderBy(direction),
+      // One more than shown: its presence says there is another page
+      take: limit + 1,
+      include: {
+        itemType: true,
+        tags: true,
+      },
+    }),
+    prisma.item.count({ where }),
+  ]);
+
+  const { rows, pageInfo } = resolvePage(fetched, limit, direction, cursor !== null);
+  return { items: rows.map(toItemWithType), totalCount, pageInfo };
+}
+
+/**
+ * Get items by type for a user, one page at a time
  */
 export async function getItemsByType(
   userId: string,
   typeName: string,
-  page: number = 1,
+  request?: PageRequest,
   limit: number = 21
 ): Promise<PaginatedItems> {
-  const skip = (page - 1) * limit;
-
-  const [items, totalCount] = await Promise.all([
-    prisma.item.findMany({
-      where: {
-        userId,
-        itemType: {
-          name: typeName,
-          isSystem: true,
-        },
-      },
-      orderBy: [
-        { isPinned: 'desc' },
-        { updatedAt: 'desc' },
-      ],
-      skip,
-      take: limit,
-      include: {
-        itemType: true,
-        tags: true,
-      },
-    }),
-    prisma.item.count({
-      where: {
-        userId,
-        itemType: {
-          name: typeName,
-          isSystem: true,
-        },
-      },
-    }),
-  ]);
-
-  return {
-    items: items.map(toItemWithType),
-    totalCount,
-    totalPages: Math.ceil(totalCount / limit),
-    currentPage: page,
-  };
+  return pageOfItems(
+    { userId, itemType: { name: typeName, isSystem: true } },
+    request,
+    limit
+  );
 }
 
 /**
- * Get items by collection ID for a user with pagination
+ * Get items by collection ID for a user, one page at a time
  */
 export async function getItemsByCollection(
   userId: string,
   collectionId: string,
-  page: number = 1,
+  request?: PageRequest,
   limit: number = 21
 ): Promise<PaginatedItems> {
-  const skip = (page - 1) * limit;
-
-  const [items, totalCount] = await Promise.all([
-    prisma.item.findMany({
-      where: {
-        userId,
-        collections: {
-          some: { collectionId },
-        },
-      },
-      orderBy: [
-        { isPinned: 'desc' },
-        { updatedAt: 'desc' },
-      ],
-      skip,
-      take: limit,
-      include: {
-        itemType: true,
-        tags: true,
-      },
-    }),
-    prisma.item.count({
-      where: {
-        userId,
-        collections: {
-          some: { collectionId },
-        },
-      },
-    }),
-  ]);
-
-  return {
-    items: items.map(toItemWithType),
-    totalCount,
-    totalPages: Math.ceil(totalCount / limit),
-    currentPage: page,
-  };
+  return pageOfItems(
+    { userId, collections: { some: { collectionId } } },
+    request,
+    limit
+  );
 }
 
 /**
@@ -549,76 +519,6 @@ export interface CreateItemData {
    * under a lock on the user's row, and a full account throws LimitReachedError.
    */
   maxItems?: number;
-}
-
-/**
- * Create a new item for a user
- */
-export interface SearchableItem {
-  id: string;
-  title: string;
-  typeName: string;
-  typeIcon: string;
-  typeColor: string;
-  contentPreview: string | null;
-  tags: string[];
-}
-
-/**
- * Get all items for a user in a lightweight format for search
- */
-export async function getSearchableItems(
-  userId: string
-): Promise<SearchableItem[]> {
-  const [items, snippets] = await Promise.all([
-    prisma.item.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        url: true,
-        tags: { select: { name: true } },
-        itemType: {
-          select: {
-            name: true,
-            icon: true,
-            color: true,
-          },
-        },
-      },
-    }),
-    // Only the first 101 characters of each item's content leave the database
-    // (101, so a 100-character preview can tell whether it was cut). Loading
-    // every item's whole text just to show a one-line preview was the slow part
-    // of opening the app.
-    prisma.$queryRaw<{ id: string; snippet: string }[]>`
-      SELECT id, left(content, 101) AS snippet
-      FROM "items"
-      WHERE "userId" = ${userId} AND content IS NOT NULL AND content <> ''
-    `,
-  ]);
-
-  const snippetById = new Map(snippets.map((row) => [row.id, row.snippet]));
-
-  return items.map((item) => {
-    // Create a content preview (first 100 chars of content, description, or url)
-    const previewSource = snippetById.get(item.id) || item.description || item.url || '';
-    const contentPreview = previewSource.length > 100
-      ? previewSource.slice(0, 100) + '...'
-      : previewSource || null;
-
-    return {
-      id: item.id,
-      title: item.title,
-      typeName: item.itemType.name,
-      typeIcon: item.itemType.icon,
-      typeColor: item.itemType.color,
-      contentPreview,
-      tags: item.tags.map((tag) => tag.name),
-    };
-  });
 }
 
 /**

@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/prisma'
+import { countItems } from '@/lib/db/items'
+import { countCollections } from '@/lib/db/collections'
 import { MAX_ITEMS, MAX_COLLECTIONS } from '@/lib/constants/plan'
 
 export { MAX_ITEMS, MAX_COLLECTIONS }
@@ -17,8 +18,8 @@ export async function getUserUsage(
   isPro: boolean
 ): Promise<UserUsage> {
   const [itemCount, collectionCount] = await Promise.all([
-    prisma.item.count({ where: { userId } }),
-    prisma.collection.count({ where: { userId } }),
+    countItems(userId),
+    countCollections(userId),
   ])
 
   return {
@@ -36,7 +37,7 @@ export async function canCreateItem(
   isPro: boolean
 ): Promise<boolean> {
   if (isPro) return true
-  const count = await prisma.item.count({ where: { userId } })
+  const count = await countItems(userId)
   return count < MAX_ITEMS
 }
 
@@ -45,6 +46,6 @@ export async function canCreateCollection(
   isPro: boolean
 ): Promise<boolean> {
   if (isPro) return true
-  const count = await prisma.collection.count({ where: { userId } })
+  const count = await countCollections(userId)
   return count < MAX_COLLECTIONS
 }

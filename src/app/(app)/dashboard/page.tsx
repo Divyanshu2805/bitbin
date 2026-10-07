@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { ViewToggle } from '@/components/shared/view-toggle';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
 import BinOverview from '@/components/dashboard/bin-overview';
 import QuickCreate from '@/components/dashboard/quick-create';
 import PageHeader, { TitleAccent } from '@/components/shared/page-header';
@@ -10,6 +9,7 @@ import CollectionsSection from '@/components/dashboard/collections-section';
 import PinnedItems from '@/components/dashboard/pinned-items';
 import RecentItems from '@/components/dashboard/recent-items';
 import { getRecentCollections } from '@/lib/db/collections';
+import { getUserById } from '@/lib/db/users';
 import { getPinnedItems, getRecentItems, getDashboardStats, getItemTypesWithCounts } from '@/lib/db/items';
 import { DASHBOARD_COLLECTIONS_LIMIT, DASHBOARD_RECENT_ITEMS_LIMIT } from '@/lib/constants/pagination';
 import { formatRelativeDate } from '@/lib/utils/date';
@@ -21,10 +21,7 @@ export default async function DashboardPage() {
     redirect('/sign-in');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, name: true, email: true, image: true },
-  });
+  const user = await getUserById(session.user.id);
 
   const [collections, pinnedItems, recentItems, stats, itemTypes] = user
     ? await Promise.all([

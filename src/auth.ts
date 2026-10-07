@@ -1,16 +1,10 @@
-import NextAuth, { CredentialsSignin } from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+import NextAuth from 'next-auth'
 import GitHub from 'next-auth/providers/github'
 import Credentials from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { createAuthAdapter } from '@/lib/db/auth-adapter'
+import { deleteOAuthLink, findUserById, getSessionState } from '@/lib/db/accounts'
+import { authorizeCredentials } from '@/lib/credentials'
 import { SESSION_MAX_AGE_SECONDS, SESSION_UPDATE_AGE_SECONDS } from '@/lib/constants/session'
-
-/** Too many sign-in attempts; the form reads `code === 'rate_limited'`. */
-class RateLimitedSignin extends CredentialsSignin {
-  code = 'rate_limited'
-}
 
 /**
  * Full NextAuth configuration with Prisma adapter.
@@ -20,7 +14,7 @@ class RateLimitedSignin extends CredentialsSignin {
  * the Credentials provider to use bcrypt validation, which is not edge-compatible.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: createAuthAdapter(),
   session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE_SECONDS, updateAge: SESSION_UPDATE_AGE_SECONDS },
   pages: {
     signIn: '/sign-in',
@@ -34,56 +28,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        code: { label: 'Authentication code', type: 'text' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const email = credentials.email as string
-        const password = credentials.password as string
-
-        // Enforced here, not in a pre-check the client may skip (5 per 15 min, per IP + email)
-        const rateLimit = await checkRateLimit('login', email.toLowerCase())
-        if (!rateLimit.success) {
-          throw new RateLimitedSignin()
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email },
-        })
-
-        if (!user || !user.password) {
-          return null
-        }
-
-        const isValid = await bcrypt.compare(password, user.password)
-
-        if (!isValid) {
-          return null
-        }
-
-        // Check if email is verified (unless verification is skipped)
-        const skipVerification = process.env.SKIP_EMAIL_VERIFICATION === 'true'
-        if (!skipVerification && !user.emailVerified) {
-          throw new Error('EmailNotVerified')
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        }
-      },
+      // The email-and-password check, the rate limit: lib/credentials.ts
+      authorize: (credentials) => authorizeCredentials(credentials),
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider !== 'credentials' && user.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-        })
+        const dbUser = await findUserById(user.id)
 
         // Block OAuth if this user has a password (credentials account)
         // or if the OAuth email doesn't match the existing user's email
@@ -92,9 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (dbUser?.password || emailMismatch) {
           // Clean up the bad account link the adapter created
-          await prisma.account.deleteMany({
-            where: { userId: user.id, provider: account?.provider },
-          })
+          await deleteOAuthLink(user.id, account?.provider)
           return '/sign-in?error=OAuthAccountNotLinked'
         }
       }
@@ -108,10 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         // One read per evaluation: the plan stays live (isPro) and the session
         // can be revoked (sessionVersion)
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { isPro: true, sessionVersion: true },
-        })
+        const dbUser = await getSessionState(token.id as string)
         // Account deleted: end the session instead of serving a ghost user
         if (!dbUser) return null
         if (user?.id) {

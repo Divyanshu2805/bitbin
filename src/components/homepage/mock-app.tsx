@@ -17,7 +17,7 @@ export const MOCK_SIDEBAR = "bg-[color-mix(in_srgb,var(--sidebar)_70%,transparen
 export function MockSectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <p className={cn("px-2 pb-1 font-mono text-[10.5px] whitespace-nowrap text-muted-foreground", className)}>
-      <span className="text-muted-foreground/50">{"// "}</span>
+      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
       {children}
     </p>
   );

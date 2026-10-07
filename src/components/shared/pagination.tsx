@@ -1,151 +1,59 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { PageInfo } from '@/lib/keyset';
 
 interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
+  pageInfo: PageInfo;
   baseUrl: string;
 }
 
-export default function Pagination({
-  currentPage,
-  totalPages,
-  baseUrl,
-}: PaginationProps) {
-  if (totalPages <= 1) {
-    return null;
-  }
+const linkClass = cn(
+  'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs transition-colors',
+  'hover:border-lime/40 hover:text-lime'
+);
 
-  // Generate page numbers to display
-  const getPageNumbers = (): (number | 'ellipsis')[] => {
-    const pages: (number | 'ellipsis')[] = [];
-    const showPages = 5; // Max number of page buttons to show
+/**
+ * Previous / next links for a keyset-paginated list. A page is identified by the row it starts
+ * after or ends before (`?after=` / `?before=`), so there are no page numbers; the first page is
+ * the plain list URL.
+ */
+export default function Pagination({ pageInfo, baseUrl }: PaginationProps) {
+  const { hasPrev, hasNext, prevCursor, nextCursor } = pageInfo;
+  if (!hasPrev && !hasNext) return null;
 
-    if (totalPages <= showPages) {
-      // Show all pages if total is small
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Always show first page
-      pages.push(1);
-
-      if (currentPage > 3) {
-        pages.push('ellipsis');
-      }
-
-      // Show pages around current page
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push('ellipsis');
-      }
-
-      // Always show last page
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
-
-  const buildUrl = (page: number): string => {
-    if (page === 1) {
-      return baseUrl;
-    }
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}page=${page}`;
-  };
-
-  const pageNumbers = getPageNumbers();
-  const hasPrev = currentPage > 1;
-  const hasNext = currentPage < totalPages;
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  const prevHref = prevCursor ? `${baseUrl}${separator}before=${encodeURIComponent(prevCursor)}` : null;
+  const nextHref = nextCursor ? `${baseUrl}${separator}after=${encodeURIComponent(nextCursor)}` : null;
 
   return (
-    <nav
-      className="flex items-center justify-center gap-1"
-      aria-label="Pagination"
-    >
-      {/* Previous button */}
-      {hasPrev ? (
-        <Link
-          href={buildUrl(currentPage - 1)}
-          className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs transition-colors',
-            'hover:border-lime/40 hover:text-lime'
-          )}
-          aria-label="Previous page"
-        >
+    <nav className="flex items-center justify-center gap-2" aria-label="Pagination">
+      {hasPrev && (
+        <Link href={baseUrl} className={linkClass} aria-label="First page">
+          <span className="hidden sm:inline">first</span>
+          <span className="sm:hidden">1</span>
+        </Link>
+      )}
+
+      {prevHref ? (
+        <Link href={prevHref} className={linkClass} aria-label="Previous page">
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline">prev</span>
         </Link>
       ) : (
-        <span
-          className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs',
-            'cursor-not-allowed opacity-50'
-          )}
-          aria-disabled="true"
-        >
+        <span className={cn(linkClass, 'cursor-not-allowed opacity-50 hover:border-border hover:text-inherit')} aria-disabled="true">
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline">prev</span>
         </span>
       )}
 
-      {/* Page numbers */}
-      <div className="flex items-center gap-1">
-        {pageNumbers.map((page, index) =>
-          page === 'ellipsis' ? (
-            <span
-              key={`ellipsis-${index}`}
-              className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground"
-            >
-              ...
-            </span>
-          ) : (
-            <Link
-              key={page}
-              href={buildUrl(page)}
-              className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-md border font-mono text-xs tabular-nums transition-colors',
-                page === currentPage
-                  ? 'border-lime/50 bg-lime/10 text-lime'
-                  : 'border-border bg-card text-muted-foreground hover:border-lime/40 hover:text-lime'
-              )}
-              aria-current={page === currentPage ? 'page' : undefined}
-            >
-              {page}
-            </Link>
-          )
-        )}
-      </div>
-
-      {/* Next button */}
-      {hasNext ? (
-        <Link
-          href={buildUrl(currentPage + 1)}
-          className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs transition-colors',
-            'hover:border-lime/40 hover:text-lime'
-          )}
-          aria-label="Next page"
-        >
+      {nextHref ? (
+        <Link href={nextHref} className={linkClass} aria-label="Next page">
           <span className="hidden sm:inline">next</span>
           <ChevronRight className="h-4 w-4" />
         </Link>
       ) : (
-        <span
-          className={cn(
-            'flex h-9 items-center justify-center gap-1 rounded-md border border-border bg-card px-3 font-mono text-xs',
-            'cursor-not-allowed opacity-50'
-          )}
-          aria-disabled="true"
-        >
+        <span className={cn(linkClass, 'cursor-not-allowed opacity-50 hover:border-border hover:text-inherit')} aria-disabled="true">
           <span className="hidden sm:inline">next</span>
           <ChevronRight className="h-4 w-4" />
         </span>

@@ -63,7 +63,6 @@
   --color-cyan: var(--brand-cyan);
   --color-violet: var(--brand-violet);
   --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
   --color-faint: var(--faint);
 
   /* Syntax palette, for code and terminal output */
@@ -71,7 +70,6 @@
   --color-tok-fn: var(--tok-fn);
   --color-tok-str: var(--tok-str);
   --color-tok-num: var(--tok-num);
-  --color-tok-com: var(--tok-com);
   --color-tok-type: var(--tok-type);
   --color-tok-path: var(--tok-path);
 
@@ -82,12 +80,9 @@
   --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.4s ease-out both;
   --animate-page-in: page-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-print: print 0.6s steps(24, end) both;
   --animate-shimmer: shimmer 1.6s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
-  --animate-marquee: marquee 44s linear infinite;
   --animate-blink: blink 1.1s steps(2, start) infinite;
-  --animate-glow: glow 3.2s ease-in-out infinite;
   --animate-spin-slow: spin 9s linear infinite;
   --animate-led: led 2.4s ease-in-out infinite;
   --animate-pop: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -99,50 +94,49 @@
 
   /* Light: warm paper surfaces, ink text, and the brand hues deepened so
      every accent used as text clears 4.5:1 on the page and on cards. */
-  --brand-lime: #4a7200;
-  --brand-coral: #c2410c;
-  --brand-cyan: #0a7770;
-  --brand-violet: #6b4fc4;
+  --brand-lime: #406200;
+  --brand-coral: #9d350a;
+  --brand-cyan: #08635d;
+  --brand-violet: #5f46ae;
 
   --background: #eff2e9;
   --foreground: #14161a;
   --surface: #ffffff;
-  --surface-2: #f0f0ec;
-  --faint: #e8e8e3;
   --card: #ffffff;
   --card-foreground: #14161a;
   --popover: #ffffff;
   --popover-foreground: #14161a;
-  --primary: #4a7200;
+  --primary: #406200;
   --primary-foreground: #ffffff;
   --secondary: #eeeee9;
   --secondary-foreground: #14161a;
   --muted: #eeeee9;
-  --muted-foreground: #5b6069;
+  --muted-foreground: #545961;
+  /* Decorative text that still has to be read (line numbers, hints): lighter than muted, still 4.5:1 */
+  --faint: #5e636b;
   --accent: #ebebe5;
   --accent-foreground: #14161a;
-  --destructive: #c8321f;
+  --destructive: #a42919;
   --border: #dcddd5;
-  --input: #d3d4cc;
-  --ring: #4a7200;
-  --chart-1: #4a7200;
-  --chart-2: #c2410c;
-  --chart-3: #0a7770;
-  --chart-4: #a16207;
-  --chart-5: #6b4fc4;
+  --input: #8a8d83; /* 3:1 on the page and cards: an input's edge is its only outline */
+  --ring: #406200;
+  --chart-1: #406200;
+  --chart-2: #9d350a;
+  --chart-3: #08635d;
+  --chart-4: #7f4d06;
+  --chart-5: #5f46ae;
   --sidebar: #d3e1bd;
   --sidebar-foreground: #14161a;
-  --sidebar-primary: #4a7200;
+  --sidebar-primary: #406200;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #c6d7ab;
   --sidebar-accent-foreground: #14161a;
   --sidebar-border: #bccda0;
-  --sidebar-ring: #4a7200;
+  --sidebar-ring: #406200;
   --tok-kw: #8e3fb0;
   --tok-fn: #2552c4;
   --tok-str: #3f6b0a;
   --tok-num: #b83c0a;
-  --tok-com: #6f747d;
   --tok-type: #955b06;
   --tok-path: #0e6f86;
   --shadow-soft: 0 1px 2px rgb(20 22 26 / 0.05), 0 4px 16px -6px rgb(20 22 26 / 0.1);
@@ -150,10 +144,7 @@
 
   /* Theme-dependent pieces of the buttons, keycaps and editor chrome */
   --tint: black; /* what accent text is mixed towards to stay readable */
-  --tint-keep: 72%;
-  --kbd-base: #ffffff;
   --btn-drop: 0 1px 2px rgb(20 22 26 / 0.08);
-  --btn-edge: 0 0 0 0 transparent;
   --editor-bg: #ffffff;
   --editor-chrome: #f3f3ef;
   --scroll-thumb: rgb(20 22 26 / 0.2);
@@ -175,8 +166,6 @@
   --background: #08090a;
   --foreground: #ededee;
   --surface: #0c0d0f;
-  --surface-2: #131519;
-  --faint: #16181c;
   --card: #0e1013;
   --card-foreground: #ededee;
   --popover: #121418;
@@ -187,6 +176,7 @@
   --secondary-foreground: #ededee;
   --muted: #17191d;
   --muted-foreground: #a3a8b1;
+  --faint: color-mix(in srgb, #a3a8b1 55%, transparent);
   --accent: #1a1d22;
   --accent-foreground: #f4f5f6;
   --destructive: #ff5a4a;
@@ -210,17 +200,13 @@
   --tok-fn: #82aaff;
   --tok-str: #c3e88d;
   --tok-num: #f78c6c;
-  --tok-com: #7a818d;
   --tok-type: #ffcb6b;
   --tok-path: #89ddff;
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 20px -8px rgb(0 0 0 / 0.6);
   --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 28px 60px -24px rgb(0 0 0 / 0.85);
 
   --tint: white;
-  --tint-keep: 55%;
-  --kbd-base: #0b0c0e;
   --btn-drop: 0 1px 2px rgb(0 0 0 / 0.45);
-  --btn-edge: 0 0 0 1px rgb(0 0 0 / 0.3);
   --editor-bg: #1e1e1e;
   --editor-chrome: #2d2d2d;
   --scroll-thumb: rgb(255 255 255 / 0.18);
@@ -310,16 +296,6 @@
   }
 }
 
-/* A headline line rising out of its mask */
-@keyframes line-up {
-  from {
-    transform: translateY(105%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
 /* A line being printed to a terminal, left to right */
 @keyframes print {
   from {
@@ -346,15 +322,6 @@
   }
   50% {
     transform: translateY(-8px);
-  }
-}
-
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
   }
 }
 
@@ -401,16 +368,6 @@
   92%, 100% { translate: 0 0; opacity: 1; }
 }
 
-@keyframes glow {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
 /* A status LED breathing */
 @keyframes led {
   0%,
@@ -443,21 +400,6 @@
   }
 }
 
-/* A keycap being pressed */
-@keyframes keypress {
-  0%,
-  100% {
-    translate: 0 0;
-    border-bottom-width: 3px;
-  }
-  45% {
-    translate: 0 2px;
-    border-bottom-width: 1px;
-    border-color: var(--brand-lime);
-    color: var(--brand-lime);
-  }
-}
-
 /* A checkbox being ticked */
 @keyframes tick {
   0% {
@@ -471,39 +413,6 @@
     background: var(--brand-lime);
     border-color: var(--brand-lime);
     color: var(--primary-foreground);
-  }
-}
-
-/* A quick tap early in a long cycle, so keys can take turns */
-@keyframes keytap {
-  0%,
-  9%,
-  100% {
-    translate: 0 0;
-    border-bottom-width: 4px;
-  }
-  3% {
-    translate: 0 3px;
-    border-bottom-width: 1px;
-    border-color: var(--brand-lime);
-    color: var(--brand-lime);
-    box-shadow: 0 0 18px -4px var(--brand-lime);
-  }
-}
-
-/* A packet travelling along a wire */
-@keyframes flow {
-  0% {
-    left: 0.5rem;
-    opacity: 0;
-  }
-  15%,
-  85% {
-    opacity: 1;
-  }
-  100% {
-    left: calc(100% - 0.5rem);
-    opacity: 0;
   }
 }
 
@@ -784,58 +693,6 @@
 .card-glow:focus-within::after,
 .card-glow-active::after {
   opacity: 1;
-}
-
-/*
- * Selection brackets: four corner ticks that snap onto an element on hover
- * or keyboard focus, like a selection in an editor.
- */
-.bracket {
-  position: relative;
-}
-.bracket::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  pointer-events: none;
-  border-radius: calc(var(--radius) + 5px);
-  --c: color-mix(in srgb, var(--accent-color, var(--brand-lime)) 85%, transparent);
-  --l: 10px;
-  background:
-    linear-gradient(var(--c), var(--c)) top left / var(--l) 1.5px,
-    linear-gradient(var(--c), var(--c)) top left / 1.5px var(--l),
-    linear-gradient(var(--c), var(--c)) top right / var(--l) 1.5px,
-    linear-gradient(var(--c), var(--c)) top right / 1.5px var(--l),
-    linear-gradient(var(--c), var(--c)) bottom left / var(--l) 1.5px,
-    linear-gradient(var(--c), var(--c)) bottom left / 1.5px var(--l),
-    linear-gradient(var(--c), var(--c)) bottom right / var(--l) 1.5px,
-    linear-gradient(var(--c), var(--c)) bottom right / 1.5px var(--l);
-  background-repeat: no-repeat;
-  opacity: 0;
-  scale: 1.04;
-  transition:
-    opacity 0.2s ease,
-    scale 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.bracket:hover::after,
-.bracket:focus-visible::after {
-  opacity: 1;
-  scale: 1;
-}
-
-/*
- * Icon nudge: the leading icon of an interactive row shifts a hair when the
- * row is hovered or focused, so every control feels like it answers back.
- */
-@media (prefers-reduced-motion: no-preference) {
-  .nudge svg:first-child,
-  [data-nudge] > svg:first-child {
-    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  .nudge:is(:hover, :focus-visible, [data-highlighted]) svg:first-child,
-  [data-nudge]:is(:hover, :focus-visible, [data-highlighted]) > svg:first-child {
-    transform: translate(1px, -1px) rotate(-8deg) scale(1.08);
-  }
 }
 
 /* Reveal on scroll: the root adds .reveal-ready, useReveal marks items .is-visible */
@@ -1414,39 +1271,6 @@ html.vt-slide.vt-back::view-transition-new(root) {
   from { transform: translateX(-100%); }
 }
 
-/* ---------------------------------------------------------------------------
- * Terminal
- * A `[data-term]` block holds a `[data-cmd]` that types itself when it scrolls
- * into view, then an `[data-out]` that prints top to bottom, line by line.
- * `.term-ready` goes on the root only once JS runs (see TerminalRoot), so
- * without JS every block is simply shown.
- * ------------------------------------------------------------------------- */
-
-@keyframes out-print {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-.term-ready [data-term]:not(.is-run) [data-out] {
-  opacity: 0;
-}
-.term-ready [data-term].is-run [data-out] {
-  animation: out-print var(--print, 0.9s) steps(18, end) both;
-}
-[data-term].is-typing [data-cmd]::after {
-  content: "";
-  display: inline-block;
-  width: 0.6ch;
-  height: 1.1em;
-  margin-left: 1px;
-  vertical-align: -0.2em;
-  background: var(--brand-lime);
-}
-
 /* A TUI pane: a box whose title sits in its top border, like lazygit or htop */
 .tui {
   position: relative;
@@ -1472,15 +1296,6 @@ html.vt-slide.vt-back::view-transition-new(root) {
   color: var(--brand-lime);
 }
 
-/* CRT-ish scanlines, used very faintly behind the hero */
-@utility scanlines {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--foreground) 3%, transparent) 0 1px,
-    transparent 1px 3px
-  );
-}
-
 /* While the navbar's Features panel is open, the landing page behind it holds still */
 html[data-features-open] main *,
 html[data-features-open] main *::before,
@@ -1488,9 +1303,6 @@ html[data-features-open] main *::after {
   animation-play-state: paused !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  .term-ready [data-term]:not(.is-run) [data-out] {
-    opacity: 1;
-  }
   *,
   *::before,
   *::after {
@@ -2010,112 +1822,24 @@ html:not(.dark) .btn-terminal.btn-featured {
   animation-duration: 0.2s;
   animation-delay: 0.4s;
 }
-/*
- * Every app button is a GitHub button (`<Button>` renders a <ContribGrid />).
- * `.gh-primary` is the main action on a screen, `.gh-danger` a destructive one;
- * `--grid-color` retints the cells (quick-create chips use the item type's colour).
- */
 .gh-button {
   isolation: isolate;
 }
 .gh-button:active {
   translate: 0 1px;
 }
-/* The main action: a lime body, a bright lime edge and lime-white text */
-.gh-primary {
-  color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) var(--tint-keep), var(--tint));
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--grid-color, var(--brand-lime)) 24%, var(--card)),
-    color-mix(in srgb, var(--grid-color, var(--brand-lime)) 14%, var(--card))
-  );
-  border-color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 75%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--grid-color, var(--brand-lime)) 35%, transparent),
-    var(--btn-edge),
-    0 6px 18px -8px color-mix(in srgb, var(--grid-color, var(--brand-lime)) 55%, transparent);
-}
-.gh-primary .lucide {
-  color: var(--grid-color, var(--brand-lime));
-}
-.gh-primary .gh-grid > span {
-  opacity: 0.32;
-}
-
-.gh-danger {
-  --grid-color: var(--destructive);
-  color: var(--destructive);
-  border-color: color-mix(in srgb, var(--destructive) 40%, var(--border));
-}
-.gh-danger:hover {
-  border-color: color-mix(in srgb, var(--destructive) 65%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    0 0 0 4px color-mix(in srgb, var(--destructive) 10%, transparent),
-    0 12px 28px -14px color-mix(in srgb, var(--destructive) 70%, transparent);
-}
-.gh-button:disabled .gh-grid > span {
-  animation: none;
-}
-/* Its icon redraws itself, stroke by stroke, in the grid's colour, then glows */
-.gh-button:is(:hover, :focus-visible) .lucide:not(.animate-spin, .gh-icon) {
-  color: var(--grid-color, var(--brand-lime));
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--grid-color, var(--brand-lime)) 70%, transparent));
-  transition: filter 0.3s ease 0.35s;
-}
-/*
- * Constructs, then sustains: each stroke grows from its start (the dash grows
- * from 0 to the icon box's size, so short strokes like a plus's draw across the
- * whole animation rather than popping in at the end) and holds once drawn.
- */
-.gh-button:is(:hover, :focus-visible) .lucide:not(.animate-spin, .gh-icon) :is(path, line, rect, circle, polyline, polygon, ellipse) {
-  animation: gh-construct 0.55s cubic-bezier(0.45, 0, 0.2, 1) both;
-}
-@keyframes gh-construct {
-  from { stroke-dasharray: 0 30; }
-  to { stroke-dasharray: 30 0; }
-}
-/* Key hints inside: a keycap that presses and lights up on hover */
-/* Solid, so the cells never show through the key */
-.gh-button .btn-kbd {
-  min-width: 1.4rem;
-  height: 1.4rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  /* Tinted in the button's colour (cyan C on Collection, lime N on New item) */
-  color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) var(--tint-keep), var(--tint));
-  background: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 18%, var(--kbd-base));
-  border: 1px solid color-mix(in srgb, var(--grid-color, var(--brand-lime)) 42%, transparent);
-  border-bottom-width: 2px;
-  box-shadow: var(--btn-drop);
-  transition: translate 0.12s ease, border-width 0.12s ease, color 0.2s ease, background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-/* On the main action the key is filled in the button's colour, dark text on top */
-.gh-primary .btn-kbd {
-  color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) var(--tint-keep), var(--tint));
-  background: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 28%, var(--kbd-base));
-  border-color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 50%, transparent);
-}
-.gh-button:is(:hover, :focus-visible) .btn-kbd {
-  translate: 0 1px;
-  border-bottom-width: 1px;
-  color: var(--grid-color, var(--brand-lime));
-  border-color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 70%, transparent);
-}
-.gh-primary:is(:hover, :focus-visible) .btn-kbd {
-  color: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 80%, var(--tint));
-  background: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 38%, var(--kbd-base));
-}
-/* A button that shows its shortcut keeps its right side clear of cells, idle and on hover */
-.gh-button:has(.btn-kbd) .gh-grid,
-.gh-button:has(.btn-kbd):is(:hover, :focus-visible) .gh-grid {
-  -webkit-mask-image: linear-gradient(90deg, #000, rgb(0 0 0 / 0.15) 35%, transparent 60%);
-  mask-image: linear-gradient(90deg, #000, rgb(0 0 0 / 0.15) 35%, transparent 60%);
-}
 @keyframes gh-draw {
   from { stroke-dashoffset: var(--len); }
   to { stroke-dashoffset: 0; }
+}
+/*
+ * Constructs, then sustains: each stroke of a button's icon grows from its start (the dash grows
+ * from 0 to the icon box's size, so short strokes like a plus's draw across the whole animation
+ * rather than popping in at the end) and holds once drawn. Used by every `[data-slot="button"]`.
+ */
+@keyframes gh-construct {
+  from { stroke-dasharray: 0 30; }
+  to { stroke-dasharray: 30 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .gh-button .gh-icon path {
@@ -2283,11 +2007,6 @@ html:has(.landing)::-webkit-scrollbar {
 .ai-action:hover:not(:disabled) {
   color: var(--grid-color, var(--brand-lime));
   background: color-mix(in srgb, var(--grid-color, var(--brand-lime)) 12%, transparent);
-}
-
-/* In GitHub-style buttons the plus is constructed, not turned (see gh-construct) */
-.gh-button:is(:hover, :focus-visible) .lucide-plus {
-  animation: none;
 }
 
 /* ---------------------------------------------------------------------------

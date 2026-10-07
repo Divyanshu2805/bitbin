@@ -97,10 +97,10 @@ export default function AppShortcuts() {
               <h3 className="mb-2 flex items-center gap-2 font-mono text-[11px] font-normal text-muted-foreground [&_svg]:h-3.5 [&_svg]:w-3.5 [&_svg]:text-lime">
                 {GROUP_ICONS[group.title]}
                 <span>
-                  <span className="text-muted-foreground/50">{"// "}</span>
+                  <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
                   {group.title}
                 </span>
-                <span className="ml-auto tabular-nums text-muted-foreground/60">[{group.items.length}]</span>
+                <span className="ml-auto tabular-nums text-faint dark:text-muted-foreground/60">[{group.items.length}]</span>
               </h3>
               <ul className="overflow-hidden rounded-lg border border-border bg-card/60">
                 {group.items.map((item) => (

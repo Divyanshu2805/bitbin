@@ -28,7 +28,7 @@ export function LegalPage({ title, updated, children }: LegalPageProps) {
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
         <p className="mt-2 font-mono text-xs text-muted-foreground">Last updated {updated}</p>
-        <div className="prose prose-invert mt-8 max-w-none prose-headings:scroll-mt-20 prose-a:text-lime">
+        <div className="prose dark:prose-invert mt-8 max-w-none prose-headings:scroll-mt-20 prose-a:text-lime">
           {children}
         </div>
       </main>

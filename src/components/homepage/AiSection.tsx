@@ -156,7 +156,7 @@ export default function AiSection() {
                     aria-hidden
                     className={cn("absolute inset-y-0 left-0 w-0.5 bg-violet transition-opacity duration-500", reading(i) ? "opacity-100" : "opacity-0")}
                   />
-                  <span className="mr-5 inline-block w-4 select-none text-right text-muted-foreground/40">{i + 1}</span>
+                  <span className="mr-5 inline-block w-4 select-none text-right text-faint dark:text-muted-foreground/40">{i + 1}</span>
                   {line}
                 </div>
               ))}
@@ -165,7 +165,7 @@ export default function AiSection() {
             {/* What the helpers wrote back onto the item */}
             <div className="space-y-2 border-t border-border px-4 py-3 font-mono text-[11.5px]">
               <div className="flex h-6 items-center gap-2">
-                <span className="w-20 shrink-0 text-muted-foreground/70">tags</span>
+                <span className="w-20 shrink-0 text-faint dark:text-muted-foreground/70">tags</span>
                 {done >= 1 ? (
                   <span key={`t${run}`} className="flex gap-1.5 overflow-hidden">
                     {TAGS.map((tag, i) => (
@@ -179,7 +179,7 @@ export default function AiSection() {
                 )}
               </div>
               <div className="flex h-6 items-center gap-2">
-                <span className="w-20 shrink-0 text-muted-foreground/70">description</span>
+                <span className="w-20 shrink-0 text-faint dark:text-muted-foreground/70">description</span>
                 {done >= 2 ? (
                   <span key={`d${run}`} className="truncate font-sans text-[12.5px] text-foreground/90 animate-[print_1s_steps(40)_both]">
                     {DESCRIPTION}
@@ -259,7 +259,7 @@ export default function AiSection() {
                   ) : running ? (
                     <AgentSpinner verb={helper.verb} className="text-[13px]" />
                   ) : (
-                    <p className="font-mono text-[13px] text-muted-foreground/40">waiting…</p>
+                    <p className="font-mono text-[13px] text-faint dark:text-muted-foreground/40">waiting…</p>
                   )}
                 </div>
                 {/* Progress while this helper runs */}

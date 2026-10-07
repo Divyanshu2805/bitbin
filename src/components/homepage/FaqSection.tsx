@@ -135,7 +135,7 @@ export default function FaqSection() {
                   <span
                     className={cn(
                       "w-6 shrink-0 font-mono text-xs tabular-nums transition-colors duration-300",
-                      isOpen ? "text-cyan" : "text-muted-foreground/60 group-hover:text-cyan/80"
+                      isOpen ? "text-cyan" : "text-faint dark:text-muted-foreground/60 group-hover:text-cyan/80"
                     )}
                   >
                     {String(i + 1).padStart(2, "0")}

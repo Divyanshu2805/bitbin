@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { decodeCursor, encodeCursor, keysetWhere } from '@/lib/keyset';
 import { getCollectionById, getAllCollections, updateCollection, deleteCollection, toggleCollectionPin } from './collections';
 
 // Mock Prisma client
@@ -272,9 +273,64 @@ describe('getAllCollections', () => {
     expect(prisma.collection.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: 'user-1' },
-        orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
+        orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }, { id: 'desc' }],
       })
     );
     expect(result.collections[0].isPinned).toBe(true);
+  });
+
+  it('reads one more than a page to learn whether there is another, and shows only the page', async () => {
+    const rows = Array.from({ length: 4 }, (_, i) => ({
+      ...basePrismaCollection,
+      id: `col-${i}`,
+      updatedAt: new Date(10_000 - i),
+    }));
+    vi.mocked(prisma.collection.findMany).mockResolvedValue(rows as never);
+    vi.mocked(prisma.collection.count).mockResolvedValue(9);
+
+    const result = await getAllCollections('user-1', undefined, 3);
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 4 }));
+    expect(result.collections.map((c) => c.id)).toEqual(['col-0', 'col-1', 'col-2']);
+    expect(result.totalCount).toBe(9);
+    expect(result.pageInfo).toMatchObject({ hasNext: true, hasPrev: false });
+    expect(decodeCursor(result.pageInfo.nextCursor)?.id).toBe('col-2');
+  });
+
+  it('continues after a cursor, still scoped to the user, and knows it is on a later page', async () => {
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([{ ...basePrismaCollection, id: 'col-7' }] as never);
+    vi.mocked(prisma.collection.count).mockResolvedValue(8);
+    const after = encodeCursor({ id: 'col-6', isPinned: false, updatedAt: new Date(5000) });
+
+    const result = await getAllCollections('user-1', { after }, 3);
+
+    const call = vi.mocked(prisma.collection.findMany).mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(call.where.AND[0]).toEqual({ userId: 'user-1' });
+    expect(call.where.AND[1]).toEqual(keysetWhere({ pinned: false, updatedAt: new Date(5000), id: 'col-6' }, 'after'));
+    expect(result.pageInfo).toMatchObject({ hasNext: false, hasPrev: true, nextCursor: null });
+  });
+
+  it('goes back by reading in reverse and showing the rows in list order', async () => {
+    const reversed = ['col-3', 'col-2', 'col-1', 'col-0'].map((id, i) => ({ ...basePrismaCollection, id, updatedAt: new Date(1000 + i) }));
+    vi.mocked(prisma.collection.findMany).mockResolvedValue(reversed as never);
+    vi.mocked(prisma.collection.count).mockResolvedValue(10);
+    const before = encodeCursor({ id: 'col-4', isPinned: false, updatedAt: new Date(900) });
+
+    const result = await getAllCollections('user-1', { before }, 3);
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ isPinned: 'asc' }, { updatedAt: 'asc' }, { id: 'asc' }], take: 4 })
+    );
+    expect(result.collections.map((c) => c.id)).toEqual(['col-1', 'col-2', 'col-3']);
+    expect(result.pageInfo).toMatchObject({ hasPrev: true, hasNext: true });
+  });
+
+  it('ignores a cursor it did not issue and shows the first page', async () => {
+    vi.mocked(prisma.collection.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.collection.count).mockResolvedValue(0);
+
+    await getAllCollections('user-1', { after: 'garbage' });
+
+    expect(prisma.collection.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: 'user-1' } }));
   });
 });

@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
-import { prisma } from '@/lib/prisma';
+import { rejectUnlessCron } from '@/lib/cron-auth';
+import { findUserIdByEmail, resetDemoAccount } from '@/lib/db/demo';
 import { DEMO_EMAIL } from '@/lib/demo';
 import { resetDemoContent } from '../../../../../prisma/demo-content';
-
-/** True when `header` is exactly `Bearer <secret>`, compared in constant time. */
-function isAuthorized(header: string | null, secret: string): boolean {
-  const given = Buffer.from(header ?? '');
-  const expected = Buffer.from(`Bearer ${secret}`);
-  return given.length === expected.length && timingSafeEqual(given, expected);
-}
 
 /**
  * Put the public demo account back to the seeded library. Called once a day by
@@ -17,38 +10,18 @@ function isAuthorized(header: string | null, secret: string): boolean {
  * $CRON_SECRET`. Without `CRON_SECRET` set it refuses to run for anyone.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error('Demo reset refused: CRON_SECRET is not set');
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
-  }
-
-  if (!isAuthorized(request.headers.get('authorization'), secret)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const refused = rejectUnlessCron(request, 'Demo reset');
+  if (refused) return refused;
 
   try {
-    const demo = await prisma.user.findUnique({
-      where: { email: DEMO_EMAIL },
-      select: { id: true },
-    });
+    const demoId = await findUserIdByEmail(DEMO_EMAIL);
 
     // No demo account here (for example a fresh database): nothing to reset
-    if (!demo) {
+    if (!demoId) {
       return NextResponse.json({ success: true, skipped: true });
     }
 
-    await prisma.$transaction(
-      async (tx) => {
-        await resetDemoContent(tx, demo.id);
-        // The sandbox blocks these, so this is a safety net
-        await tx.user.update({
-          where: { id: demo.id },
-          data: { name: 'Demo User', isPro: false, stripeCustomerId: null, stripeSubscriptionId: null },
-        });
-      },
-      { timeout: 30_000 }
-    );
+    await resetDemoAccount(demoId, resetDemoContent);
 
     return NextResponse.json({ success: true });
   } catch (error) {

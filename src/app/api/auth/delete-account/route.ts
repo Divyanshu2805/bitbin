@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { auth } from '@/auth'
-import { prisma } from '@/lib/prisma'
+import { deleteUser, getDeletionRecord } from '@/lib/db/accounts'
 import { stripe } from '@/lib/stripe'
 import { deleteUserFilesFromR2 } from '@/lib/r2'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
@@ -27,10 +27,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: demoBlockedMessage('be deleted') }, { status: 403 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { password: true, stripeSubscriptionId: true },
-    })
+    const user = await getDeletionRecord(session.user.id)
 
     if (!user) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
@@ -72,9 +69,7 @@ export async function DELETE(request: Request) {
     }
 
     // Delete the user - cascade will handle related data
-    await prisma.user.delete({
-      where: { id: session.user.id },
-    })
+    await deleteUser(session.user.id)
 
     return NextResponse.json({
       success: true,

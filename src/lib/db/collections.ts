@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma/client';
+import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 
 // Maximum allowed limit for queries to prevent abuse
@@ -11,15 +13,9 @@ function validateLimit(limit: number, defaultLimit: number): number {
   return Math.min(Math.max(1, limit), MAX_QUERY_LIMIT) || defaultLimit;
 }
 
-const DEMO_USER_EMAIL = 'demo@bitbin.dev';
-
-/**
- * Get the demo user (temporary until auth is implemented)
- */
-export async function getDemoUser() {
-  return prisma.user.findUnique({
-    where: { email: DEMO_USER_EMAIL },
-  });
+/** How many collections the user has (plan limits). */
+export async function countCollections(userId: string): Promise<number> {
+  return prisma.collection.count({ where: { userId } });
 }
 
 export interface CollectionItemType {
@@ -298,26 +294,28 @@ export async function getUserCollections(
 export interface PaginatedCollections {
   collections: CollectionWithTypes[];
   totalCount: number;
-  totalPages: number;
-  currentPage: number;
+  pageInfo: PageInfo;
 }
 
 /**
- * Get all collections for a user with item type information and pagination
+ * Get all collections for a user with item type information, one page at a time
+ * (pinned first, then by last edit; found by position, see `lib/keyset.ts`)
  */
 export async function getAllCollections(
   userId: string,
-  page: number = 1,
+  request?: PageRequest,
   limit: number = 21
 ): Promise<PaginatedCollections> {
-  const skip = (page - 1) * limit;
+  const { cursor, direction } = readPageRequest(request);
+  const position = keysetWhere(cursor, direction);
+  const where: Prisma.CollectionWhereInput = { userId };
 
-  const [collections, totalCount] = await Promise.all([
+  const [fetched, totalCount] = await Promise.all([
     prisma.collection.findMany({
-      where: { userId },
-      orderBy: PINNED_FIRST,
-      skip,
-      take: limit,
+      where: position ? { AND: [where, position] } : where,
+      orderBy: keysetOrderBy(direction),
+      // One more than shown: its presence says there is another page
+      take: limit + 1,
       include: {
         _count: {
           select: { items: true },
@@ -341,10 +339,10 @@ export async function getAllCollections(
         },
       },
     }),
-    prisma.collection.count({
-      where: { userId },
-    }),
+    prisma.collection.count({ where }),
   ]);
+
+  const { rows: collections, pageInfo } = resolvePage(fetched, limit, direction, cursor !== null);
 
   return {
     collections: collections.map((collection) => {
@@ -365,8 +363,7 @@ export async function getAllCollections(
       };
     }),
     totalCount,
-    totalPages: Math.ceil(totalCount / limit),
-    currentPage: page,
+    pageInfo,
   };
 }
 
@@ -588,13 +585,6 @@ export async function toggleCollectionPin(
   return updated.isPinned;
 }
 
-export interface FavoriteCollection {
-  id: string;
-  name: string;
-  itemCount: number;
-  updatedAt: Date;
-}
-
 /**
  * Get all favorite collections for a user (sorted by updatedAt desc), in the
  * same shape as the collections page so they render as cards or rows
@@ -642,35 +632,4 @@ export async function getFavoriteCollections(
       updatedAt: collection.updatedAt,
     };
   });
-}
-
-export interface SearchableCollection {
-  id: string;
-  name: string;
-  itemCount: number;
-}
-
-/**
- * Get all collections for a user in a lightweight format for search
- */
-export async function getSearchableCollections(
-  userId: string
-): Promise<SearchableCollection[]> {
-  const collections = await prisma.collection.findMany({
-    where: { userId },
-    orderBy: { updatedAt: 'desc' },
-    select: {
-      id: true,
-      name: true,
-      _count: {
-        select: { items: true },
-      },
-    },
-  });
-
-  return collections.map((collection) => ({
-    id: collection.id,
-    name: collection.name,
-    itemCount: collection._count.items,
-  }));
 }

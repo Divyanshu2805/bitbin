@@ -133,7 +133,7 @@ export default function ExtensionDemo({ t }: { t: number }) {
         <span className={cn("grid size-5 place-items-center rounded-md transition-colors duration-200", open ? "bg-lime/15 ring-1 ring-lime/40" : "")}>
           <LogoMark className="size-3.5" />
         </span>
-        <span className="grid size-4 place-items-center rounded-full bg-violet/30 text-[8px] font-bold text-violet">D</span>
+        <span className="grid size-4 place-items-center rounded-full bg-violet/15 text-[8px] font-bold text-violet">D</span>
       </div>
 
       {/* The page */}
@@ -156,7 +156,7 @@ export default function ExtensionDemo({ t }: { t: number }) {
             </span>
           </span>
         </div>
-        <p className="mt-3.5 text-[12.5px] leading-relaxed text-muted-foreground/70">
+        <p className="mt-3.5 text-[12.5px] leading-relaxed text-faint dark:text-muted-foreground/70">
           Call useMemo at the top level of your component to cache a calculation between re-renders.
         </p>
       </div>
@@ -221,7 +221,7 @@ export default function ExtensionDemo({ t }: { t: number }) {
                   ) : suggesting ? (
                     <span className="text-muted-foreground">…</span>
                   ) : (
-                    <span className="text-muted-foreground/60">comma, separated</span>
+                    <span className="text-faint dark:text-muted-foreground/60">comma, separated</span>
                   )}
                 </span>
                 <span
@@ -244,7 +244,7 @@ export default function ExtensionDemo({ t }: { t: number }) {
                 ) : suggesting ? (
                   <span className="text-muted-foreground">…</span>
                 ) : (
-                  <span className="text-muted-foreground/60">Optional</span>
+                  <span className="text-faint dark:text-muted-foreground/60">Optional</span>
                 )}
               </span>
             </label>

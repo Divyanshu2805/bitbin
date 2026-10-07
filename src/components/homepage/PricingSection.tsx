@@ -145,7 +145,7 @@ export default function PricingSection() {
               >
                 {yearly ? "$6" : "$8"}
               </span>
-              {yearly ? <span className="font-display text-xl text-muted-foreground/60 line-through">$8</span> : null}
+              {yearly ? <span className="font-display text-xl text-faint dark:text-muted-foreground/60 line-through">$8</span> : null}
               <span className="text-muted-foreground">/month</span>
             </p>
             <p className="relative mt-1 h-5 text-sm text-muted-foreground">
@@ -243,7 +243,7 @@ function Cell({ value, pro = false }: { value: boolean | string; pro?: boolean }
       {value ? (
         <Check className={cn("size-4", pro ? "text-lime" : "text-foreground/70")} strokeWidth={2.5} />
       ) : (
-        <Minus className="size-4 text-muted-foreground/40" />
+        <Minus className="size-4 text-faint dark:text-muted-foreground/40" />
       )}
     </span>
   );

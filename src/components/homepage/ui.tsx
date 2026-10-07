@@ -6,7 +6,6 @@ import { LogoMark } from "@/components/shared/logo";
 import LandingBackdrop from "./LandingBackdrop";
 import { BRAND_SURFACE } from "./brand-surface";
 import { useEffect, useRef } from "react";
-import { scramble } from "@/components/shared/decode-text";
 import { prefersReducedMotion, usePointerEffects, useReveal } from "@/hooks/use-motion";
 import { startSmoothScroll } from "@/lib/smooth-scroll";
 
@@ -92,7 +91,7 @@ export function SectionHeading({
           "border-[color-mix(in_srgb,var(--accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] text-[var(--accent)]"
         )}
       >
-        <span className="opacity-60">{index}</span>
+        <span className="dark:opacity-60">{index}</span>
         <span className="h-3 w-px bg-current opacity-30" />
         {label}
       </p>
@@ -192,6 +191,19 @@ export function CtaLink({
       )}
     </TransitionLink>
   );
+}
+
+const SCRAMBLE_GLYPHS = "abcdefghijklmnopqrstuvwxyz0123456789{}[]<>/=+*#$%&";
+
+/** `text` with every character past the first `settled` swapped for a random glyph. */
+function scramble(text: string, settled: number) {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (i < settled || char === " ") out += char;
+    else out += SCRAMBLE_GLYPHS[Math.floor(Math.random() * SCRAMBLE_GLYPHS.length)];
+  }
+  return out;
 }
 
 /**

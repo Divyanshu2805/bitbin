@@ -155,7 +155,7 @@ export default function ShortcutsSection() {
                   <span className="ml-auto flex items-center gap-1 font-mono text-[11px]">
                     {item.keys.map((key, k) => (
                       <span key={k} className="flex items-center gap-1">
-                        {k > 0 && item.sequence ? <span className="text-muted-foreground/60">then</span> : null}
+                        {k > 0 && item.sequence ? <span className="text-faint dark:text-muted-foreground/60">then</span> : null}
                         <kbd className={cn("grid h-6 min-w-6 place-items-center rounded border border-b-2 px-1.5", current ? "border-lime/40 text-lime" : "border-border text-muted-foreground")}>
                           {key}
                         </kbd>
@@ -197,7 +197,7 @@ export default function ShortcutsSection() {
                       <kbd className="grid h-5 min-w-5 place-items-center rounded border border-b-2 border-lime/50 bg-lime/10 px-1 text-lime">{key}</kbd>
                     </span>
                   ))}
-                  {typed === 0 ? <span className="text-muted-foreground/60">waiting for keys…</span> : null}
+                  {typed === 0 ? <span className="text-faint dark:text-muted-foreground/60">waiting for keys…</span> : null}
                 </span>
               }
             />
@@ -359,12 +359,12 @@ function DashboardScreen({ step, acted, t, keys }: { step: number; acted: boolea
                         {label}
                       </span>
                       <span className="mt-0.5 block font-mono text-[18px] leading-tight font-bold">{n}</span>
-                      <span className="text-[9.5px] text-muted-foreground/70">{note}</span>
+                      <span className="text-[9.5px] text-faint dark:text-muted-foreground/70">{note}</span>
                     </span>
                   ))}
                 </div>
                 <p className="mt-3 mb-1.5 font-mono text-[10px] text-muted-foreground">
-                  <span className="text-muted-foreground/50">{"// "}</span>recent <span className="text-muted-foreground/60">[3]</span>
+                  <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>recent <span className="text-faint dark:text-muted-foreground/60">[3]</span>
                 </p>
                 <Rows rows={RECENT} />
               </>
@@ -438,7 +438,7 @@ function DashboardScreen({ step, acted, t, keys }: { step: number; acted: boolea
             {shortcut.label}
           </span>
         ) : (
-          <span className="ml-auto text-muted-foreground/60">ready</span>
+          <span className="ml-auto text-faint dark:text-muted-foreground/60">ready</span>
         )}
       </div>
     </div>
@@ -464,7 +464,7 @@ function Rows({ rows, starred = false }: { rows: Row[]; starred?: boolean }) {
             <span className="ml-auto flex shrink-0 items-center gap-2 font-mono text-[9.5px] text-muted-foreground">
               {row.tags.map((tag) => (
                 <span key={tag}>
-                  <span className="text-muted-foreground/50">#</span>
+                  <span className="text-faint dark:text-muted-foreground/50">#</span>
                   {tag}
                 </span>
               ))}
@@ -543,7 +543,7 @@ function NewItemForm({ t }: { t: number }) {
         <span className="grid gap-1">
           <span className="text-[10px] text-muted-foreground">Tags</span>
           <span className="flex gap-1.5">
-            <span className="flex h-7 min-w-0 flex-1 items-center rounded-md border border-border bg-card px-2 text-[11px] text-muted-foreground/60">
+            <span className="flex h-7 min-w-0 flex-1 items-center rounded-md border border-border bg-card px-2 text-[11px] text-faint dark:text-muted-foreground/60">
               Separate tags with commas
             </span>
             <MockButton icon={Sparkles} className="text-[10.5px]">
@@ -569,7 +569,7 @@ function NewCollectionForm({ t }: { t: number }) {
         </Field>
         <span className="grid gap-1">
           <span className="text-[10px] text-muted-foreground">Description</span>
-          <span className="h-12 rounded-md border border-border bg-card px-2 py-1.5 text-[11px] text-muted-foreground/60">Enter collection description</span>
+          <span className="h-12 rounded-md border border-border bg-card px-2 py-1.5 text-[11px] text-faint dark:text-muted-foreground/60">Enter collection description</span>
         </span>
       </div>
       <Footer />
@@ -588,14 +588,14 @@ function SearchPalette({ t }: { t: number }) {
     <>
       <p className="flex items-center gap-2 border-b border-border px-3.5 py-2.5 text-[12px]">
         <span className="font-mono text-lime">&gt;</span>
-        {query ? <span className="font-mono">{query}</span> : <span className="font-mono text-muted-foreground/60">search your bin</span>}
+        {query ? <span className="font-mono">{query}</span> : <span className="font-mono text-faint dark:text-muted-foreground/60">search your bin</span>}
         <span className="caret -ml-1" />
         <span className="ml-auto rounded border border-border px-1 font-mono text-[9px] text-muted-foreground">esc</span>
       </p>
       <div className="h-[118px] p-1.5">
         {query.length >= 2 ? (
           <>
-            <p className="px-2 pt-1 pb-1 font-mono text-[9px] tracking-[0.14em] text-muted-foreground/70 uppercase">3 results</p>
+            <p className="px-2 pt-1 pb-1 font-mono text-[9px] tracking-[0.14em] text-faint dark:text-muted-foreground/70 uppercase">3 results</p>
             {results.map((row, i) => {
               const Icon = TYPE_ICONS[row.type];
               return (

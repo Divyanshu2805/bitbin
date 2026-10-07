@@ -1126,3 +1126,60 @@ describe('optimizePrompt server action', () => {
     expect(callArgs.text).toEqual({ format: { type: 'json_object' } })
   })
 })
+
+describe('models without a JSON mode', () => {
+  const pro = { user: { id: 'user-123', isPro: true }, expires: new Date().toISOString() }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockCheckRateLimit.mockResolvedValue({ success: true, remaining: 19, reset: Date.now() + 3600000, retryAfter: 0 })
+    mockAuth.mockResolvedValue(pro)
+  })
+
+  function clientReplying(...replies: Array<string | Error>) {
+    const create = vi.fn()
+    for (const reply of replies) {
+      if (reply instanceof Error) create.mockRejectedValueOnce(reply)
+      else create.mockResolvedValueOnce({ output_text: reply })
+    }
+    mockGetOpenAIClient.mockReturnValue({ responses: { create } } as unknown as ReturnType<typeof getOpenAIClient>)
+    return create
+  }
+
+  it('reads tags out of a fenced reply', async () => {
+    clientReplying('```json\n{"tags":["React","Hooks"]}\n```')
+
+    const result = await generateAutoTags(validInput)
+
+    expect(result).toEqual({ success: true, data: ['react', 'hooks'] })
+  })
+
+  it('reads a description out of a reply wrapped in a sentence', async () => {
+    clientReplying('Here you go: {"description":"A React hook for auth."} Enjoy!')
+
+    const result = await generateDescription(validDescInput)
+
+    expect(result).toEqual({ success: true, data: 'A React hook for auth.' })
+  })
+
+  it('retries without JSON mode when the provider rejects it', async () => {
+    const create = clientReplying(
+      Object.assign(new Error('json_object is not supported'), { status: 400 }),
+      '["react","auth"]'
+    )
+
+    const result = await generateAutoTags(validInput)
+
+    expect(result).toEqual({ success: true, data: ['react', 'auth'] })
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(create.mock.calls[1][0].text).toBeUndefined()
+  })
+
+  it('uses a plain-text reply as the optimized prompt', async () => {
+    clientReplying('You are a senior reviewer.\n\nContext:\n- A pull request.')
+
+    const result = await optimizePrompt(validOptimizeInput)
+
+    expect(result).toEqual({ success: true, data: 'You are a senior reviewer.\n\nContext:\n- A pull request.' })
+  })
+})

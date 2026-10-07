@@ -21,6 +21,25 @@ const eslintConfig = defineConfig([
     // Generated copy of the code editor (scripts/copy-monaco.mjs)
     "public/monaco/**",
   ]),
+  // The database client is used in src/lib/db only; everything else calls a function from there,
+  // so every query and its ownership check live in one layer.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/db/**", "src/lib/prisma.ts", "src/**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/lib/prisma", "**/lib/prisma", "./prisma"],
+              message: "Add a function to src/lib/db instead of using the Prisma client directly.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

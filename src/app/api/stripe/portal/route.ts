@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe } from '@/lib/stripe'
-import { prisma } from '@/lib/prisma'
+import { getStripeCustomerId } from '@/lib/db/billing'
 import { rejectCrossSite } from '@/lib/same-origin'
 
 export async function POST(request?: Request) {
@@ -23,12 +23,9 @@ export async function POST(request?: Request) {
       return rateLimitResponse(rateLimit.retryAfter)
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { stripeCustomerId: true },
-    })
+    const stripeCustomerId = await getStripeCustomerId(session.user.id)
 
-    if (!user?.stripeCustomerId) {
+    if (!stripeCustomerId) {
       return NextResponse.json(
         { error: 'No billing account found' },
         { status: 400 }
@@ -38,7 +35,7 @@ export async function POST(request?: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
+      customer: stripeCustomerId,
       return_url: `${appUrl}/settings`,
     })
 

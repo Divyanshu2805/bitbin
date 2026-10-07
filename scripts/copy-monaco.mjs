@@ -1,9 +1,8 @@
 // Copies the Monaco editor's runtime files into public/monaco so the app serves them itself.
 //
-// The editor used to load from a public CDN. That meant a third party's script ran inside every
-// signed-in page, with no integrity check, and the Content Security Policy had to allow that origin.
-// Serving the files from our own origin removes the dependency: the policy can say `script-src
-// 'self'`, and the version in use is the one pinned in package.json.
+// Serving the editor from our own origin, rather than a public CDN, keeps third-party script out of
+// every signed-in page: the Content Security Policy can say `script-src 'self'`, and the version in
+// use is the one pinned in package.json.
 //
 // Runs before `next dev` and `next build` (the `predev` / `prebuild` scripts). public/monaco is
 // generated and git-ignored.

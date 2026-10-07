@@ -61,10 +61,10 @@ export function AddToCollectionMenu({ itemId }: { itemId: string }) {
       <DropdownMenuSubContent sideOffset={6} alignOffset={-5} className="thin-scrollbar max-h-72 w-48 overflow-y-auto">
         <DropdownMenuLabel className="flex items-center justify-between px-2 pt-1 pb-1.5 font-mono text-[11px] font-normal text-muted-foreground">
           <span>
-            <span className="text-muted-foreground/50">{"//"}</span> collections
+            <span className="text-faint dark:text-muted-foreground/50">{"//"}</span> collections
           </span>
           {options && options.length > 0 && (
-            <span className="tabular-nums text-muted-foreground/70">
+            <span className="tabular-nums text-faint dark:text-muted-foreground/70">
               {options.filter((o) => o.inCollection).length}/{options.length}
             </span>
           )}

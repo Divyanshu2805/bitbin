@@ -58,7 +58,7 @@ export default function ItemRow({ item }: { item: ItemWithType }) {
         <span className="hidden shrink-0 gap-2 font-mono text-[11px] text-muted-foreground md:flex">
           {item.tags.slice(0, 3).map((tag) => (
             <span key={tag}>
-              <span className="text-muted-foreground/50">#</span>
+              <span className="text-faint dark:text-muted-foreground/50">#</span>
               {tag}
             </span>
           ))}

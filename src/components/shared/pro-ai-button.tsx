@@ -26,7 +26,7 @@ export default function ProAiButton({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="flex items-center gap-1.5 text-sm text-muted-foreground/50 cursor-not-allowed">
+          <span className="flex items-center gap-1.5 text-sm text-faint dark:text-muted-foreground/50 cursor-not-allowed">
             <Crown className="h-3.5 w-3.5" />
             <span>{label}</span>
           </span>

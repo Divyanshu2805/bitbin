@@ -34,7 +34,7 @@ export default function Footer() {
         </div>
         {COLUMNS.map((col) => (
           <nav key={col.title} aria-label={col.title} className="flex flex-col gap-1">
-            <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground/70">{col.title}</p>
+            <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-faint dark:text-muted-foreground/70">{col.title}</p>
             {col.links.map((link) => (
               <a key={link.label} href={link.href} className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
                 {link.label}
@@ -43,7 +43,7 @@ export default function Footer() {
           </nav>
         ))}
         <nav aria-label="Account" className="flex flex-col gap-1">
-          <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground/70">Account</p>
+          <p className="mb-1 font-mono text-xs uppercase tracking-[0.18em] text-faint dark:text-muted-foreground/70">Account</p>
           <TransitionLink href="/sign-in" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
             Sign in
           </TransitionLink>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
-import { prisma } from '@/lib/prisma'
+import { linkStripeCustomer, setPlanForCustomer } from '@/lib/db/billing'
 import type Stripe from 'stripe'
 
 type CustomerRef = string | { id: string } | null | undefined
@@ -26,13 +26,7 @@ async function syncPlanFromStripe(customerId: string) {
   })
   const active = subscriptions.data.find((sub) => ACTIVE_STATUSES.has(sub.status))
 
-  await prisma.user.updateMany({
-    where: { stripeCustomerId: customerId },
-    data: {
-      isPro: Boolean(active),
-      stripeSubscriptionId: active?.id ?? null,
-    },
-  })
+  await setPlanForCustomer(customerId, Boolean(active), active?.id ?? null)
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
@@ -57,10 +51,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // updateMany: the user may have deleted their account between paying and
   // this event, and a thrown error would make Stripe retry for days
-  await prisma.user.updateMany({
-    where: { id: userId },
-    data: { stripeCustomerId: customerId },
-  })
+  await linkStripeCustomer(userId, customerId)
   await syncPlanFromStripe(customerId)
 }
 

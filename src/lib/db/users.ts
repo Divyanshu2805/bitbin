@@ -121,3 +121,37 @@ export async function getEditorPreferences(userId: string): Promise<EditorPrefer
 
   return mergeWithDefaults(user?.editorPreferences as Partial<EditorPreferences> | null);
 }
+
+export interface ProfileStats {
+  totalItems: number;
+  totalCollections: number;
+  itemTypeBreakdown: { name: string; icon: string; color: string; count: number }[];
+}
+
+/**
+ * Totals and the per-type item counts for the profile page
+ */
+export async function getProfileStats(userId: string): Promise<ProfileStats> {
+  const [itemCounts, itemTypes, totalItems, totalCollections] = await Promise.all([
+    prisma.item.groupBy({
+      by: ['itemTypeId'],
+      where: { userId },
+      _count: { id: true },
+    }),
+    prisma.itemType.findMany({ where: { isSystem: true } }),
+    prisma.item.count({ where: { userId } }),
+    prisma.collection.count({ where: { userId } }),
+  ]);
+
+  const typeCountMap = new Map(itemCounts.map((c) => [c.itemTypeId, c._count.id]));
+  return {
+    totalItems,
+    totalCollections,
+    itemTypeBreakdown: itemTypes.map((type) => ({
+      name: type.name,
+      icon: type.icon,
+      color: type.color,
+      count: typeCountMap.get(type.id) || 0,
+    })),
+  };
+}

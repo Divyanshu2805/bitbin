@@ -18,7 +18,7 @@ export default function SidebarUsage({ itemCount }: { itemCount: number }) {
         <div className="mx-3 mb-3 rounded-md border border-border bg-background/50 p-3">
           <div className="mb-2 flex items-baseline justify-between font-mono text-xs">
             <span className="text-muted-foreground">
-              <span className="text-muted-foreground/50">{"// "}</span>free plan
+              <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>free plan
             </span>
             <span className={cn("tabular-nums", nearlyFull ? "text-coral" : "text-foreground")}>
               {used}/{MAX_ITEMS}

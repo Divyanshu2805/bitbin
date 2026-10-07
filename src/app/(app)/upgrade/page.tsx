@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
 import UpgradePricing from '@/components/settings/upgrade-pricing';
 import { getUserUsage } from '@/lib/usage';
+import { getUserPlan } from '@/lib/db/billing';
 
 export default async function UpgradePage() {
   const session = await auth();
@@ -15,10 +15,7 @@ export default async function UpgradePage() {
     redirect('/settings');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, isPro: true },
-  });
+  const user = await getUserPlan(session.user.id);
 
   if (!user) {
     redirect('/sign-in');
