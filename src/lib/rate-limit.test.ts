@@ -86,7 +86,7 @@ describe('checkRateLimit when Redis errors', () => {
   it('refuses credential endpoints instead of switching the limit off', async () => {
     const { checkRateLimit } = await loadRateLimit()
 
-    for (const type of ['login', 'register', 'forgotPassword', 'resetPassword', 'resendVerification', 'changePassword', 'registerEmail', 'forgotPasswordEmail', 'resendVerificationEmail', 'twoFactor'] as const) {
+    for (const type of ['login', 'register', 'forgotPassword', 'resetPassword', 'resendVerification', 'changePassword', 'registerEmail', 'forgotPasswordEmail', 'resendVerificationEmail'] as const) {
       await expect(checkRateLimit(type, 'a@b.com')).resolves.toMatchObject({ success: false, retryAfter: 60 })
     }
   })

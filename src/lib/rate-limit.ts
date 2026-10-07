@@ -66,13 +66,13 @@ export const rateLimitConfigs = {
   resendVerificationEmail: cfg(3, '1 h', 'ratelimit:resend-verification-email'),
   // Change password: 5 attempts per 15 minutes (keyed by IP + user ID)
   changePassword: cfg(5, '15 m', 'ratelimit:change-password'),
-  // Two-factor setup, confirmation, disabling and recovery-code actions: 10 per 15 minutes per user
-  twoFactor: cfg(10, '15 m', 'ratelimit:two-factor'),
   // "Sign out everywhere": 5 per hour per user
   sessions: cfg(5, '1 h', 'ratelimit:sessions'),
   // Import: 5 imports per hour, and 20 previews, per user (parsing a big file is real work)
   import: cfg(5, '1 h', 'ratelimit:import'),
   importPreview: cfg(20, '1 h', 'ratelimit:import-preview'),
+  // Search palette: 240 a minute per user (a request per pause in typing, a few per search)
+  search: cfg(240, '1 m', 'ratelimit:search'),
   // Export: 10 per hour per user (a ZIP reads every file from storage)
   export: cfg(10, '1 h', 'ratelimit:export'),
   // Stripe: 10 checkouts and 20 portal sessions per hour per user
@@ -107,7 +107,6 @@ const FAIL_CLOSED: ReadonlySet<RateLimitType> = new Set([
   'forgotPasswordEmail',
   'resendVerificationEmail',
   'changePassword',
-  'twoFactor',
 ])
 
 interface RateLimitResult {
@@ -163,11 +162,6 @@ export function memoryLimit(type: RateLimitType, key: string, now = Date.now()):
     }
   }
   return { success: true, remaining: limit - recent.length, reset: recent[0] + span, retryAfter: 0 }
-}
-
-/** Test helper: forget every in-memory counter. */
-export function resetMemoryLimits(): void {
-  memory.clear()
 }
 
 // ---------------------------------------------------------------------------

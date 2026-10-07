@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderOpen } from "lucide-react";
 import {
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -14,20 +13,23 @@ import {
 import { ItemTypeIcon } from "@/components/shared/item-type-icon";
 import { AgentSpinner } from "@/components/shared/agent-spinner";
 import { readableColor } from "@/lib/utils/color";
+import { cn } from "@/lib/utils";
 import { useSearch } from "@/components/search/search-provider";
 import { useItemDrawer } from "@/components/items/item-drawer-provider";
+import { searchLibrary, type SearchData } from "@/actions/search";
 
-/**
- * Stricter search filter - requires search term to appear as contiguous substring
- * Returns 1 for match, 0 for no match (cmdk expects this format)
- */
-function strictFilter(value: string, search: string): number {
-  if (!search) return 1;
-  return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+// A pause in typing this long sends the search
+const DEBOUNCE_MS = 150;
+
+interface SearchResult {
+  /** The text these results are for */
+  query: string;
+  data: SearchData | null;
+  error: string | null;
 }
 
 export default function CommandPalette() {
-  const { isOpen, closeSearch, searchData, isLoading } = useSearch();
+  const { isOpen, closeSearch } = useSearch();
   const { openDrawer } = useItemDrawer();
   const router = useRouter();
 
@@ -54,10 +56,63 @@ export default function CommandPalette() {
       title="Search"
       description="Search items, tags and collections"
       showCloseButton={false}
-      filter={strictFilter}
+      // The server filters and ranks; cmdk only lists what it is given
+      shouldFilter={false}
       className="gap-0 border-border bg-popover shadow-[var(--shadow-lift)] sm:max-w-xl [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-normal [&_[cmdk-item][data-selected=true]]:bg-lime/[0.07] [&_[cmdk-item]]:rounded-md"
     >
+      {/* Mounted only while the palette is open, so each opening starts with an empty box and fresh results */}
+      <PaletteBody onSelectItem={handleItemSelect} onSelectCollection={handleCollectionSelect} />
+    </CommandDialog>
+  );
+}
+
+function PaletteBody({
+  onSelectItem,
+  onSelectCollection,
+}: {
+  onSelectItem: (id: string) => void;
+  onSelectCollection: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [settled, setSettled] = useState("");
+  const [result, setResult] = useState<SearchResult | null>(null);
+
+  // Wait for a pause in typing before asking the server
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(query), query ? DEBOUNCE_MS : 0);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Ask for the settled text. A newer search makes an older answer irrelevant, so it is dropped.
+  useEffect(() => {
+    let current = true;
+    searchLibrary(settled)
+      .then((response) => {
+        if (!current) return;
+        setResult({
+          query: settled,
+          data: response.success && response.data ? response.data : null,
+          error: response.success ? null : (response.error ?? "Search failed"),
+        });
+      })
+      .catch(() => {
+        if (current) setResult({ query: settled, data: null, error: "Search failed" });
+      });
+    return () => {
+      current = false;
+    };
+  }, [settled]);
+
+  const data = result?.data ?? null;
+  const upToDate = result !== null && result.query === query.trim() && settled === query;
+  const typed = query.trim().length > 0;
+  const hasResults = !!data && (data.items.length > 0 || data.collections.length > 0);
+
+  return (
+    <>
       <CommandInput
+        value={query}
+        onValueChange={setQuery}
         placeholder="search items, #tags and collections"
         className="font-mono text-base lg:text-[13px]"
         icon={
@@ -67,25 +122,33 @@ export default function CommandPalette() {
         }
       />
       <CommandList className="thin-scrollbar max-h-[min(420px,60vh)] py-1">
-        {isLoading ? (
+        {result === null ? (
           <div className="flex justify-center py-8">
             <AgentSpinner verb={["Indexing", "Grepping"]} className="text-xs" />
           </div>
+        ) : result.error && !hasResults ? (
+          <p className="py-6 text-center font-mono text-xs text-destructive">{result.error}</p>
         ) : (
-          <>
-            <CommandEmpty>
-              <span className="font-mono text-xs text-muted-foreground">
-                no matches <span className="text-muted-foreground">· try fewer letters</span>
-              </span>
-            </CommandEmpty>
+          <div className={cn("transition-opacity", !upToDate && typed && "opacity-60")}>
+            {!hasResults && upToDate && (
+              <p className="py-6 text-center font-mono text-xs text-muted-foreground">
+                {typed ? (
+                  <>
+                    no matches <span>· try fewer letters</span>
+                  </>
+                ) : (
+                  "nothing saved yet · press N to add the first item"
+                )}
+              </p>
+            )}
 
-            {searchData && searchData.items.length > 0 && (
-              <CommandGroup heading="// items">
-                {searchData.items.map((item) => (
+            {data && data.items.length > 0 && (
+              <CommandGroup heading={typed ? "// items" : "// recent items"}>
+                {data.items.map((item) => (
                   <CommandItem
                     key={item.id}
-                    value={`item-${item.title}-${item.contentPreview || ""} ${item.tags.map((tag) => `#${tag}`).join(" ")}`}
-                    onSelect={() => handleItemSelect(item.id)}
+                    value={`item-${item.id}`}
+                    onSelect={() => onSelectItem(item.id)}
                     className="group cursor-pointer gap-3"
                   >
                     <span
@@ -113,13 +176,13 @@ export default function CommandPalette() {
               </CommandGroup>
             )}
 
-            {searchData && searchData.collections.length > 0 && (
-              <CommandGroup heading="// collections">
-                {searchData.collections.map((collection) => (
+            {data && data.collections.length > 0 && (
+              <CommandGroup heading={typed ? "// collections" : "// recent collections"}>
+                {data.collections.map((collection) => (
                   <CommandItem
                     key={collection.id}
-                    value={`collection-${collection.name}`}
-                    onSelect={() => handleCollectionSelect(collection.id)}
+                    value={`collection-${collection.id}`}
+                    onSelect={() => onSelectCollection(collection.id)}
                     className="cursor-pointer gap-3"
                   >
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan/10">
@@ -133,7 +196,7 @@ export default function CommandPalette() {
                 ))}
               </CommandGroup>
             )}
-          </>
+          </div>
         )}
       </CommandList>
 
@@ -150,6 +213,6 @@ export default function CommandPalette() {
           <span className="kbd">esc</span> close
         </span>
       </div>
-    </CommandDialog>
+    </>
   );
 }

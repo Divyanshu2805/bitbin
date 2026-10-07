@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
-import { getFromR2, isOwnedFileUrl } from '@/lib/r2';
-import { fileKeyFromUrl } from '@/lib/file-url';
-import { buildTextEntries } from '@/lib/export-files';
-import { getUserExportData } from '@/lib/db/export';
-import archiver from 'archiver';
-import { PassThrough } from 'stream';
+import { safeFileName } from '@/lib/export-files';
+import { buildExportZip } from '@/lib/export-zip';
+import { getCollectionExportData, getUserExportData } from '@/lib/db/export';
 
 function getDateString(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+/** A collection's name as part of a download name: plain ASCII, so the header is always valid. */
+function asciiSlug(name: string): string {
+  return safeFileName(name).replace(/[^\x20-\x7e]/g, '-').replace(/\s+/g, '-').slice(0, 40);
 }
 
 export async function GET(request: NextRequest) {
@@ -19,9 +21,14 @@ export async function GET(request: NextRequest) {
   }
 
   const format = request.nextUrl.searchParams.get('format') || 'json';
+  const collectionId = request.nextUrl.searchParams.get('collection');
 
   if (format !== 'json' && format !== 'zip') {
     return NextResponse.json({ error: 'Invalid format' }, { status: 400 });
+  }
+
+  if (collectionId !== null && (collectionId.length === 0 || collectionId.length > 100)) {
+    return NextResponse.json({ error: 'Invalid collection' }, { status: 400 });
   }
 
   // ZIP export is Pro-only
@@ -38,75 +45,34 @@ export async function GET(request: NextRequest) {
     return rateLimitResponse(rateLimit.retryAfter);
   }
 
-  const data = await getUserExportData(session.user.id);
-  const dateStr = getDateString();
+  // The whole library, or one collection and its items (another user's collection is "not found")
+  const data = collectionId
+    ? await getCollectionExportData(session.user.id, collectionId)
+    : await getUserExportData(session.user.id);
+  if (!data) {
+    return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+  }
+
+  const label = collectionId ? `bitbin-collection-${asciiSlug(data.collections[0]?.name ?? 'export')}` : 'bitbin-export';
+  const baseName = `${label}-${getDateString()}`;
 
   if (format === 'json') {
     const json = JSON.stringify(data, null, 2);
     return new NextResponse(json, {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="bitbin-export-${dateStr}.json"`,
+        'Content-Disposition': `attachment; filename="${baseName}.json"`,
       },
     });
   }
 
-  // ZIP format: JSON manifest + actual files from R2
-  const archive = archiver('zip', { zlib: { level: 9 } });
-  const chunks: Uint8Array[] = [];
-
-  const streamPromise = new Promise<Uint8Array>((resolve, reject) => {
-    const passthrough = new PassThrough();
-    archive.pipe(passthrough);
-
-    passthrough.on('data', (chunk: Uint8Array) => chunks.push(chunk));
-    passthrough.on('end', () => {
-      const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-      const result = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        result.set(chunk, offset);
-        offset += chunk.length;
-      }
-      resolve(result);
-    });
-    passthrough.on('error', reject);
-    archive.on('error', reject);
-  });
-
-  // Add JSON manifest
-  archive.append(JSON.stringify(data, null, 2), { name: 'bitbin-export.json' });
-
-  // Snippets, prompts, commands, notes and links as plain files next to the manifest
-  for (const entry of buildTextEntries(data.items)) {
-    archive.append(entry.content, { name: entry.path });
-  }
-
-  // Fetch and add files from R2 for file/image items
-  const fileItems = data.items.filter((item) =>
-    (item.type === 'file' || item.type === 'image') && isOwnedFileUrl(session.user.id, item.fileUrl)
-  );
-
-  for (const item of fileItems) {
-    try {
-      // The bucket is private: read the object with our credentials, by its key
-      const object = await getFromR2(fileKeyFromUrl(item.fileUrl)!);
-      if (object) {
-        const fileName = item.fileName || `file-${fileItems.indexOf(item)}`;
-        archive.append(Buffer.from(object.body), { name: `files/${fileName}` });
-      }
-    } catch {
-      // Skip files that can't be fetched
-    }
-  }
-
-  await archive.finalize();
-  const zipBytes = await streamPromise;
+  // ZIP format: JSON manifest + text items as files + the stored files from R2
+  const zipBytes = await buildExportZip(session.user.id, data);
 
   return new Response(zipBytes.buffer as ArrayBuffer, {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="bitbin-export-${dateStr}.zip"`,
+      'Content-Disposition': `attachment; filename="${baseName}.zip"`,
     },
   });
 }

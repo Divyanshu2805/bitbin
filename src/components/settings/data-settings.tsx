@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Database, Download, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadFrom } from '@/components/shared/download-file';
 import ImportDialog from './import-dialog';
 
 interface DataSettingsProps {
@@ -22,32 +23,9 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/export?format=${format}`);
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Export failed');
-        return;
-      }
-
-      // Trigger browser download
-      const blob = await res.blob();
-      const disposition = res.headers.get('Content-Disposition') || '';
-      const filenameMatch = disposition.match(/filename="(.+?)"/);
-      const filename = filenameMatch?.[1] || `bitbin-export.${format}`;
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast.success(`Export downloaded as ${filename}`);
-    } catch {
-      toast.error('Export failed');
+      const result = await downloadFrom(`/api/export?format=${format}`, `bitbin-export.${format}`);
+      if (result.ok) toast.success(`Export downloaded as ${result.filename}`);
+      else toast.error(result.error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +37,7 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
         id="data"
         icon={<Database />}
         title="Data"
-        description="Export your bin, or import from a previous export."
+        description="Export your bin, or import from a previous export (a full export, or a single collection's)."
       >
         <div className="space-y-5">
           <div className="flex flex-wrap gap-3">
@@ -101,12 +79,12 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
             onClick={() => setImportOpen(true)}
           >
             <Upload className="mr-2 h-4 w-4" />
-            Import from JSON
+            Import from JSON or ZIP
           </Button>
         </div>
       </Panel>
 
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} isPro={isPro} />
     </>
   );
 }

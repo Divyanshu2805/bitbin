@@ -1,157 +1,104 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { Session } from 'next-auth';
 
-// Mock the auth module
-vi.mock('@/auth', () => ({
-  auth: vi.fn(),
+vi.mock('@/auth', () => ({ auth: vi.fn() }));
+vi.mock('@/lib/db/search', () => ({
+  MAX_SEARCH_LENGTH: 100,
+  searchItems: vi.fn(),
+  searchCollections: vi.fn(),
+  getRecentSearchableItems: vi.fn(),
+  getRecentSearchableCollections: vi.fn(),
+}));
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 }),
+  formatRetryTime: (s: number) => `${s} seconds`,
 }));
 
-// Mock the db modules
-vi.mock('@/lib/db/items', () => ({
-  getSearchableItems: vi.fn(),
-}));
-
-vi.mock('@/lib/db/collections', () => ({
-  getSearchableCollections: vi.fn(),
-}));
-
-import { getSearchData } from './search';
+import { searchLibrary } from './search';
 import { auth } from '@/auth';
-import { getSearchableItems } from '@/lib/db/items';
-import { getSearchableCollections } from '@/lib/db/collections';
+import { checkRateLimit } from '@/lib/rate-limit';
+import {
+  getRecentSearchableCollections,
+  getRecentSearchableItems,
+  searchCollections,
+  searchItems,
+} from '@/lib/db/search';
 
 const mockAuth = auth as unknown as Mock<() => Promise<Session | null>>;
-const mockGetSearchableItems = vi.mocked(getSearchableItems);
-const mockGetSearchableCollections = vi.mocked(getSearchableCollections);
+const session: Session = { user: { id: 'user-1', isPro: false }, expires: new Date().toISOString() };
 
-describe('getSearchData server action', () => {
+const item = { id: 'i1', title: 'Debounce', typeName: 'snippet', typeIcon: 'Code', typeColor: '#3b82f6', contentPreview: 'x', tags: [] };
+const collection = { id: 'c1', name: 'Hooks', itemCount: 2 };
+
+describe('searchLibrary server action', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuth.mockResolvedValue(session);
+    vi.mocked(checkRateLimit).mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 });
+    vi.mocked(searchItems).mockResolvedValue([item]);
+    vi.mocked(searchCollections).mockResolvedValue([collection]);
+    vi.mocked(getRecentSearchableItems).mockResolvedValue([item]);
+    vi.mocked(getRecentSearchableCollections).mockResolvedValue([collection]);
   });
 
-  it('returns error when not authenticated', async () => {
+  it('requires a session', async () => {
     mockAuth.mockResolvedValue(null);
 
-    const result = await getSearchData();
+    const result = await searchLibrary('x');
 
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(searchItems).not.toHaveBeenCalled();
+  });
+
+  it('requires a user id on the session', async () => {
+    mockAuth.mockResolvedValue({ user: { id: '', isPro: false }, expires: '' });
+    expect((await searchLibrary('x')).error).toBe('Unauthorized');
+  });
+
+  it('searches for the session user only, never an id from the input', async () => {
+    const result = await searchLibrary('debounce');
+
+    expect(searchItems).toHaveBeenCalledWith('user-1', 'debounce');
+    expect(searchCollections).toHaveBeenCalledWith('user-1', 'debounce');
+    expect(getRecentSearchableItems).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: true, data: { items: [item], collections: [collection] } });
+  });
+
+  it('shows the recent items and collections when nothing (or only spaces) is typed', async () => {
+    for (const text of ['', '   ']) {
+      const result = await searchLibrary(text);
+      expect(result.success).toBe(true);
+    }
+
+    expect(getRecentSearchableItems).toHaveBeenCalledTimes(2);
+    expect(getRecentSearchableItems).toHaveBeenCalledWith('user-1');
+    expect(searchItems).not.toHaveBeenCalled();
+  });
+
+  it('refuses absurdly long text before touching the database', async () => {
+    const result = await searchLibrary('x'.repeat(1000));
+
+    expect(result).toEqual({ success: false, error: 'Search text is too long' });
+    expect(searchItems).not.toHaveBeenCalled();
+  });
+
+  it('is rate limited per user', async () => {
+    vi.mocked(checkRateLimit).mockResolvedValue({ success: false, remaining: 0, reset: 0, retryAfter: 20 });
+
+    const result = await searchLibrary('x');
+
+    expect(checkRateLimit).toHaveBeenCalledWith('search', 'user-1');
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
+    expect(result.error).toContain('Too many searches');
+    expect(searchItems).not.toHaveBeenCalled();
   });
 
-  it('returns error when user id is missing', async () => {
-    mockAuth.mockResolvedValue({
-      user: { id: '', isPro: false },
-      expires: new Date().toISOString(),
-    });
+  it('hides a database failure behind a generic message', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(searchItems).mockRejectedValue(new Error('connection refused to ep-secret.neon.tech'));
 
-    const result = await getSearchData();
+    const result = await searchLibrary('x');
 
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Unauthorized');
-  });
-
-  it('returns items and collections on success', async () => {
-    const mockItems = [
-      {
-        id: 'item-1',
-        title: 'Test Snippet',
-        typeName: 'snippet',
-        typeIcon: 'Code',
-        typeColor: '#3b82f6',
-        contentPreview: 'function test() {}',
-        tags: ['react', 'hooks'],
-      },
-      {
-        id: 'item-2',
-        title: 'Test Note',
-        typeName: 'note',
-        typeIcon: 'StickyNote',
-        typeColor: '#fde047',
-        contentPreview: null,
-        tags: [],
-      },
-    ];
-
-    const mockCollections = [
-      { id: 'coll-1', name: 'React Patterns', itemCount: 5 },
-      { id: 'coll-2', name: 'DevOps Scripts', itemCount: 3 },
-    ];
-
-    mockAuth.mockResolvedValue({
-      user: { id: 'user-123', isPro: false },
-      expires: new Date().toISOString(),
-    });
-    mockGetSearchableItems.mockResolvedValue(mockItems);
-    mockGetSearchableCollections.mockResolvedValue(mockCollections);
-
-    const result = await getSearchData();
-
-    expect(result.success).toBe(true);
-    expect(result.data).toEqual({
-      items: mockItems,
-      collections: mockCollections,
-    });
-    expect(mockGetSearchableItems).toHaveBeenCalledWith('user-123');
-    expect(mockGetSearchableCollections).toHaveBeenCalledWith('user-123');
-  });
-
-  it('returns empty arrays when user has no data', async () => {
-    mockAuth.mockResolvedValue({
-      user: { id: 'user-123', isPro: false },
-      expires: new Date().toISOString(),
-    });
-    mockGetSearchableItems.mockResolvedValue([]);
-    mockGetSearchableCollections.mockResolvedValue([]);
-
-    const result = await getSearchData();
-
-    expect(result.success).toBe(true);
-    expect(result.data).toEqual({
-      items: [],
-      collections: [],
-    });
-  });
-
-  it('returns error when items query fails', async () => {
-    mockAuth.mockResolvedValue({
-      user: { id: 'user-123', isPro: false },
-      expires: new Date().toISOString(),
-    });
-    mockGetSearchableItems.mockRejectedValue(new Error('DB error'));
-    mockGetSearchableCollections.mockResolvedValue([]);
-
-    const result = await getSearchData();
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Failed to fetch search data');
-  });
-
-  it('returns error when collections query fails', async () => {
-    mockAuth.mockResolvedValue({
-      user: { id: 'user-123', isPro: false },
-      expires: new Date().toISOString(),
-    });
-    mockGetSearchableItems.mockResolvedValue([]);
-    mockGetSearchableCollections.mockRejectedValue(new Error('DB error'));
-
-    const result = await getSearchData();
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Failed to fetch search data');
-  });
-
-  it('fetches items and collections in parallel', async () => {
-    mockAuth.mockResolvedValue({
-      user: { id: 'user-123', isPro: false },
-      expires: new Date().toISOString(),
-    });
-    mockGetSearchableItems.mockResolvedValue([]);
-    mockGetSearchableCollections.mockResolvedValue([]);
-
-    await getSearchData();
-
-    // Both should be called with the same user id
-    expect(mockGetSearchableItems).toHaveBeenCalledWith('user-123');
-    expect(mockGetSearchableCollections).toHaveBeenCalledWith('user-123');
+    expect(result).toEqual({ success: false, error: 'Search failed' });
   });
 });

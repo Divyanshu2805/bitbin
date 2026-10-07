@@ -13,11 +13,12 @@ import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 
-const { mockExportData, mockGetFromR2 } = vi.hoisted(() => ({
+const { mockExportData, mockCollectionExport, mockGetFromR2 } = vi.hoisted(() => ({
   mockExportData: vi.fn(),
+  mockCollectionExport: vi.fn(),
   mockGetFromR2: vi.fn(),
 }));
-vi.mock('@/lib/db/export', () => ({ getUserExportData: mockExportData }));
+vi.mock('@/lib/db/export', () => ({ getUserExportData: mockExportData, getCollectionExportData: mockCollectionExport }));
 vi.mock('@/lib/r2', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/r2')>()),
   getFromR2: mockGetFromR2,
@@ -28,14 +29,14 @@ import { auth } from '@/auth';
 
 const mockAuth = auth as unknown as Mock<() => Promise<Session | null>>;
 
-function exportRequest(format: string) {
-  return new Request(`http://localhost/api/export?format=${format}`) as unknown as NextRequest & {
+function exportRequest(format: string, extra = '') {
+  return new Request(`http://localhost/api/export?format=${format}${extra}`) as unknown as NextRequest & {
     nextUrl: URL;
   };
 }
 
-function get(format: string) {
-  const request = exportRequest(format);
+function get(format: string, extra = '') {
+  const request = exportRequest(format, extra);
   Object.defineProperty(request, 'nextUrl', { value: new URL(request.url) });
   return GET(request);
 }
@@ -132,6 +133,44 @@ describe('GET /api/export', () => {
     mockGetFromR2.mockResolvedValue(null);
 
     expect((await get('zip')).status).toBe(200);
+  });
+});
+
+describe('GET /api/export for one collection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', isPro: true }, expires: new Date().toISOString() });
+  });
+
+  it('exports only that collection, scoped to the caller, and names the download after it', async () => {
+    mockCollectionExport.mockResolvedValue({
+      version: 1,
+      exportedAt: '2026-01-01T00:00:00.000Z',
+      items: [],
+      collections: [{ name: 'React Patterns', description: null, isFavorite: false, isPinned: false }],
+    });
+
+    const res = await get('json', '&collection=col-1');
+
+    expect(res.status).toBe(200);
+    expect(mockCollectionExport).toHaveBeenCalledWith('user-1', 'col-1');
+    expect(mockExportData).not.toHaveBeenCalled();
+    expect(res.headers.get('content-disposition')).toMatch(/bitbin-collection-React-Patterns-\d{4}-\d{2}-\d{2}\.json/);
+  });
+
+  it('answers 404 for a collection that is missing or belongs to someone else', async () => {
+    mockCollectionExport.mockResolvedValue(null);
+    expect((await get('json', '&collection=col-9')).status).toBe(404);
+  });
+
+  it("keeps a collection's ZIP export Pro-only", async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1', isPro: false }, expires: new Date().toISOString() });
+    expect((await get('zip', '&collection=col-1')).status).toBe(403);
+    expect(mockCollectionExport).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty collection id', async () => {
+    expect((await get('json', '&collection=')).status).toBe(400);
   });
 });
 

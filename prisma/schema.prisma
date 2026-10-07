@@ -142,6 +142,12 @@ model Item {
   @@index([userId, isPinned])
   @@index([userId, isFavorite])
   @@index([userId, updatedAt])
+  // Trigram indexes: they make the contains-style search (ILIKE '%text%') use an index
+  // instead of reading every row. They need the pg_trgm extension, created in the migration.
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "items_title_trgm_idx")
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin, map: "items_content_trgm_idx")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, map: "items_description_trgm_idx")
+  @@index([url(ops: raw("gin_trgm_ops"))], type: Gin, map: "items_url_trgm_idx")
   @@map("items")
 }
 
@@ -192,6 +198,7 @@ model Collection {
   @@index([userId, isFavorite])
   @@index([userId, isPinned])
   @@index([userId, updatedAt])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "collections_name_trgm_idx")
   @@map("collections")
 }
 
@@ -218,5 +225,6 @@ model Tag {
   name  String @unique
   items Item[] @relation("ItemTags")
 
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "tags_name_trgm_idx")
   @@map("tags")
 }
