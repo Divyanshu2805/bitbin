@@ -47,6 +47,7 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 - `auth()` first; return `401` JSON without a session.
 - Return `NextResponse.json({ error }, { status })` for every failure, with the status that matches the [error table](../api/errors-and-rate-limits.md#route-handlers).
 - Wrap the body in `try/catch`, `console.error` the real error with context, and return a generic `500` message.
+- A handler authorised by the session cookie that changes state starts with `const crossSite = rejectCrossSite(request); if (crossSite) return crossSite` (`lib/same-origin.ts`).
 - Only add a route handler when a server action can't do the job — a public URL (auth emails, webhooks), streaming bytes, or a non-browser caller.
 
 ## Queries (`lib/db`)
@@ -64,7 +65,7 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 ## Components
 
 - Server components by default; add `'use client'` only for state, effects or event handlers.
-- shadcn/ui primitives in `components/ui/` keep their APIs; restyle, don't fork.
+- shadcn/ui primitives in `components/ui/` keep their APIs; restyle, don't fork. They hold only the parts the app uses: add another part (a dialog footer, a select group) with the shadcn CLI when a feature needs it.
 - After a successful mutation: toast (Sonner), then `router.refresh()`.
 - Use the shared pieces — `PageHeader`, `EmptyState`, `ConfirmDeleteDialog`, `Pagination`, `ItemTypeIcon` — before writing a new one. See the [design system](design-system.md).
 
@@ -82,6 +83,9 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 - Motion respects `prefers-reduced-motion`.
 
 ## Redirects and account state
+
+- A browser-side `fetch` to another origin, or a script from one, is blocked by the Content Security Policy on purpose. Do the call on the server, or change `lib/csp.ts` with a reason.
+- Anything single-use (a token, an email link) is consumed with a conditional update (`lib/db/api-tokens.ts`, `lib/tokens.ts`), not a read-then-write.
 
 - A URL the client supplies to redirect to goes through `safeCallbackPath` (`lib/validation.ts`).
 - A route or action that changes the account itself checks `isDemoEmail` (`lib/demo.ts`) after the session, before anything else.

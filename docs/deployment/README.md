@@ -19,7 +19,7 @@ The build step uses placeholder values for the environment variables (the tests 
 
 CI and Vercel are independent: Vercel deploys every push to `main` whether or not CI has finished, and CI neither deploys nor migrates. Treat a red run as a reason to fix forward immediately. To make CI gate deploys, add a branch-protection rule that requires the `verify` check and deploy from pull requests.
 
-Dependabot (`.github/dependabot.yml`) opens a weekly pull request for npm and GitHub Actions updates, and GitHub's secret scanning with push protection is on for the repository.
+GitHub's secret scanning with push protection is on for the repository.
 
 ## Pages
 

@@ -44,4 +44,3 @@ Every type also uses `title`, `description`, tags, collections, and the favorite
 
 - [Items and item types tables](items-and-types.md)
 - [Items flow](../architecture/flows/items.md)
-- [Item CRUD architecture](../architecture/design-notes/item-crud-architecture.md) — the original design.

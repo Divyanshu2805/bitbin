@@ -50,17 +50,18 @@ The public [Privacy Policy](../../src/app/privacy/page.tsx) (`/privacy`) and [Te
 
 | File | Actions | Page |
 |---|---|---|
-| `items.ts` | `createItem`, `updateItem`, `deleteItem`, `toggleItemFavorite`, `toggleItemPin` | [Server actions](server-actions.md#items) |
+| `items.ts` | `createItem`, `updateItem`, `deleteItem`, `toggleItemFavorite`, `toggleItemPin`, `getItemCollections`, `setItemCollection` | [Server actions](server-actions.md#items) |
 | `collections.ts` | `createCollection`, `updateCollection`, `deleteCollection`, `toggleCollectionFavorite`, `toggleCollectionPin`, `getUserCollections` | [Server actions](server-actions.md#collections) |
 | `ai.ts` | `generateAutoTags`, `generateDescription`, `explainCode`, `optimizePrompt` | [Server actions](server-actions.md#ai) |
-| `import.ts`, `export.ts` | `previewImport`, `importData`, `exportData` | [Server actions](server-actions.md#import-and-export) |
+| `import.ts` | `previewImport`, `importData` | [Server actions](server-actions.md#import-and-export) |
 | `api-tokens.ts` | `createApiToken`, `revokeApiToken` | [Server actions](server-actions.md#api-tokens) |
-| `search.ts`, `settings.ts`, `auth.ts` | `getSearchData`, `updateEditorPreferences`, `updateName`, `signInWithGitHub` | [Server actions](server-actions.md#search-settings-and-sign-in) |
+| `search.ts`, `settings.ts`, `auth.ts` | `searchLibrary`, `updateEditorPreferences`, `updateName`, `signOutEverywhere`, `signInWithGitHub` | [Server actions](server-actions.md#search-settings-and-sign-in) |
 
 ## Conventions
 
 - Route handlers return JSON; errors are `{ "error": "…" }` with a meaningful status. Server actions return an `ActionResult`. Both are described in [errors and rate limits](errors-and-rate-limits.md).
 - The user is always taken from the session, or for `/api/v1`, from the token. No endpoint accepts a user id as input.
+- Cookie-authenticated endpoints that change state (change password, delete account, checkout, the billing portal, upload) refuse a request a browser marks `Sec-Fetch-Site: cross-site` / `same-site`, or whose `Origin` isn't this host, with `403 Cross-site request blocked` (`lib/same-origin.ts`), on top of the `SameSite=Lax` cookie. Next's server actions do the equivalent check themselves.
 
 ## Related
 

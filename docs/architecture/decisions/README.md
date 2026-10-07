@@ -13,6 +13,7 @@ Short records of the decisions that shape BitBin, each with the context that for
 | [0007](0007-token-api-for-the-browser-extension.md) | Add a small `/api/v1` authenticated by personal access tokens, for the browser extension and the desktop app | Accepted, amended |
 | [0008](0008-public-demo-account-as-a-locked-sandbox.md) | Offer a public demo account that can't change itself, and reset it daily | Accepted |
 | [0009](0009-ci-checks-and-a-coverage-floor.md) | Run CI on every push, with a coverage floor on the server code, without gating the deploy | Accepted |
+| [0010](0010-content-security-policy-without-script-nonces.md) | Send a real Content Security Policy that blocks third parties, without script nonces, and self-host the code editor | Accepted |
 
 ## Writing a new record
 

@@ -8,7 +8,7 @@
 | `title` | text | Required |
 | `contentType` | `ContentType` enum | `TEXT`, `FILE` or `URL` — derived from the item type when the item is created |
 | `content` | text, nullable | The payload for `TEXT` types |
-| `fileUrl`, `fileName`, `fileSize` | text, text, int — nullable | The payload for `FILE` types: the public R2 URL, the original name, the size in bytes |
+| `fileUrl`, `fileName`, `fileSize` | text, text, int — nullable | The payload for `FILE` types: the object's URL in the private R2 bucket (never fetched directly: files are read through `/api/download`), the original name, the size in bytes |
 | `url` | text, nullable | The payload for `URL` types (links); `http(s)` only |
 | `description` | text, nullable | |
 | `language` | text, nullable | Syntax-highlighting language for Monaco (snippets, commands). Detected from the content on paste and, when missing, on create (`lib/detect-language.ts`) |

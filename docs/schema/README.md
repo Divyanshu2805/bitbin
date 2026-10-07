@@ -6,11 +6,11 @@ BitBin's data lives in one PostgreSQL database, defined by `prisma/schema.prisma
 
 | Table | Model | Holds | Page |
 |---|---|---|---|
-| `users` | `User` | Accounts, the plan (`isPro`), Stripe ids, editor preferences | [Users and auth](users-and-auth.md) |
+| `users` | `User` | Accounts, the plan (`isPro`), Stripe ids, editor preferences, and session version | [Users and auth](users-and-auth.md) |
 | `accounts` | `Account` | OAuth links (GitHub) — NextAuth adapter | [Users and auth](users-and-auth.md) |
 | `sessions` | `Session` | NextAuth adapter table; unused with JWT sessions | [Users and auth](users-and-auth.md) |
 | `verification_tokens` | `VerificationToken` | Email verification and password-reset tokens | [Users and auth](users-and-auth.md) |
-| `api_tokens` | `ApiToken` | Personal access tokens for the browser extension (hashed) | [Users and auth](users-and-auth.md#api_tokens) |
+| `api_tokens` | `ApiToken` | Personal access tokens for the extension and desktop app (hashed, expiring, with scopes) | [Users and auth](users-and-auth.md#api_tokens) |
 | `items` | `Item` | Every saved snippet, prompt, command, note, file, image and link | [Items and item types](items-and-types.md) |
 | `item_types` | `ItemType` | The seven system types (and, in principle, per-user custom types) | [Items and item types](items-and-types.md) |
 | `collections` | `Collection` | Named groups of items | [Collections and tags](collections-and-tags.md) |

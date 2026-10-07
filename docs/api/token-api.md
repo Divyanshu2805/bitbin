@@ -11,14 +11,15 @@ Authorization: Bearer bb_…
 ```
 
 - Tokens are created and revoked in **Settings → Browser extension** (Pro only). The plain token is shown once. BitBin stores its SHA-256 hash.
-- A token expires after the lifetime chosen when it's created: 30 days, 90 days (the default), 1 year or never. Settings shows how long each token has left, and an expired one has to be replaced.
+- A token expires after the lifetime chosen when it's created: 30 days, 90 days (the default) or 1 year. There is no "never": a leaked token has to stop working eventually. Settings shows how long each token has left, and an expired one has to be replaced.
+- A token carries **permissions** (scopes), chosen when it is created and checked on every request: `collections:read` (`GET /api/v1/collections`), `items:write` (`POST /api/v1/items`) and `ai` (`POST /api/v1/ai/tags` and `/ai/description`). `GET /api/v1/me` needs none. Use all three for the browser extension and the desktop app; a script that only saves items needs just `items:write`, and if it leaks it can't read collections or spend the AI quota.
 - Cookies are ignored. A request with a session cookie and no token is rejected.
 - The owner's plan is re-read on every request, so a user who stops being Pro gets `403` from then on, even with a valid token.
 
 | Status | When |
 |---|---|
 | `401` | No `Authorization` header, not `Bearer bb_…`, an unknown / revoked token, or an **expired** one ("API token has expired. Create a new one in Settings.") |
-| `403` | The token's owner isn't on Pro |
+| `403` | The token's owner isn't on Pro, or the token lacks the permission the endpoint needs (`This token isn't allowed to do that. Create a token with the "…" permission.`) |
 | `429` | Over the `api` limit (60 requests a minute per user), with `Retry-After` |
 
 Errors are `{ "error": "…" }`, as for every [route handler](errors-and-rate-limits.md#route-handlers). Successful responses wrap their payload in `data`.
@@ -28,8 +29,10 @@ Errors are `{ "error": "…" }`, as for every [route handler](errors-and-rate-li
 Checks a token. Used by the extension's options page and the desktop app's settings window.
 
 ```json
-{ "data": { "email": "you@example.com", "name": "You", "isPro": true } }
+{ "data": { "email": "you@example.com", "name": "You", "isPro": true, "scopes": ["collections:read", "items:write", "ai"] } }
 ```
+
+`scopes` says what the token may do, so a client can switch off what it has no permission for.
 
 ## `GET /api/v1/collections`
 

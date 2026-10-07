@@ -8,11 +8,13 @@ Sign-in, registration, password reset, uploads and the AI helpers need rate limi
 
 ## Decision
 
-`lib/rate-limit.ts` defines one sliding-window limiter per action and keys each by client IP plus an optional identifier. It **fails open**: if the Upstash variables are unset, still `.env.example` placeholders, or invalid, it logs a warning or error and every check passes. If Redis **errors at runtime**, the limits that guard credentials (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, `changePassword`) **fail closed**: they refuse the request and ask the caller to retry in a minute. `ai`, `upload` and `api` log the error and allow the request.
+`lib/rate-limit.ts` defines one sliding-window limiter per action and keys each by client IP plus an optional identifier. If the Upstash variables are unset, still `.env.example` placeholders, or invalid, **development fails open** (every check passes) and **production falls back to a per-instance in-memory sliding window** (`memoryLimit`), so a misconfigured deploy is degraded rather than wide open. If Redis **errors at runtime**, the limits that guard credentials (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, `changePassword`) **fail closed**: they refuse the request and ask the caller to retry in a minute. `ai`, `upload` and `api` log the error and allow the request.
 
 ## Consequences
 
 - A missing or misconfigured Upstash setup never locks users out of their accounts. An Upstash *outage* does block sign-in, registration and password reset until Redis is back: the price of not letting a failure switch off brute-force protection.
 - Local development works with no Redis at all.
-- A deploy missing the variables still silently removes every limit, brute-force protection included; only runtime errors fail closed. Production should have the `UPSTASH_*` variables set and alert on the `Rate limit check failed` and `Upstash Redis not configured` log lines.
-- Limits keyed by IP are only as good as the `x-forwarded-for` header, which Vercel sets.
+- A deploy missing the variables keeps the in-memory fallback, which is weaker (each serverless instance counts separately and a cold start forgets, so an attacker gets a multiple of a limit, not unlimited tries) and logs one warning per process. Production should still have the `UPSTASH_*` variables set.
+- Limits keyed by IP use `x-vercel-forwarded-for` / `x-real-ip` (set by Vercel, which overwrites client values), then the *last* `x-forwarded-for` entry; the first entry is client-controlled and is not used. Limits that guard an inbox are also keyed by the address alone.
+
+*Amended 2026-10-07: the in-memory fallback, the per-address limits and the client-IP rules.*

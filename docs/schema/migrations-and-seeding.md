@@ -21,7 +21,8 @@ npm run db:migrate:deploy     # prisma migrate deploy — apply pending migratio
 | `20260924225247_add_api_tokens` | The `api_tokens` table: hashed personal access tokens for the token API |
 | `20260927120000_add_collection_pin` | `collections.isPinned`, so a collection can be pinned to the top |
 | `20260930150000_add_session_version` | `users.sessionVersion`, bumped on password change and reset to revoke sessions |
-| `20261005120000_add_api_token_expiry` | `api_tokens.expiresAt`; existing tokens stay `null` (never expire) |
+| `20261005120000_add_api_token_expiry` | `api_tokens.expiresAt` |
+| `20261006190731_add_token_scopes` | `api_tokens.scopes`. Backward compatible (a defaulted column), plus two data statements: existing tokens get all three scopes, and tokens with no expiry get a year |
 
 ### Adding one
 
@@ -45,16 +46,14 @@ Production needs step 1. The demo user is the public sandbox account: see [the d
 
 `npm run db:cleanup` (`scripts/cleanup-users.ts`) deletes every user except the demo user — handy after testing sign-ups locally, never for production.
 
+## The demo account
+
+`demo@bitbin.dev` / `12345678` is published (README, setup docs) so anyone can try BitBin, which makes it a sandbox rather than a real account. Visitors can add, edit, delete, favorite and pin items and collections, search, export and change editor preferences, as a Free user. What it refuses, and why, is in [ADR 0008](../architecture/decisions/0008-public-demo-account-as-a-locked-sandbox.md) and the [security model](../architecture/security-model.md#the-public-demo-account).
+
+- **The daily reset:** `GET /api/cron/reset-demo`, called once a day by the cron in `vercel.json` (21:00 UTC), puts the library back to the seeded one in a transaction. It requires `Authorization: Bearer $CRON_SECRET` and refuses to run at all if `CRON_SECRET` isn't set. Vercel sends that header itself when the variable exists in the project.
+- **Never seed against production by hand without meaning to:** the seed also resets this account's password.
+
 ## Related
 
 - [Setup](../local-development/setup.md) · [Resetting data](../local-development/resetting-data.md)
 - [Deployment](../deployment/vercel.md#database)
-
-## The demo account
-
-`demo@bitbin.dev` / `12345678` is published (README, setup docs) so anyone can try BitBin, which makes it a sandbox rather than a real account:
-
-- **What visitors can do:** add, edit, delete, favorite and pin items and collections, import and export, search, change editor preferences. They stay a Free user, so no files, images, AI or tokens.
-- **What is blocked** (`403` or an error message, `lib/demo.ts`): changing its password or name, deleting the account, starting a checkout, and the forgot-password email.
-- **The daily reset:** `GET /api/cron/reset-demo`, called once a day by the cron in `vercel.json` (21:00 UTC), puts the library back to the seeded one in a transaction. It requires `Authorization: Bearer $CRON_SECRET` and refuses to run at all if `CRON_SECRET` isn't set. Vercel sends that header itself when the variable exists in the project.
-- **Never seed against production by hand without meaning to:** the seed also resets this account's password.

@@ -16,9 +16,10 @@ The extension and the declared MIME type are checked, then the file's bytes (`va
 ## Upload
 
 1. `FileUpload` (drag and drop) posts multipart `{ file, itemType }` to `POST /api/upload`.
-2. The handler requires a session (`401`), re-reads `isPro` from the database (`403`), applies the `upload` rate limit (10 / hour per IP + user, `429`), and validates the file (`400`).
-3. `uploadToR2` stores the object under `{userId}/{timestamp}-{sanitised name}` and returns `{ fileUrl, fileName, fileSize }`, where `fileUrl` is `{R2_PUBLIC_URL}/{key}`.
-4. The dialog then calls `createItem({ …, fileUrl, fileName, fileSize })`.
+2. The handler refuses a cross-site request (`403`), requires a session (`401`), re-reads `isPro` from the database (`403`), applies the `upload` rate limit (10 / hour per IP + user, `429`), and validates the file (`400`).
+3. **Processing.** A PNG, JPEG or WebP is decoded and written out again without metadata (`lib/image-sanitize.ts`), which removes GPS and device information and refuses anything that isn't a real image or is over 50 megapixels. When `VIRUSTOTAL_API_KEY` is set, the SHA-256 of the result is checked against VirusTotal's known malware. The size reported back is that of the stored bytes.
+4. `uploadToR2` stores the object under `{userId}/{timestamp}-{sanitised name}` and returns `{ fileUrl, fileName, fileSize }`, where `fileUrl` is `{R2_PUBLIC_URL}/{key}`.
+5. The dialog then calls `createItem({ …, fileUrl, fileName, fileSize })`.
 
 Upload and item creation are two steps. An upload whose item is never created leaves an orphaned object in the bucket.
 
@@ -35,7 +36,7 @@ The route requires a session (`401`), requires the key to be a plain path inside
 
 ## Deletion
 
-Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PUBLIC_URL` from the stored URL to get the key. A failure is logged and the row is deleted anyway. Deleting an account does **not** delete its files — see [known gaps](../../known-gaps/not-yet-built.md).
+Deleting a file or image item calls `deleteFromR2(fileUrl)`, which strips `R2_PUBLIC_URL` from the stored URL to get the key. A failure is logged and the row is deleted anyway. Deleting an account removes the whole `{userId}/` folder (best effort).
 
 ## R2 setup checklist
 

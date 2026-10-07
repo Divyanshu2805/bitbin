@@ -11,7 +11,9 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 - [ ] Signed out, `/dashboard` redirects to sign-in.
 - [ ] Change password → you're signed out → the new password works. Delete a throwaway account (with its password) → it's gone and can't sign in.
 - [ ] `/sign-in?callbackUrl=https://example.com` signs in and lands on `/dashboard`, not on example.com.
-- [ ] The demo account (`demo@bitbin.dev`) signs in, and changing its password, deleting it and upgrading it are each refused.
+- [ ] The demo account (`demo@bitbin.dev`) signs in, and changing its password, deleting it and upgrading it are each refused. It also can't save a link or import.
+- [ ] **Sign out everywhere** signs the account out in a second browser too.
+- [ ] A cross-site request is refused: `curl -X POST -H 'Sec-Fetch-Site: cross-site' https://bitbin.yourdomain.com/api/auth/change-password` answers `403`.
 - [ ] `/privacy` and `/terms` load signed out and are linked from the footer and the sign-up form.
 - [ ] `/robots.txt` and `/sitemap.xml` show the production domain (not `localhost`), and a signed-in page such as `/dashboard` is listed as disallowed.
 - [ ] Pasting the site URL into a chat app or a card validator shows the BitBin title, description and preview image.
@@ -27,6 +29,9 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 - [ ] Upgrade with a Stripe test card → back on `/settings?upgraded=true` → the account shows Pro without signing out.
 - [ ] Upload an image → it renders; upload a file → it downloads with its name.
 - [ ] Suggest tags on an item → suggestions appear.
+- [ ] Open an item in the editor: the code editor loads (it is served from `/monaco/`), and the browser console shows no Content Security Policy errors on the homepage, the sign-in page or any signed-in page.
+- [ ] Create an API token with only **Save items**: `GET /api/v1/me` shows `scopes: ["items:write"]`, `POST /api/v1/items` works, `GET /api/v1/collections` and the AI endpoints answer `403`.
+- [ ] Upload a phone photo with location data: the stored image has no EXIF (download it and check).
 - [ ] "Manage subscription" opens the Customer Portal.
 
 ## Data

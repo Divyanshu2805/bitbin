@@ -5,8 +5,9 @@ How an account is created and verified, and how both sign-in methods end in the 
 | File | Role |
 |---|---|
 | `src/auth.ts` | Full NextAuth config: Prisma adapter, JWT sessions, GitHub + Credentials providers, the `signIn` / `jwt` / `session` callbacks |
+| `src/lib/credentials.ts` | The email-and-password check, its rate limit, and the error class the sign-in form reads (`rate_limited`) |
 | `src/auth.config.ts` | Edge-safe subset (providers only, no adapter, no bcrypt) used by `src/proxy.ts` |
-| `src/app/api/auth/*` | Registration, verification, login rate limit, password reset, change password, delete account |
+| `src/app/api/auth/*` | Registration, verification, password reset, change password, delete account |
 | `src/actions/auth.ts` | `signInWithGitHub` |
 | `src/lib/tokens.ts`, `src/lib/email.ts` | Verification and reset tokens, and the emails that carry them |
 | `src/types/next-auth.d.ts` | Adds `id` and `isPro` to the session and JWT types |
@@ -27,16 +28,14 @@ How an account is created and verified, and how both sign-in methods end in the 
 ## Signing in with email and password
 
 1. The sign-in form calls `signIn('credentials', { redirect: false })`.
-2. `authorize()` in `src/auth.ts` first counts the attempt against the `login` limit (5 attempts / 15 minutes per IP + email; over it, it throws a `rate_limited` error and the form shows a try-again message), then loads the user by email, compares the password with bcrypt, and throws `EmailNotVerified` for an unverified account (unless verification is skipped). A missing user and a wrong password both return `null`, so the form can't tell them apart.
+2. `authorize()` in `src/auth.ts` calls `authorizeCredentials()` (`src/lib/credentials.ts`), which first counts the attempt against the `login` limit (5 attempts / 15 minutes per IP + email; over it, it throws a `rate_limited` error and the form shows a try-again message), then loads the user by email, compares the password with bcrypt, and throws `EmailNotVerified` for an unverified account (unless verification is skipped). A missing user and a wrong password both return `null`, so the form can't tell them apart.
 
 The limit is enforced in `authorize()`, so it applies to direct posts to the NextAuth callback too. It fails open when Upstash is unset, but closed for a Redis *error* ([ADR 0005](../decisions/0005-rate-limits-fail-open.md)).
 3. On success the form follows `?callbackUrl=` (the proxy sets it when it sends someone to sign-in) through `safeCallbackPath`: a path on this site is kept, anything else falls back to `/dashboard`, so the page can't be used as an open redirect. The page slides in with `slideTo` (`lib/view-transition.ts`).
 
-The public demo account (`demo@bitbin.dev`) signs in like any other, but can't change its own password, name or plan, or be deleted — see [the demo account](../cross-cutting-concerns.md#the-demo-account).
-
 ## GitHub
 
-Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/sign-in?via=github' })` on the server. Back from GitHub, the sign-in form sees `via=github` and slides into `/dashboard` (`slideTo` in `lib/view-transition.ts`), holding the sign-in page on screen until the dashboard is ready so its loading screen isn't shown. An earlier client-side `signIn` needed two clicks in production, because the redirect raced the session cookie.
+Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/sign-in?via=github' })` on the server. Back from GitHub, the sign-in form sees `via=github` and slides into `/dashboard` (`slideTo` in `lib/view-transition.ts`), holding the sign-in page on screen until the dashboard is ready so its loading screen isn't shown. It stays a server action because a client-side `signIn` raced the session cookie (see [pitfalls](../../practices/gotchas/nextjs-and-auth.md#github-sign-in-must-run-on-the-server)).
 
 The `signIn` callback refuses GitHub for an email that already belongs to a **password account** (or when GitHub's email doesn't match the linked user's): it deletes the account row the adapter just created and redirects to `/sign-in?error=OAuthAccountNotLinked`, where the form explains what happened. BitBin doesn't link the two sign-in methods.
 
@@ -48,13 +47,15 @@ GitHub({ issuer: 'https://github.com/login/oauth' })
 
 GitHub's provider defines its own token and user-info endpoints, so setting `issuer` doesn't trigger OIDC discovery; it only fixes the comparison.
 
+**Sign out everywhere** (Settings → Account) bumps `sessionVersion`, which is what a password change does too.
+
 A first GitHub sign-in creates the user and an `accounts` row through the Prisma adapter. GitHub users have no password, so they can't use change-password.
 
 ## The session
 
 Sessions are JWTs (`session: { strategy: 'jwt' }`):
 
-- `jwt` callback — on sign-in, copies the user id and `sessionVersion` onto the token. **On every evaluation it re-reads `users.isPro` and `users.sessionVersion`** from the database: a Stripe webhook reaches a signed-in user without a sign-out, and a token whose version no longer matches (after a password change or reset) or whose user is gone is ended.
+- `jwt` callback — on sign-in, copies the user id and `sessionVersion` onto the token. A session lasts 14 days and is re-issued at most once a day while it is used. **On every evaluation it re-reads `users.isPro` and `users.sessionVersion`** from the database: a Stripe webhook reaches a signed-in user without a sign-out, and a token whose version no longer matches (after a password change or reset) or whose user is gone is ended.
 - `session` callback — copies `id` and `isPro` onto `session.user`.
 
 Code reads the caller with `getAuthedSession()` (server actions) or `auth()` (pages and route handlers). See [ADR 0003](../decisions/0003-jwt-sessions-with-live-plan.md).

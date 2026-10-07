@@ -34,6 +34,15 @@ All configuration comes from environment variables, read from `.env` locally (gi
 |---|---|
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), rate limiting is **disabled** — a warning or error is logged and every check passes. See [rate limits](../api/errors-and-rate-limits.md#failure-mode) |
 
+## Bot protection and upload scanning
+
+Both are optional and off until their keys are set.
+
+| Variable | Notes |
+|---|---|
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | [Cloudflare Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) (free). Both must be set. Registration and forgot-password then need a passing check, shown as a widget on those forms; a failed check or an unreachable Cloudflare refuses the request. The site key is public and is read at build time (it also widens the Content Security Policy for Cloudflare's challenge), so set it before deploying |
+| `VIRUSTOTAL_API_KEY` | A free [VirusTotal](https://www.virustotal.com) API key. Uploads are checked against its database of known malware by SHA-256: only the hash is sent, a file it has never seen passes, and a lookup that fails or times out lets the upload through |
+
 ## Safety and monitoring
 
 | Variable | Required | Used by | Notes |
@@ -55,7 +64,6 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | Variable | Notes |
 |---|---|
 | `STRIPE_SECRET_KEY` | `sk_test_…` locally; `sk_live_…` in production once the Stripe account is activated — see [Stripe test mode in production](../deployment/providers.md#stripe-test-mode-in-production) |
-| `STRIPE_PUBLISHABLE_KEY` | `pk_test_…` / `pk_live_…` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` from `stripe listen` locally, or from the dashboard's webhook endpoint in production |
 | `STRIPE_PRICE_ID_MONTHLY` | Price ID of the $8 / month plan |
 | `STRIPE_PRICE_ID_YEARLY` | Price ID of the $72 / year plan |
@@ -79,7 +87,9 @@ See [AI features](../architecture/flows/ai-features.md#provider-and-model) for c
 | Resend | Registration only works with `SKIP_EMAIL_VERIFICATION="true"`; password-reset emails fail |
 | `FROM_EMAIL` on a verified domain | Emails reach only the Resend account owner's address |
 | GitHub | The GitHub button fails; email + password still works |
-| Upstash | No rate limiting anywhere |
+| Upstash | Locally, no rate limiting. In production, a weaker per-instance in-memory limiter instead (see [rate limits](../api/errors-and-rate-limits.md#failure-mode)) |
+| Turnstile keys | No bot check on register and forgot-password (the rate limits still apply) |
+| `VIRUSTOTAL_API_KEY` | Uploads aren't checked against known malware (they are still validated and photos re-encoded) |
 | `SENTRY_DSN` | Errors are only in Vercel's function logs; nobody is told |
 | R2 | File and image uploads and ZIP exports fail |
 | Stripe | Checkout and the billing portal fail. The build still passes with a placeholder key |

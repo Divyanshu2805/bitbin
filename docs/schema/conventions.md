@@ -33,8 +33,8 @@ These are application rules only. A direct write through Prisma Studio or a scri
 | Rule | Enforced in |
 |---|---|
 | Only the payload columns of an item's content type are set | `createItem`, `updateItem`, the import action |
-| An item's collections belong to the same user as the item | Not enforced — see [known gaps](../known-gaps/not-yet-built.md#security) |
-| A `fileUrl` points into the owner's `{userId}/` prefix in R2 | Not enforced — see [known gaps](../known-gaps/not-yet-built.md#security) |
+| An item's collections belong to the same user as the item | `createItem` and `updateItem` (`lib/db/items.ts`) drop collection ids that aren't the caller's |
+| A `fileUrl` points into the owner's `{userId}/` prefix in R2 | `isOwnedFileUrl` (`lib/r2.ts`) before a `fileUrl` is stored, read or deleted |
 | Free users have at most 50 items and 3 collections | `lib/usage.ts` pre-checks; the insert re-checks under a lock on the user's row, so concurrent creates can't overshoot |
 | System item type names are unique | The seed checks before creating; the (`name`, `userId`) unique constraint doesn't apply because PostgreSQL treats the `null` user ids as distinct |
 

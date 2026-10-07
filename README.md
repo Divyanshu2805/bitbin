@@ -123,11 +123,11 @@ flowchart LR
 | Area | Choice |
 |---|---|
 | Framework | Next.js 16 (App Router), React 19 with the React Compiler, TypeScript 5 |
-| Data | PostgreSQL (Neon) with Prisma 7 and the `pg` driver adapter; 7 migrations |
+| Data | PostgreSQL (Neon) with Prisma 7 and the `pg` driver adapter; 8 migrations |
 | Auth | NextAuth v5: credentials and GitHub, JWT sessions that can be revoked |
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Services | OpenAI (or compatible), Stripe, Cloudflare R2, Upstash Redis, Resend, Sentry |
-| Quality | Vitest, ESLint, GitHub Actions CI, Dependabot |
+| Quality | Vitest, ESLint, GitHub Actions CI |
 
 More in the [architecture overview](docs/architecture/README.md), the [decision records](docs/architecture/decisions/README.md) and the [tech stack](docs/tech-stack.md).
 
@@ -136,18 +136,20 @@ More in the [architecture overview](docs/architecture/README.md), the [decision 
 The rules are written down in the [security guardrails](docs/practices/security-guardrails.md) and the [security model](docs/architecture/security-model.md). In short:
 
 - **Tenant isolation in code:** the user id comes only from the session (or the API token), every query is scoped by it, and any id or file URL from the client is checked for ownership. Another user's row looks exactly like a missing one.
-- **Accounts:** bcrypt (cost 12), hashed and single-use email tokens, revocable sessions, identical answers whether or not an email has an account, rate limits on every public auth endpoint, and an open-redirect-safe sign-in.
-- **Files** live in a private R2 bucket and are read only through an ownership-checked route; uploads are checked by extension, type, size and file signature.
+- **Accounts:** bcrypt (cost 12), hashed and single-use email tokens, 14-day revocable sessions, identical answers whether or not an email has an account, per-IP and per-address rate limits on every public auth endpoint, optional Cloudflare Turnstile, and an open-redirect-safe sign-in.
+- **Browser:** a Content Security Policy that lets nothing third-party into a page (the code editor is served from the app's own origin, not a CDN), and cross-site checks on every cookie-authenticated route that changes state.
+- **API tokens:** hashed, always expiring, and limited to the permissions they were created with (`items:write`, `ai`, `collections:read`).
+- **Files** live in a private R2 bucket and are read only through an ownership-checked route; uploads are checked by extension, type, size and file signature, photos are re-encoded so location metadata is never stored, and an optional VirusTotal hash lookup refuses known malware.
 - **Payments:** the Stripe webhook verifies the raw body's signature and syncs the plan from Stripe, so retried or out-of-order events are harmless.
-- **Operations:** security headers, Sentry with personal data stripped, scripts that refuse to touch a production database, a production dependency audit in CI, Dependabot and secret scanning.
-- **Review:** an internal audit found and fixed about 26 issues (5 critical or high); the history is in [security gaps](docs/known-gaps/security-gaps.md).
+- **Operations:** security headers, Sentry with personal data stripped, scripts that refuse to touch a production database, a production dependency audit in CI and secret scanning.
+- **Review:** internal audits found and fixed about 35 issues (5 critical or high), then a hardening round closed the remaining loopholes. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
 
 ## Quality
 
 | | |
 |---|---|
-| Tests | 600+ unit tests across 57 files (actions, library code and every route handler), all external services mocked; the desktop app has its own `node:test` suites |
-| Coverage | about 81% of statements over `src/actions`, `src/lib` and `src/app/api`, with a floor enforced in CI |
+| Tests | 800+ unit tests across 67 files (actions, library code and every route handler), all external services mocked; the desktop app has its own `node:test` suites |
+| Coverage | about 84% of statements over `src/actions`, `src/lib` and `src/app/api`, with a floor enforced in CI |
 | CI | audit, lint, tests with the coverage floor and a build on every push and pull request |
 | Lighthouse (production build) | accessibility 100, SEO 100, best practices 96, performance 80–95 across 12 pages |
 | Concurrency | the Free-plan limits and single-use email links are covered by race tests |
@@ -195,7 +197,7 @@ prisma/             schema, migrations, seed and the demo library
 extension/          Chrome / Edge extension (plain JS, outside the Next build)
 desktop/            Electron tray app (plain CommonJS, own package.json)
 docs/               documentation
-.github/            CI workflow and Dependabot config
+.github/            CI workflow
 ```
 
 ## Deployment
@@ -206,7 +208,7 @@ See [deployment](docs/deployment/README.md) and the [smoke test](docs/deployment
 
 ## Known limitations and roadmap
 
-Deliberately not built yet, and each a reasonable next step: end-to-end tests, per-device sessions and "sign out everywhere", email change and OAuth account linking, tag management, ZIP import and custom item types, server-side search for very large libraries, presigned download URLs, a full `script-src` CSP, payment-failure emails, Stripe live mode, publishing the extension to the Chrome Web Store (and a Firefox build), signed and auto-updating desktop builds, and sharing. The full, prioritised list with fixes is in [known gaps](docs/known-gaps/README.md); light-theme contrast hasn't been audited, and the legal pages are generic rather than lawyer-reviewed.
+Deliberately not built yet, and each a reasonable next step: end-to-end tests, per-device sessions, email change and OAuth account linking, tag management, ZIP import and custom item types, server-side search for very large libraries, presigned download URLs, a full `script-src` CSP, payment-failure emails, Stripe live mode, publishing the extension to the Chrome Web Store (and a Firefox build), signed and auto-updating desktop builds, and sharing. The full list is in [known gaps](docs/known-gaps/README.md); light-theme contrast hasn't been audited, and the legal pages are generic rather than lawyer-reviewed.
 
 ## Documentation
 

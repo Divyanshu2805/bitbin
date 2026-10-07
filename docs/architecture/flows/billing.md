@@ -29,17 +29,16 @@ Stripe calls `POST /api/webhooks/stripe`. The handler reads the raw body, verifi
 | `checkout.session.completed` | Skipped unless `metadata.app` is `bitbin`. Otherwise saves the customer id on the user in `metadata.userId`, then syncs the plan |
 | `invoice.paid` | Syncs the plan for that customer (renewals) |
 | `invoice.payment_failed` | Logged only |
-| `customer.subscription.updated` | `isPro` = status is `active` or `trialing` |
-| `customer.subscription.deleted` | `isPro = false`, clears `stripeSubscriptionId` |
+| `customer.subscription.updated` / `.deleted` | Syncs the plan for that customer |
 
-A handler error returns `500`, so Stripe retries. Events aren't de-duplicated or ordered — see [known gaps](../../known-gaps/constraints-and-trade-offs.md#billing).
+**Syncing the plan** lists the customer's subscriptions from Stripe and sets `isPro` to whether one is `active` or `trialing`, with `stripeSubscriptionId` set to that subscription (or `null`). The event only says whose plan changed, so a retried or out-of-order event can't leave the wrong plan. A handler error returns `500`, so Stripe retries ([trade-offs](../../known-gaps/constraints-and-trade-offs.md#billing)).
 
 ## Sharing a Stripe account with other apps
 
 Stripe sends every event to every webhook endpoint on the account, so if another app uses the same account (or sandbox), BitBin receives its events too.
 
 - Invoice and subscription events are matched by `stripeCustomerId`. Another app's customers never match a BitBin user, so those events change nothing.
-- Checkout events are matched by `metadata.userId`, a common field name. BitBin tags its own sessions with `metadata.app = "bitbin"` (`STRIPE_APP_TAG` in `src/lib/stripe.ts`), and the webhook returns `200` without doing anything for checkouts without the tag. Before the tag, a foreign checkout made the handler throw and return `500` — and Stripe retries failing endpoints for days and can eventually disable them.
+- Checkout events are matched by `metadata.userId`, a common field name. BitBin tags its own sessions with `metadata.app = "bitbin"` (`STRIPE_APP_TAG` in `src/lib/stripe.ts`), and the webhook returns `200` without doing anything for checkouts without the tag. Without it, a foreign checkout would make the handler fail, and Stripe retries failing endpoints for days and can eventually disable them.
 
 A separate Stripe account per app is still the cleanest setup: the tag can't stop *other* apps from receiving BitBin's events.
 
@@ -73,4 +72,3 @@ To test delivery without a checkout, run `stripe trigger checkout.session.comple
 ## Related
 
 - [Billing endpoints](../../api/billing.md)
-- [Stripe integration plan](../design-notes/stripe-integration-plan.md) — the original design write-up.

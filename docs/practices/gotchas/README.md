@@ -7,4 +7,5 @@ Traps this stack has hit — mostly ones that fail silently or far from their ca
 | [Next.js and NextAuth](nextjs-and-auth.md) | The edge-safe config split, `proxy.ts`, server-side GitHub sign-in, stale sessions and search |
 | [Prisma and PostgreSQL](prisma.md) | The generated client, migrations, nullable unique keys, the seed, transactions |
 | [Integrations](integrations.md) | Stripe webhooks, R2 URLs, Upstash failing open, Resend, OpenAI |
+| [Security mechanisms](security-and-csp.md) | Migrating before deploying, the generated editor copy, the CSP trade-off, single-use codes, key rotation, re-encoded uploads, Turnstile tokens |
 | [Tooling and CI](tooling-and-ci.md) | The coverage floor, CI placeholders, the audit level, `.npmrc`, lockfile line endings, measuring Lighthouse |

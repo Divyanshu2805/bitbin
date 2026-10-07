@@ -11,7 +11,7 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Language | TypeScript 5 | Everything under `src/`, `prisma/` and `scripts/` |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) | Design tokens in `src/app/globals.css`, primitives in `src/components/ui/` |
 | Validation | Zod 4 | Every server action and the import format |
-| Editors | Monaco (`@monaco-editor/react`), `react-markdown` + `remark-gfm` | Code items and markdown items |
+| Editors | Monaco (`@monaco-editor/react`, runtime copied to `public/monaco` and served from the app's own origin), `react-markdown` + `remark-gfm` | Code items and markdown items |
 | Search UI | `cmdk` | The ⌘K command palette |
 | Icons, toasts | Lucide, Sonner | |
 | Motion | Lenis (smooth scrolling on the homepage), CSS View Transitions, CSS animations | Page slides, scroll reveals, card and button effects; all off under `prefers-reduced-motion` |
@@ -35,6 +35,8 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Payments | Stripe | Checkout (subscriptions), Customer Portal, webhooks |
 | AI | OpenAI Responses API, or any OpenAI-compatible provider (default model `gpt-5-nano`) | Auto-tags, descriptions, code explanations, prompt optimization |
 | Export | `archiver` | ZIP exports with file binaries |
+| Image processing | `sharp` | Re-encoding uploaded photos to strip metadata and refuse non-images |
+| Bot check, malware lookup | Cloudflare Turnstile, VirusTotal (both optional) | Register / forgot-password, uploads |
 | Error monitoring | Sentry (`@sentry/nextjs`) | Server errors and `console.error`, with personal data stripped; off until `SENTRY_DSN` is set |
 | Hosting | Vercel + `@vercel/analytics` | Builds, serverless runtime, a daily cron for the demo reset, page analytics |
 
@@ -54,7 +56,6 @@ Both sit outside the Next build and have their own tests and READMEs.
 | Tests | Vitest 4 (Node environment) with `@vitest/coverage-v8`; `node:test` for `desktop/` |
 | Lint | ESLint 9 with `eslint-config-next` |
 | CI | GitHub Actions: audit, lint, tests with a coverage floor, build ([workflow](../.github/workflows/ci.yml)) |
-| Dependency updates | Dependabot (weekly, npm and GitHub Actions) |
 | Scripts | `tsx` for `prisma/seed.ts` and `scripts/*.ts` |
 
 ## Related

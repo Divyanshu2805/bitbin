@@ -32,7 +32,7 @@ A NextAuth JWT carrying the user's id, `isPro` and `sessionVersion`. `getAuthedS
 
 ## API token
 
-A personal access token (`bb_…`, stored only as a SHA-256 hash, expiring, revocable) that lets the browser extension and the desktop app call `/api/v1` as its owner. Cookies are never accepted there. See the [token API](../api/token-api.md).
+A personal access token (`bb_…`, stored only as a SHA-256 hash, expiring, revocable, limited to the scopes it was created with) that lets the browser extension and the desktop app call `/api/v1` as its owner. Cookies are never accepted there. See the [token API](../api/token-api.md).
 
 ## The demo account
 

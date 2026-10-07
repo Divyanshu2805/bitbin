@@ -27,7 +27,6 @@ If you are new to the codebase, read these in order:
 | [Key abstractions](key-abstractions.md) | The handful of concepts worth knowing by name |
 | [Where do I change…?](where-to-change.md) | A task-oriented index into the code |
 | [Architecture decisions](decisions/README.md) | Records of the significant design decisions and their trade-offs |
-| [Design notes](design-notes/README.md) | The original planning write-ups for item CRUD, AI and Stripe |
 
 ## Related
 

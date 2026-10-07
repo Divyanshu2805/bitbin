@@ -36,13 +36,25 @@ With JWT sessions, deleting a user or changing a password doesn't sign anyone ou
 
 The proxy puts the page someone was heading to in `?callbackUrl=`, and the sign-in form follows it after a successful sign-in. Anyone can craft that link, so the form passes it through `safeCallbackPath` and only follows a path on this site. Following the raw value would turn `/sign-in?callbackUrl=https://evil.example` into an open redirect from a trusted domain.
 
+## Importing `next-auth` in a unit test fails
+
+Vitest's Node resolver can't load `next-auth` (it imports `next/server` without the extension), so a test of anything that imports it dies with "Cannot find module .../next/server". Mock it (`vi.mock('next-auth', () => ({ CredentialsSignin: class extends Error {} }))`) as `lib/credentials.test.ts` does, and keep logic in `lib/` so it can be tested without NextAuth.
+
+## A sign-in error's `code` is how the form learns what happened
+
+A `CredentialsSignin` subclass thrown from `authorize()` (see `lib/credentials.ts`) comes back to the client as `?error=CredentialsSignin&code=<its code>`. The form reads `result.code`. A plain `Error` becomes a generic failure, so anything the form must react to (`rate_limited`) needs its own subclass.
+
+## `AUTH_URL` is also where `signOut` sends the browser
+
+`signOut({ callbackUrl })` and the URLs NextAuth returns are built from `AUTH_URL`. With `AUTH_URL` on `localhost:3000` and the app on another port, sign-out lands on whatever runs on 3000. Keep `AUTH_URL` equal to the origin you are browsing.
+
 ## `router.refresh()`, not `revalidatePath`
 
 Actions don't revalidate; components call `router.refresh()` after a successful action. A new component that forgets leaves the page showing stale server-rendered data until the next navigation.
 
-## The search index reloads when the palette opens
+## The palette searches on the server, as you type
 
-`SearchProvider` loads the ⌘K index on mount and again, quietly, each time the palette opens (at most every two seconds), so mutations don't need to refresh it. If you make the index bigger, remember it is one request that sends everything to the browser; see [search](../../architecture/flows/search.md).
+`CommandPalette` calls the `searchLibrary` action after a pause in typing, so what you just saved is found without any refresh, and nothing is preloaded. `shouldFilter={false}` stops cmdk filtering the answer a second time. The search is a raw `ILIKE` query: user text goes through `containsPattern` (which escapes `%`, `_` and `\`) and is bound as a parameter, never put into the SQL. See [search](../../architecture/flows/search.md).
 
 ## `'use server'` files may only export async functions
 

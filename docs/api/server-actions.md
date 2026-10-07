@@ -16,6 +16,8 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 | `getItemCollections` | `itemId` | `{ id, name, inCollection }[]` | Owned item; the user's collections, each marked |
 | `setItemCollection` | `itemId`, `collectionId`, `add` | `{ collectionName, inCollection, changed }` | Item **and** collection owned. Adds or removes that one link, leaving the item's other collections alone; adding twice is a no-op (`changed: false`) |
 
+The shared **demo account** may not save links (no `link` items, no new URL on any item) or items over 5,000 characters, and may not import: everything it saves is shown to the next visitor ([ADR 0008](../architecture/decisions/0008-public-demo-account-as-a-locked-sandbox.md)). It can still edit a seeded link item as long as the URL is unchanged.
+
 `typeName` is one of `snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`. `url` and `fileUrl` must be `http(s)`. `collectionIds` that aren't the caller's are dropped. `createItem`'s checks live in `createItemForUser` (`src/lib/item-create.ts`), which [`POST /api/v1/items`](token-api.md#post-apiv1items) shares.
 
 ## Collections
@@ -50,7 +52,6 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 |---|---|---|
 | `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…". `importPreview` rate limit (20 / hour) |
 | `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. `import` rate limit (5 / hour); one transaction; Free limits apply (under the row lock); file and image items skipped for Free users; only `http(s)` URLs and the caller's own `fileUrl`s are kept; "skip duplicates" matches on title, type and content (or URL); `createdAt` / `updatedAt` are kept |
-| `exportData` | — | The manifest as data. Not used by the UI, which downloads through [`/api/export`](export-format.md) |
 
 ## API tokens
 
@@ -58,17 +59,18 @@ Every action in `src/actions/` starts with `getAuthedSession()` (except `signInW
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createApiToken` | `{ name }` (1–50 chars) | `{ token, summary }`. `token` is the plain `bb_…` value, returned only here | Pro; at most 10 tokens per user. Stores only the SHA-256 hash |
+| `createApiToken` | `{ name, scopes, expiresInDays? }`: name 1–50 chars; at least one of `collections:read`, `items:write`, `ai`; `30`, `90` (default) or `365` days (there is no "never") | `{ token, summary }`. `token` is the plain `bb_…` value, returned only here | Pro; at most 10 tokens per user. Stores only the SHA-256 hash, the scopes and the expiry |
 | `revokeApiToken` | `tokenId` | `null` | Owned. Works on any plan |
 
-The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`): name, prefix, created and last used. Never the hash.
+The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`): name, prefix, created, last used, expiry and permissions. Never the hash.
 
 ## Search, settings and sign-in
 
 | Action | Input | Returns |
 |---|---|---|
-| `getSearchData` (`search.ts`) | — | `{ items, collections }` — the whole ⌘K index for the user |
+| `searchLibrary` (`search.ts`) | `query: string` (at most 400 characters) | `{ items, collections }` — the best matches for the ⌘K palette (at most 20 items and 8 collections; `#tag` searches tags only); with nothing typed, the 8 most recent items and 5 most recent collections. `search` rate limit (240 / minute) |
 | `updateEditorPreferences` (`settings.ts`) | `{ fontSize, tabSize, wordWrap, minimap, theme }` | Validated against the allowed values, saved to `users.editorPreferences` |
+| `signOutEverywhere` (`settings.ts`) | — | Bumps `users.sessionVersion`, ending every session on every device (this one too; the UI then clears its cookie). `sessions` rate limit (5 / hour). Refused for the demo account, whose sessions are shared |
 | `updateName` (`settings.ts`) | `{ name }` | Trimmed, 1–50 characters (`fieldErrors.name` otherwise), saved to `users.name` for the session user; returns `{ name }`. Edited in place on `/profile`. Refused for the public demo account |
 | `signInWithGitHub` (`auth.ts`) | — | Redirects to GitHub; see [authentication](../architecture/flows/authentication.md#github) |
 

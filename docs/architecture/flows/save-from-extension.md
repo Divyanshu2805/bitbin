@@ -12,7 +12,7 @@ Until the extension is on the Chrome Web Store, users install it from BitBin:
 
 ## Connecting
 
-1. A user on Pro opens **Settings → Browser extension** (`components/settings/extension-settings.tsx`) and creates a token. The `createApiToken` action (`src/actions/api-tokens.ts`) checks Pro, allows at most 10 tokens, sets the expiry the user picked (30 days, 90 by default, 1 year or never), generates `bb_…` with `generateApiToken` (`src/lib/api-tokens.ts`), and stores only its SHA-256 hash and display prefix in `api_tokens`.
+1. A user on Pro opens **Settings → Browser extension** (`components/settings/extension-settings.tsx`) and creates a token. The `createApiToken` action (`src/actions/api-tokens.ts`) checks Pro, allows at most 10 tokens, sets the expiry the user picked (30 days, 90 by default or 1 year; there is no "never") and the permissions (all three by default: list collections, save items, AI suggestions), generates `bb_…` with `generateApiToken` (`src/lib/api-tokens.ts`), and stores only its SHA-256 hash and display prefix in `api_tokens`.
 2. The token is shown once. The user pastes it into the extension's options page, which calls `GET /api/v1/me` to check it and saves it in `chrome.storage.local`.
 
 ## Saving
@@ -41,8 +41,9 @@ Each `/api/v1` request goes through `authenticateApiRequest` (`src/lib/api-auth.
 2. Hash it and look it up (`findApiTokenByHash`), or return `401`.
 3. Return `401` if the token's `expiresAt` has passed.
 4. Check the owner's `isPro` from that same query, or return `403`.
-5. Apply the `api` rate limit (60 a minute per user), or return `429`.
-6. Update `lastUsedAt` if it's more than a minute old (best effort).
+5. Check the token has the scope the endpoint needs (`collections:read`, `items:write` or `ai`), or return `403`. A token without all three still works, just not for the features it lacks (the extension's ✦ Suggest, for example, needs `ai`).
+6. Apply the `api` rate limit (60 a minute per user), or return `429`.
+7. Update `lastUsedAt` if it's more than a minute old (best effort).
 
 After that, the handler works with the token owner's id exactly as an action works with the session's.
 

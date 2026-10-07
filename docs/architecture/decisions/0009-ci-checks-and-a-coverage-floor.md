@@ -18,6 +18,6 @@ CI does **not** gate the deploy. Vercel builds from the push independently.
 
 - A broken push is visible within minutes, and the README's badge shows the state of `main`.
 - Because Vercel deploys in parallel, a red run means fix forward, not "it didn't ship". Making CI a gate means requiring the `verify` check through branch protection and deploying from pull requests; that is a deliberate step up, not done yet.
-- Moderate advisories don't fail the build, because they're often in build-time tooling with no fix; high and critical ones do. Dependabot opens weekly update pull requests for the rest.
+- Moderate advisories don't fail the build, because they're often in build-time tooling with no fix; high and critical ones do.
 - A number under 100% is honest. The floor protects against decline, not against untested behaviour that is still above it, so tests for new code remain part of the [definition of done](../../practices/definition-of-done.md).
 - No end-to-end tests run in CI yet; a Playwright suite is on the [checklist](../../known-gaps/remaining-work.md).

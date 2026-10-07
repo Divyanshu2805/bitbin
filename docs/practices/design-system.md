@@ -12,25 +12,29 @@ tokens live in `src/app/globals.css`.
 | Token | Dark | Light | Used for |
 | --- | --- | --- | --- |
 | `--background` | `#08090a` | `#eff2e9` | Page background |
-| `--surface` / `--surface-2` | `#0c0d0f` / `#131519` | `#ffffff` / `#f0f0ec` | Title bars, panel header strips, nested tiles |
+| `--surface` | `#0c0d0f` | `#ffffff` | Title bars, panel header strips, nested tiles |
 | `--card` | `#0e1013` | `#ffffff` | Cards, panes, panels |
 | `--popover` | `#121418` | `#ffffff` | Menus, dialogs, the ⌘K palette |
 | `--muted` / `--secondary` | `#17191d` | `#eeeee9` | Chips, kbd, subtle fills |
 | `--border` | `#23262c` | `#dcddd5` | Hairlines |
 | `--foreground` | `#ededee` | `#14161a` | Body text |
-| `--muted-foreground` | `#a3a8b1` | `#5b6069` | Secondary text, mono metadata, placeholders at 65% |
-| `--primary` / `--brand-lime` | `#c2f24b` | `#4a7200` | Primary buttons, active nav, focus ring, prompts (`$`, `>`) |
-| `--brand-coral` | `#ff7a4d` | `#c2410c` | Upgrade, `PRO` tags, nearly-full limits, the logo's falling bit |
-| `--brand-cyan` | `#5ee6d8` | `#0a7770` | Collections, gradient partner to lime |
-| `--destructive` | `#ff5a4a` | `#c8321f` | Delete actions, errors |
+| `--muted-foreground` | `#a3a8b1` | `#545961` | Secondary text, mono metadata |
+| `--faint` | `#a3a8b1` at 55% | `#5e636b` | Decorative text that still has to be read: line numbers, `//` labels, hints. Use `text-faint dark:text-muted-foreground/50`, never a bare `text-muted-foreground/50` (about 2:1 in the light theme) |
+| `--primary` / `--brand-lime` | `#c2f24b` | `#406200` | Primary buttons, active nav, focus ring, prompts (`$`, `>`) |
+| `--brand-coral` | `#ff7a4d` | `#9d350a` | Upgrade, `PRO` tags, nearly-full limits, the logo's falling bit |
+| `--brand-cyan` | `#5ee6d8` | `#08635d` | Collections, gradient partner to lime |
+| `--destructive` | `#ff5a4a` | `#a42919` | Delete actions, errors |
 | `--tok-*` | | | Syntax colours for code previews and terminal output |
 
 The light brand hues are deepened versions of the dark ones, chosen so each
-clears 4.5:1 as text on the light page and on cards. Keep that when changing
-them.
+clears 4.5:1 as text on the page, on cards, on the green sidebar and on an 8%
+wash of itself (badges and chips). `--input` is darker in the light theme
+(3:1) because a field's edge is its only outline. `src/app/theme-contrast.test.ts`
+reads the tokens from `globals.css` and fails when a pairing drops below AA, so
+change a colour there and the test tells you what it breaks.
 
 Tailwind exposes them as `bg-lime`, `text-coral`, `border-cyan`,
-`bg-surface-2`, `text-tok-path`, etc. (see `@theme inline`).
+`bg-surface`, `text-tok-path`, etc. (see `@theme inline`).
 
 ## Themes
 
@@ -42,9 +46,8 @@ what makes `light-dark()` pick the right half.
 
 - **Never hardcode a dark-only colour** (`#1e1e1e`, `mix(…, white)`, a
   near-black keycap) in the app. Use a token, or one of the theme variables:
-  `--tint` / `--tint-keep` (what accent text mixes towards to stay readable),
-  `--kbd-base`, `--btn-drop`, `--btn-edge`, `--editor-bg`, `--editor-chrome`,
-  `--scroll-thumb`.
+  `--tint` (what accent text mixes towards to stay readable),
+  `--btn-drop`, `--editor-bg`, `--editor-chrome`, `--scroll-thumb`.
 - For a one-off pair, `light-dark(#lightValue, #darkValue)` in a style works.
 - Tailwind palette colours used as text need a light shade too:
   `text-amber-500 dark:text-amber-400`.
@@ -136,8 +139,6 @@ Keyframes and utilities are defined once in `globals.css`:
 | `stagger` | Put on a grid/list. Children fade up one after another |
 | `card-lift` | Hover lift + border/glow tinted by `--accent-color` (defaults to lime) |
 | `card-glow` | A gradient border in `--accent-color` on hover/focus |
-| `animate-[bar-fill_…]` | Bars (type breakdowns, usage meters) grow in from the left |
-| `nudge` | The leading icon tilts when its row is hovered |
 | Animated icons | Icons inside any button, link, `role="button"`/`radio`/`option`, menu item, sidebar row or `[data-anim-icons]` move on hover, each its own way, keyed off lucide's `lucide-*` classes (plus turns, trash wiggles, download bobs, star spins…) |
 | `animate-shimmer` | Skeleton loading sweep (used by `<Skeleton />`) |
 | `animate-led` | A breathing status LED (status bar) |
@@ -146,12 +147,12 @@ Keyframes and utilities are defined once in `globals.css`:
 | `animate-spin-slow` | The light running round the Pro card's border |
 | `shimmer-text` | A light sweeping across text (the agent spinner's verb) |
 
-Other helpers: `bg-grid`, `bg-dots`, `mask-radial`, `noise`, `scanlines`,
+Other helpers: `bg-grid`, `bg-dots`, `mask-radial`, `noise`,
 `text-brand-gradient`, `thin-scrollbar`, `.tui` / `.tui-title` (a pane whose
 title sits in its top border).
 
 `prefers-reduced-motion: reduce` disables all animations and transitions
-globally; `<AnimatedNumber />` and `<DecodeText />` jump straight to their final value and `<TypeText />` shows its text at once.
+globally; `<AnimatedNumber />` jumps straight to its final value and `<TypeText />` shows its text at once.
 
 ## Buttons
 
@@ -212,14 +213,13 @@ box, put `field-frame` on its container (it must not clip with
 | `BinOverview` | `components/dashboard/bin-overview.tsx` | The dashboard's `bin --stats` pane: counters and the per-type bar |
 | `QuickCreate` | `components/dashboard/quick-create.tsx` | `+ new snippet prompt command …` chips |
 | `AgentSpinner`, `ToolLine`, `ResultLine` | `components/shared/agent-spinner.tsx` | `✻ Indexing…` loading states; `⏺ Load(…)` / `⎿ result` lines |
-| `DecodeText` | `components/shared/decode-text.tsx` | Text that decodes into place (`scramble` is used by the homepage) |
 | `TypeText` | `components/shared/type-text.tsx` | Content that types itself in, one character per step, behind a caret |
 | `AnimatedNumber` | `components/shared/animated-number.tsx` | Count-up numbers |
 | `ItemTypeIcon` | `components/shared/item-type-icon.tsx` | Renders an item type's Lucide icon by name |
 | `Section`, `CtaLink`, `ScrambleLabel`, `Window` | `components/homepage/ui.tsx` | Homepage building blocks |
 | `MockNavRow`, `MockCollectionRow`, `MockSectionLabel`, `MockSearch`, `MockButton`, `MockPathPill` | `components/homepage/mock-app.tsx` | The app shell drawn small for the homepage demos (hero, types, shortcuts, agent, extension). Change them with `components/layout` so the demos keep looking like the app |
 
-shadcn/ui primitives (`components/ui/*`) keep their APIs; `CommandInput` takes
+shadcn/ui primitives (`components/ui/*`) keep their APIs and contain only the parts the app uses; `CommandInput` takes
 an optional `icon` (the palette's `>` prompt).
 
 ## Accessibility notes
@@ -245,11 +245,11 @@ an optional `icon` (the palette's `>` prompt).
 - Active nav links set `aria-current`. Icon-only buttons have an `aria-label`.
 - Bars and meters carry an `aria-label` (or `role="meter"`) with the numbers they draw.
 
+## Grid and list views
+
+Every page that lists items or collections renders them through `ItemsView` / `CollectionsView` (`components/shared/list-views.tsx`): cards in grid mode, rows in list mode. The choice is global, set by `ViewToggle` in the page header and kept in `localStorage` (`bitbin:view`, `lib/view-mode.ts`). `VIEW_SCRIPT` (`lib/view-mode-script.ts`, run in the root layout's `<head>`) copies it to `<html data-view>` before paint, and `globals.css` hides the `[data-view-content]` layout that doesn't match until React renders the right one. A new list page should use these views rather than its own grid.
+
 ## Related
 
 - [Coding conventions](coding-conventions.md#components)
 - [Where do I change…?](../architecture/where-to-change.md#look-and-feel)
-
-## Grid and list views
-
-Every page that lists items or collections renders them through `ItemsView` / `CollectionsView` (`components/shared/list-views.tsx`): cards in grid mode, rows in list mode. The choice is global, set by `ViewToggle` in the page header and kept in `localStorage` (`bitbin:view`, `lib/view-mode.ts`). `VIEW_SCRIPT` (`lib/view-mode-script.ts`, run in the root layout's `<head>`) copies it to `<html data-view>` before paint, and `globals.css` hides the `[data-view-content]` layout that doesn't match until React renders the right one. A new list page should use these views rather than its own grid.

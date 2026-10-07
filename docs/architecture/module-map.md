@@ -21,7 +21,7 @@ src/
 │   ├── robots.ts, sitemap.ts, opengraph-image.tsx, twitter-image.tsx, apple-icon.tsx, favicon.ico, icon.svg   crawler rules, sitemap, link-preview image and icons
 │   ├── layout.tsx         fonts, ThemeProvider (next-themes, dark default), Toaster, Vercel Analytics
 │   └── globals.css        design tokens and motion utilities
-├── actions/               server actions: items, collections, ai, api-tokens, search, settings, import, export, auth
+├── actions/               server actions: items, collections, ai, api-tokens, search, settings, import, auth
 ├── auth.ts, auth.config.ts   NextAuth — full config, and the edge-safe subset used by proxy.ts
 ├── proxy.ts               guards /dashboard/*
 ├── instrumentation.ts     starts Sentry (only when SENTRY_DSN is set) and reports errors Next.js catches
@@ -35,7 +35,7 @@ src/
 │   └── shared/            logo, empty state, page header, panel, usage meter, pagination, confirm dialogs, …
 ├── lib/
 │   ├── db/                items, collections, users, export, api-tokens — the app's queries
-│   ├── constants/         pagination, plan limits, pricing, item types, editor defaults, keyboard shortcuts
+│   ├── constants/         pagination, plan limits, session lifetime, pricing, item types, editor defaults, keyboard shortcuts
 │   ├── utils/             date and colour helpers
 │   ├── prisma.ts          the Prisma client (pg adapter, one instance per process)
 │   ├── action-utils.ts    ActionResult, getAuthedSession, requirePro, checkAiRateLimit
@@ -49,7 +49,11 @@ src/
 │   ├── import-utils.ts, export-files.ts   duplicate detection for imports; the readable text files in a ZIP export
 │   ├── detect-language.ts, ai-description.ts, explanation-store.ts   language guessing, the shared description helper, browser-side code explanations
 │   ├── site.ts            site name, description, public origin, and which paths crawlers may or may not index
-│   ├── demo.ts            the public demo account: `isDemoEmail`, the message shown when it is refused
+│   ├── demo.ts            the public demo account: `isDemoEmail`, the message shown when it is refused, and what it may not save
+│   ├── credentials.ts     the email-and-password sign-in: the login limit and the errors the form reads
+│   ├── csp.ts, same-origin.ts   the Content Security Policy sent with pages; `rejectCrossSite` for cookie-authenticated mutating routes
+│   ├── turnstile.ts, virus-check.ts, image-sanitize.ts   optional Cloudflare bot check, optional VirusTotal hash lookup, photo re-encoding (strips EXIF)
+│   ├── api-scopes.ts      the permissions an API token can carry
 │   ├── monitoring.ts      Sentry setup and the scrubbing of personal data from events
 │   ├── db-safety.ts, db-url.ts   the guard on destructive scripts; `sslmode` normalisation for the pg driver
 │   ├── file-url.ts        `fileViewPath` / `fileDownloadPath` for stored files (safe for client components)
@@ -58,11 +62,12 @@ src/
 ├── hooks/                 use-clipboard, use-hotkey, use-motion, use-sidebar-collapsed, use-typewriter
 ├── types/                 next-auth session augmentation
 └── generated/prisma/      generated client (git-ignored)
-prisma/                    schema.prisma, migrations/ (7), seed.ts and demo-content.ts (the demo library)
-scripts/                   test-db.ts, cleanup-users.ts
+prisma/                    schema.prisma, migrations/ (8), seed.ts and demo-content.ts (the demo library)
+scripts/                   cleanup-users.ts, copy-monaco.mjs (copies the code editor into public/monaco before dev and build)
+public/monaco/             generated, git-ignored: the Monaco editor served from our own origin
 extension/                 the Chrome / Edge extension (plain JS, not part of the Next build)
 desktop/                   the Electron tray app (plain CommonJS, own package.json and tests, not part of the Next build)
-.github/                   workflows/ci.yml (audit, lint, tests with coverage floor, build) and dependabot.yml
+.github/                   workflows/ci.yml (audit, lint, tests with coverage floor, build)
 vercel.json                the daily cron that resets the demo account
 ```
 
@@ -73,7 +78,8 @@ vercel.json                the daily cron that resets the demo account
 | `/` | Static | Marketing homepage |
 | `/privacy`, `/terms` | Static | Public legal pages; no session needed |
 | `/robots.txt`, `/sitemap.xml`, `/opengraph-image`, `/twitter-image`, `/apple-icon` | Static | Generated at build time from `lib/site.ts` |
-| `/sign-in`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email` | Static | The `(auth)` split-screen layout |
+| `/register`, `/forgot-password`, `/reset-password`, `/verify-email` | Static | The `(auth)` split-screen layout |
+| `/sign-in` | Dynamic | Same layout; reads `?via=` from the URL, so it renders per request |
 | `/dashboard` | Dynamic | Stats, collections, pinned and recent items |
 | `/items/[type]` | Dynamic | `snippets`, `prompts`, `commands`, `notes`, `files`, `images`, `links` — paginated |
 | `/collections`, `/collections/[id]` | Dynamic | Paginated list and detail |

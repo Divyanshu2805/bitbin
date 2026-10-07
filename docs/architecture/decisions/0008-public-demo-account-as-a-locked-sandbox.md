@@ -12,7 +12,7 @@ The demo account stays a normal user row, so the app needs no special mode, but 
 
 - `lib/demo.ts` is the single check (`isDemoEmail`, `demoBlockedMessage`).
 - Change password, delete account, update name, start a checkout and password reset by email each return a `403` (or an `ActionResult` error) for it.
-- Ordinary use (creating, editing and deleting items and collections) stays open: that is the point of a demo.
+- Ordinary use (creating, editing and deleting items and collections) stays open: that is the point of a demo. What it saves is shown to the next visitor, so it **can't save links** (no `link` items, and no new URL on an item; a seeded link can still be renamed) or items over 5,000 characters, and it can't import. Sign-out-everywhere is refused too, because it would sign every visitor out.
 - A daily cron (`vercel.json` → `GET /api/cron/reset-demo`, 21:00 UTC) restores the library from `prisma/demo-content.ts` inside one transaction, and resets the name, plan and Stripe ids as a safety net. The route needs `Authorization: Bearer $CRON_SECRET` and refuses everyone when the secret is unset.
 
 ## Consequences

@@ -26,6 +26,8 @@ BitBin is a single Next.js 16 App Router application. There is no separate API s
 | OpenAI (or an OpenAI-compatible provider) | The four AI helpers | `src/actions/ai.ts` via `lib/openai.ts` | For AI |
 | Resend | Verification and password-reset email | `lib/email.ts` | For email verification |
 | GitHub OAuth | Sign-in provider | NextAuth | For GitHub sign-in |
+| Cloudflare Turnstile | Bot check on register and forgot-password (optional) | `lib/turnstile.ts`, `components/auth/turnstile-widget.tsx` | No — off until both keys are set |
+| VirusTotal | Known-malware check of uploads by hash (optional) | `lib/virus-check.ts` | No — off without `VIRUSTOTAL_API_KEY` |
 | Sentry | Error monitoring | `src/instrumentation.ts`, `lib/monitoring.ts` | No — off without `SENTRY_DSN` |
 | Vercel Analytics | Page analytics | `<Analytics />` in the root layout | No |
 | Vercel Cron | Daily reset of the public demo account | `vercel.json` → `/api/cron/reset-demo`, authorised by `CRON_SECRET` | Only if the demo account is kept |

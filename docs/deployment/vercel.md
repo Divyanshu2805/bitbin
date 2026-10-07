@@ -25,7 +25,7 @@ Use a separate Neon branch for local development, so test accounts and experimen
 ## Project
 
 1. Import `github.com/Divyanshu2805/bitbin` into Vercel.
-2. Framework preset: **Next.js**. Leave the build command as `npm run build` — it runs `prisma generate` first.
+2. Framework preset: **Next.js**. Leave the build command as `npm run build`: its `prebuild` step copies the code editor into `public/monaco` (from the `monaco-editor` dev dependency, so keep devDependencies installed, which is Vercel's default), then it runs `prisma generate`.
 3. Add the environment variables below, then deploy.
 
 `@vercel/analytics` is mounted in the root layout and starts reporting once the project is live; it needs no configuration.
@@ -43,7 +43,9 @@ Every variable from [configuration](../local-development/configuration.md), with
 | `FROM_EMAIL` | An address on your verified Resend domain, e.g. `BitBin <noreply@bitbin.yourdomain.com>` — see [providers](providers.md#resend) |
 | `STRIPE_WEBHOOK_SECRET` | The signing secret of the **dashboard** webhook endpoint, not the one `stripe listen` prints locally |
 | `STRIPE_*` keys and price ids | Test-mode values until the Stripe account is activated for live mode — see [providers](providers.md#stripe-test-mode-in-production) |
-| `UPSTASH_*` | Set them — without them production has no rate limiting at all |
+| `UPSTASH_*` | Set them. Without them production falls back to a weaker per-instance in-memory limiter, because every serverless instance counts separately |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional bot check on register and forgot-password; both or neither. See [Turnstile](providers.md#cloudflare-turnstile) |
+| `VIRUSTOTAL_API_KEY` | Optional known-malware check on uploads. See [VirusTotal](providers.md#virustotal) |
 | `SENTRY_DSN` | The DSN of your Sentry project; without it errors are only in Vercel's logs. See [Sentry](providers.md#sentry) |
 | `CRON_SECRET` | A long random string (for example `openssl rand -hex 32`). Vercel's cron sends it to `/api/cron/reset-demo`, which resets the public demo account once a day (`vercel.json`). Without it that route refuses to run |
 | `DATABASE_URL` | The Neon pooled URL |
@@ -58,7 +60,7 @@ Vercel keeps separate values for Production, Preview and Development. Point prev
 
 ## Releasing a schema change
 
-The build doesn't run migrations, so order matters:
+The build doesn't run migrations, so order matters. Code that selects a column production doesn't have yet fails every query on that table (for `users`, every sign-in), so **deploying the code before migrating production breaks the site**. Run `DATABASE_URL=<production URL> npm run db:migrate:deploy` first, then push:
 
 1. Merge a migration that's **backwards compatible** with the code currently deployed (add columns as nullable or with defaults; don't drop or rename in the same step).
 2. Run `npm run db:migrate:deploy` against production.

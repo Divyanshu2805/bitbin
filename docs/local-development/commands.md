@@ -6,8 +6,8 @@ Every script in `package.json`.
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Start the Next.js dev server on <http://localhost:3000> |
-| `npm run build` | `prisma generate && next build` — generate the Prisma client, type-check and build |
+| `npm run dev` | Copy the editor into `public/monaco`, then start the Next.js dev server on <http://localhost:3000> |
+| `npm run build` | Copy the editor into `public/monaco`, then `prisma generate && next build` — generate the Prisma client, type-check and build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
 
@@ -40,7 +40,6 @@ CI runs the same three, plus `npm audit --omit=dev --audit-level=high` and the c
 | `npm run db:generate` | `prisma generate` — regenerate the client without touching the database |
 | `npm run db:seed` | Seed the seven system item types and the demo account (`demo@bitbin.dev` / `12345678`). Overwrites the demo account, so it refuses to run until the database is in `SAFE_DATABASE_HOSTS` or confirmed with `CONFIRM_DATABASE_HOST` ([details](resetting-data.md#before-you-run-either-script)) |
 | `npm run db:studio` | Open Prisma Studio to browse and edit rows |
-| `npm run db:test` | Connectivity check against `DATABASE_URL` (`scripts/test-db.ts`) |
 | `npm run db:cleanup` | Delete every user except the demo user (`scripts/cleanup-users.ts`) — development only. Refuses to run until the database is in `SAFE_DATABASE_HOSTS` or confirmed with `CONFIRM_DATABASE_HOST` ([details](resetting-data.md#before-you-run-either-script)) |
 | `npm run db:push` | **Disabled on purpose** — exits with an error. Use `db:migrate` |
 

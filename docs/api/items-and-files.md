@@ -24,14 +24,19 @@ Multipart form data:
 
 | Status | When |
 |---|---|
-| `200` | `{ fileUrl, fileName, fileSize }` — pass these to `createItem` |
-| `400` | No file, an invalid `itemType`, or the file fails validation (extension, MIME type, size, or contents that don't match the extension, see below) |
+| `200` | `{ fileUrl, fileName, fileSize }` — pass these to `createItem`. `fileSize` is the size of what was **stored**, which for a photo can differ from what was uploaded |
+| `400` | No file, an invalid `itemType`, or the file fails validation (extension, MIME type, size, contents that don't match the extension, an image that can't be decoded, or a file flagged as known malware, see below) |
 | `401` | No session |
-| `403` | Not Pro (read from the database, not the session) |
+| `403` | Not Pro (read from the database, not the session), or a request a browser says came from another site |
 | `429` | `upload` limit — 10 / hour per IP + user |
 | `500` | Storage error or missing R2 configuration |
 
 The stored `Content-Type` comes from the extension, not from what the browser sent. After the name, size and type checks, the bytes are checked too: PNG, JPEG, GIF, WebP and PDF signatures must match; every other type must be valid UTF-8 without NUL bytes; and an SVG may not contain `<script>`, `<foreignObject>`, `<iframe>`, `<embed>`, `<object>`, `on…=` handlers or `javascript:`.
+
+Two more steps follow the byte checks:
+
+- **Photos are written out again** (`lib/image-sanitize.ts`, `sharp`). A PNG, JPEG or WebP is decoded, rotated to its EXIF orientation and encoded again without metadata, so GPS coordinates, the camera model and timestamps are not stored, and bytes that merely start like an image are refused ("Could not read this image"). Images above 50 megapixels are refused as decompression bombs. GIF and SVG are stored as uploaded (an SVG is already checked for script).
+- **Known malware is refused**, when `VIRUSTOTAL_API_KEY` is set (`lib/virus-check.ts`): the SHA-256 of the processed bytes is looked up on VirusTotal and a file that engines flag as malicious is a `400`. Only the hash leaves the server, a file VirusTotal has never seen passes, and a failed or slow lookup lets the upload through. It is a safety net for known samples, not a scanner.
 
 Limits per type are in the [file uploads flow](../architecture/flows/file-uploads.md#limits). The object key is `{userId}/{timestamp}-{name}`, with every character outside `A–Z a–z 0–9 . -` replaced by `_`.
 
@@ -47,7 +52,6 @@ With `?inline=1` (the app's previews) it's served `inline` instead: a PDF as `ap
 | `401` | No session |
 | `403` | The key isn't a plain path inside the caller's own `{userId}/` folder: another user's folder, a look-alike id prefix, or a `.` / `..` segment (encoded or not) |
 | `404` | The object doesn't exist |
-| `404` | No such object |
 | `500` | Storage error or missing R2 configuration |
 
 ## Related

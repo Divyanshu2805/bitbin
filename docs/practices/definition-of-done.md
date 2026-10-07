@@ -11,6 +11,9 @@ A change is ready to merge when every line that applies is true.
 - [ ] New actions, route handlers and library functions have tests next to them, and coverage stays above the floor in `vitest.config.ts`.
 - [ ] Anything that changes account-level state (password, name, email, deletion, billing) refuses the demo account with `isDemoEmail`.
 - [ ] Any URL taken from the client to redirect to goes through `safeCallbackPath`.
+- [ ] A cookie-authenticated route that changes state calls `rejectCrossSite`, and a new `/api/v1` endpoint passes the scope it needs.
+- [ ] Nothing new loads from another origin; if something must, `lib/csp.ts` changes in the same commit with the reason, and the browser console shows no Content Security Policy errors on a production build.
+- [ ] A schema change that new code depends on is applied to production **before** the deploy, and the commit says so.
 
 ## Data
 

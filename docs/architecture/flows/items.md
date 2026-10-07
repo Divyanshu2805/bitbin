@@ -8,7 +8,7 @@ Creating, reading, editing and deleting items — the core of BitBin. The per-ty
 | Server actions | `src/actions/items.ts` |
 | Item detail endpoint | `src/app/api/items/[id]/route.ts` |
 | Card (grid) | `src/components/dashboard/item-card.tsx` |
-| File row / image tile | `src/components/items/file-list-row.tsx`, `image-thumbnail-card.tsx` |
+| Image tile | `src/components/items/image-thumbnail-card.tsx` (chosen in `components/shared/list-views.tsx`; files use the regular card and row) |
 | Drawer (view + edit) | `src/components/items/item-drawer.tsx`, `item-drawer-provider.tsx` |
 | Create dialog | `src/components/items/new-item-dialog.tsx` |
 | Editors | `code-editor.tsx` (Monaco), `markdown-editor.tsx` |
@@ -30,7 +30,7 @@ The dialog then shows a toast and calls `router.refresh()`.
 
 | Where | Query |
 |---|---|
-| Dashboard | `getPinnedItems`, `getRecentItems` (10), `getDashboardStats` |
+| Dashboard | `getPinnedItems`, `getRecentItems` (`DASHBOARD_RECENT_ITEMS_LIMIT`), `getDashboardStats` |
 | `/items/[type]` | `getItemsByType(userId, type, page, 21)`, paginated |
 | Drawer | `GET /api/items/[id]` → `getItemById(userId, id)` — full content, tags and collections |
 
@@ -59,7 +59,7 @@ The drawer switches to edit mode in place. `updateItem` checks ownership, filter
 └───────────────────────────────────────────┘
 ```
 
-- The whole card is keyboard focusable; Enter or Space opens the drawer.
+- The title is a real button, so Tab, then Enter or Space, opens the drawer; clicking anywhere else on the card opens it too.
 - The copy button copies `content` or `url`, and is always visible on touch screens.
 - Hover lifts the card and tints its border with the item type's colour (`card-lift`, see the [design system](../../practices/design-system.md)).
 

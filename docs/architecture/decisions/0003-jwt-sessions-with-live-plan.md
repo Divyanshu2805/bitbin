@@ -10,12 +10,12 @@
 
 NextAuth uses **JWT sessions** (`session: { strategy: 'jwt' }`) with the Prisma adapter for users and OAuth accounts. The config is split: `auth.config.ts` holds only what the proxy needs; `auth.ts` adds the adapter, bcrypt and callbacks.
 
-The `jwt` callback puts the user id on the token at sign-in and, **every time it runs, re-reads `users.isPro`** from the database. The `session` callback exposes `id` and `isPro` on `session.user`.
+The `jwt` callback puts the user id on the token at sign-in and, **every time it runs, re-reads `users.isPro` and `users.sessionVersion`** from the database. The `session` callback exposes `id` and `isPro` on `session.user`.
 
 ## Consequences
 
 - A webhook's change to `isPro` is visible on the user's next request, with no sign-out and no cache invalidation.
 - The rest of the app checks `session.user.isPro` and never queries the plan itself (the upload route re-reads it anyway, as a second check).
 - Every session evaluation costs one small primary-key query — including the ones `proxy.ts` triggers.
-- JWTs can't be revoked server-side. A password change, password reset or account deletion leaves already-issued tokens valid until they expire. See [known gaps](../../known-gaps/not-yet-built.md#security).
+- The same query reads `users.sessionVersion`, which is how a stateless JWT is revoked: a password change or reset, and **Sign out everywhere** bump it, and every older token is rejected. There is no per-device list.
 - The `sessions` table exists for the adapter but stays empty.

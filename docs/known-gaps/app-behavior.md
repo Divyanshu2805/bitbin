@@ -14,14 +14,12 @@ Things that look like bugs but are intended — or at least known and accepted.
 | Importing the same export twice duplicates items | Only when **Skip duplicates** is off. With it on, items matching on title, type and content (or URL) are skipped |
 | An import stops part-way through a Free account's items | Free limits apply to imports; the result reports how many were skipped |
 | Imported file and image items for a Free user are missing | They're skipped — files and images are Pro |
-| Rate limits don't apply locally | Without the `UPSTASH_*` variables, rate limiting is disabled (fails open) |
+| Rate limits don't apply locally | Without the `UPSTASH_*` variables, rate limiting is off in development (in production a weaker in-memory limiter takes over) |
 | You can't change the demo account's password or name, delete it or upgrade it | It's the public demo account (`demo@bitbin.dev`): its login is published, so the account itself is locked, and a daily job puts its library back to the seeded one |
 | Registering an email that's already taken looks like it worked | Deliberate: the answer is the same for every address so it can't reveal who has an account. No email arrives for a verified account; an unverified one gets a new verification email and the newly chosen password |
 | Changing your password signs you out | Deliberate: it bumps `sessionVersion`, which ends every session, this one included |
 | A Pro user gets "already subscribed" starting a checkout | Deliberate: checkout answers `409` for a Pro user so they can't be billed twice |
 | An upload is refused although the type looks right | The bytes are checked against the extension (a `.png` must be a PNG, a `.svg` can't hold script) |
 | Deleting a collection keeps its items | Collections are groupings; items belong to the user, not the collection |
-| Only test cards work when upgrading on the live site | Production runs on Stripe test-mode keys until the account can go live — [known gaps](not-yet-built.md#accounts-and-billing) |
-| Verification emails reach you but nobody else | `FROM_EMAIL` is unset, so Resend's sandbox sender is used; it only delivers to the Resend account owner |
+| Only test cards work when upgrading on the live site | Production runs on Stripe test-mode keys until the account can go live — see [Stripe test mode in production](../deployment/providers.md#stripe-test-mode-in-production) |
 | `stripe trigger checkout.session.completed` changes nothing | Deliberate: the generated session has no `metadata.app = "bitbin"` tag, so the webhook answers `200` and skips it |
-| Registration works without email and sign-in is immediate | `SKIP_EMAIL_VERIFICATION="true"` — a development setting that must be off in production |

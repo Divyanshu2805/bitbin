@@ -14,9 +14,10 @@ The account itself, the three tables NextAuth's Prisma adapter needs, and the AP
 | `isPro` | boolean, default `false` | The plan. Written only by the Stripe webhook; read into every session |
 | `stripeCustomerId` | text, unique, nullable | Set at first checkout |
 | `stripeSubscriptionId` | text, unique, nullable | Set by `checkout.session.completed`, cleared by `customer.subscription.deleted` |
-| `sessionVersion` | integer, default `0` | Bumped on password change and reset. A session token issued with an older value is rejected, which is how sessions are revoked |
+| `sessionVersion` | integer, default `0` | Bumped on password change and reset and on "Sign out everywhere". A session token issued with an older value is rejected, which is how sessions are revoked |
 | `editorPreferences` | jsonb, nullable | Monaco settings; `null` means the defaults in `src/lib/constants/editor.ts` |
 | `createdAt`, `updatedAt` | timestamp | |
+
 
 Deleting a user cascades to `items`, `collections`, `item_types` owned by the user, `accounts`, `sessions` and `api_tokens`.
 
@@ -48,7 +49,7 @@ Unique on (`identifier`, `token`). **`token` holds the SHA-256 of the token, nev
 
 ## `api_tokens`
 
-Personal access tokens for the [token API](../api/token-api.md), created in Settings → Browser extension. Added by migration `20260924225247_add_api_tokens`.
+Personal access tokens for the [token API](../api/token-api.md), created in Settings → Browser extension.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -58,10 +59,11 @@ Personal access tokens for the [token API](../api/token-api.md), created in Sett
 | `tokenHash` | text, unique | SHA-256 (hex) of the token. The token itself is never stored |
 | `prefix` | text | The token's first 10 characters (`bb_…`), shown in Settings to tell tokens apart |
 | `lastUsedAt` | timestamp, nullable | Updated by `/api/v1` requests, at most once a minute |
-| `expiresAt` | timestamp, nullable | When the token stops working. `null` = never expires (tokens created before migration `20261005120000_add_api_token_expiry` stay `null`) |
+| `expiresAt` | timestamp, nullable | When the token stops working. Every token is created with one |
+| `scopes` | text[], default `{}` | What the token may do: any of `collections:read`, `items:write`, `ai` ([`lib/api-scopes.ts`](../../src/lib/api-scopes.ts)) |
 | `createdAt` | timestamp | |
 
-At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). A token expires after 30 days, 90 days (the default), 1 year or never, chosen when it's created; `authenticateApiRequest` rejects an expired one with `401`. Revoking one deletes the row. Tokens are **not** exported or imported.
+At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). A token expires after 30 days, 90 days (the default) or 1 year, chosen when it's created (there is no "never"); `authenticateApiRequest` rejects an expired one with `401` and one without the permission an endpoint needs with `403`. Revoking one deletes the row. Tokens are **not** exported or imported.
 
 ## Related
 

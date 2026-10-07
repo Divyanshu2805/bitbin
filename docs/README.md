@@ -10,7 +10,7 @@ Everything about how BitBin is built, run and changed. Start with the section th
 ## Understanding the app
 
 - [Architecture](architecture/README.md) — layers, module map, request flows, security model.
-- [Architecture decisions](architecture/decisions/README.md) — why the app is shaped the way it is (nine records).
+- [Architecture decisions](architecture/decisions/README.md) — why the app is shaped the way it is (eleven records).
 - [Data model](schema/README.md) — the tables, item types, conventions, migrations and seeding.
 
 ## Reference
@@ -31,4 +31,4 @@ Everything about how BitBin is built, run and changed. Start with the section th
 
 ## Keeping these docs accurate
 
-These pages describe the app as it is now. A change that makes any of them inaccurate updates them in the same commit. The [design notes](architecture/design-notes/README.md) are the exception: they're kept as historical planning records.
+These pages describe the app as it is now. A change that makes any of them inaccurate updates them in the same commit.
