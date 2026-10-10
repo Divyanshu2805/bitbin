@@ -14,7 +14,7 @@ export default defineConfig({
       include: ['src/actions/**/*.ts', 'src/lib/**/*.ts', 'src/app/api/**/*.ts'],
       exclude: ['**/*.test.ts', 'src/generated/**', 'src/lib/constants/**'],
       // The floor sits just under today's numbers so a drop fails CI
-      thresholds: { statements: 75, branches: 75, functions: 65, lines: 75 },
+      thresholds: { statements: 80, branches: 80, functions: 70, lines: 80 },
     },
   },
   resolve: {
