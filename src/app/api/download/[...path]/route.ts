@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { contentTypeForFile, getFromR2, isOwnedKey } from '@/lib/r2';
+import { contentTypeForFile, isOwnedKey, streamFromR2 } from '@/lib/r2';
 
 // Image types the app may show inline. The type is chosen from the file
 // extension, never from what was stored, and everything is served sandboxed.
@@ -36,15 +36,16 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const object = await getFromR2(key);
+    // Streamed from storage: no size limit on the response, and the file is never held in memory
+    const object = await streamFromR2(key);
 
     if (!object) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    // Copy into a plain ArrayBuffer for the response body
-    const data = object.body.slice().buffer as ArrayBuffer;
+    const data = object.body;
     const contentType = object.contentType || 'application/octet-stream';
+    const length: Record<string, string> = object.contentLength !== undefined ? { 'Content-Length': String(object.contentLength) } : {};
 
     // Extract filename from path
     const fileName = key.split('/').pop() || 'download';
@@ -68,6 +69,7 @@ export async function GET(
           'X-Content-Type-Options': 'nosniff',
           ...(isPdf ? {} : { 'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'" }),
           'Cache-Control': 'private, max-age=3600',
+          ...length,
         },
       });
     }
@@ -78,6 +80,7 @@ export async function GET(
         'Content-Disposition': `attachment; filename="${cleanFileName}"`,
         'X-Content-Type-Options': 'nosniff',
         'Cache-Control': 'private, max-age=3600',
+        ...length,
       },
     });
   } catch (error) {

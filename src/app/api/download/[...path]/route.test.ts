@@ -8,7 +8,7 @@ vi.mock('@/auth', () => ({
 const mockGetFromR2 = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/r2', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/r2')>()),
-  getFromR2: mockGetFromR2,
+  streamFromR2: mockGetFromR2,
 }));
 
 import { GET } from './route';
@@ -27,9 +27,11 @@ function get(path: string[], query = '') {
 }
 
 function stored(contentType: string | undefined, body: string | Uint8Array = 'hello') {
+  const bytes = typeof body === 'string' ? new TextEncoder().encode(body) : body;
   mockGetFromR2.mockResolvedValue({
-    body: typeof body === 'string' ? new TextEncoder().encode(body) : body,
+    body: new Response(bytes as BodyInit).body,
     contentType,
+    contentLength: bytes.length,
   });
 }
 
@@ -149,5 +151,14 @@ describe('GET /api/download/[...path]', () => {
     stored('image/png', 'not really');
     const res = await get(['user-1', '1-notes.txt'], '?inline=1');
     expect(res.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+  });
+  it('streams the object with its length, so a large file is never one buffered response', async () => {
+    signIn();
+    stored('application/pdf', 'a'.repeat(1000));
+    const res = await get(['user-1', '1-big.pdf']);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-length')).toBe('1000');
+    expect(res.body).toBeInstanceOf(ReadableStream);
+    expect((await res.text()).length).toBe(1000);
   });
 });

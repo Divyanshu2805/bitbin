@@ -83,6 +83,8 @@ export const rateLimitConfigs = {
   create: cfg(120, '1 m', 'ratelimit:create'),
   // File upload: 10 uploads per hour (keyed by user ID)
   upload: cfg(10, '1 h', 'ratelimit:upload'),
+  // Parts of a file too large for one request: 30 per hour, enough for ten 10 MB uploads
+  uploadPart: cfg(30, '1 h', 'ratelimit:upload-part'),
   // AI requests: 20 per hour (keyed by user ID)
   ai: cfg(20, '1 h', 'ratelimit:ai'),
   // Token API (browser extension): 60 requests per minute (keyed by user ID)

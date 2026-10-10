@@ -140,4 +140,13 @@ describe('sweepOrphanedFiles', () => {
     expect(await sweepOrphanedFiles({}, d)).toMatchObject({ scanned: 0, orphans: 0, deleted: 0, aborted: null });
     expect(d.deleteKeys).not.toHaveBeenCalled();
   });
+  it('deletes abandoned upload parts older than a day, outside the orphan count', async () => {
+    const part = (n: number) => `user-1/parts/0f8b7c1e-2d3a-4b5c-8d9e-0a1b2c3d4e5f/${n}`;
+    const d = deps([{ key: part(0) }, { key: part(1), lastModified: FRESH }, { key: upload(1) }], [`${BASE}/${upload(1)}`]);
+
+    const result = await sweepOrphanedFiles({}, d);
+
+    expect(result).toMatchObject({ staleParts: 1, orphans: 0, eligible: 1, aborted: null });
+    expect(d.deleteKeys).toHaveBeenCalledWith([part(0)]);
+  });
 });

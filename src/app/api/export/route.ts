@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // ZIP format: JSON manifest + text items as files + the stored files from R2
-  const zipBytes = await buildExportZip(session.user.id, data);
+  // ZIP format: JSON manifest + text items as files + the stored files from R2, streamed
+  const zip = await buildExportZip(session.user.id, data);
 
-  return new Response(zipBytes.buffer as ArrayBuffer, {
+  return new Response(zip, {
     headers: {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${baseName}.zip"`,

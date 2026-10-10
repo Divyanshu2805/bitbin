@@ -8,7 +8,12 @@ vi.mock('@/lib/r2', async (importOriginal) => ({
   getFromR2: mockGetFromR2,
 }));
 
-import { buildExportZip } from './export-zip';
+import { buildExportZip as buildStream } from './export-zip';
+
+/** The streamed ZIP, collected into bytes. */
+async function buildExportZip(userId: string, data: ExportData): Promise<Uint8Array> {
+  return new Uint8Array(await new Response(await buildStream(userId, data)).arrayBuffer());
+}
 import { readImportZip } from './zip-import';
 import { parseImportData } from './import-schema';
 import type { ExportData, ExportItem } from '@/lib/db/export';
@@ -84,5 +89,11 @@ describe('buildExportZip', () => {
     expect(parsed.data.items[0].zipPath).toBeNull();
     expect(mockGetFromR2).toHaveBeenCalledTimes(1);
     expect(mockGetFromR2).toHaveBeenCalledWith('user-1/1-gone.txt');
+  });
+
+  it('returns a stream, so a large export is never one buffered response', async () => {
+    mockGetFromR2.mockResolvedValue(null);
+    const stream = await buildStream('user-1', { version: 1, exportedAt: '2026-01-01T00:00:00.000Z', items: [], collections: [] });
+    expect(stream).toBeInstanceOf(ReadableStream);
   });
 });

@@ -265,6 +265,19 @@ export function isOwnedFileUrl(userId: string, fileUrl: string | null | undefine
   return isOwnedKey(userId, fileUrl.slice(prefix.length));
 }
 
+/** The S3 GetObject response for a key, or null if the object doesn't exist. */
+async function getObject(key: string) {
+  const { client, bucketName } = getBucket();
+  try {
+    const response = await client.send(new GetObjectCommand({ Bucket: bucketName, Key: key }));
+    return response.Body ? response : null;
+  } catch (error) {
+    const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
+    throw error;
+  }
+}
+
 /**
  * Read an object through the S3 API with our credentials. The bucket is
  * private, so this is the only way to read a file. `null` if it doesn't exist.
@@ -272,20 +285,31 @@ export function isOwnedFileUrl(userId: string, fileUrl: string | null | undefine
 export async function getFromR2(
   key: string
 ): Promise<{ body: Uint8Array; contentType: string | undefined } | null> {
-  const { client, bucketName } = getBucket();
+  const response = await getObject(key);
+  if (!response?.Body) return null;
+  return { body: await response.Body.transformToByteArray(), contentType: response.ContentType };
+}
 
-  try {
-    const response = await client.send(new GetObjectCommand({ Bucket: bucketName, Key: key }));
-    if (!response.Body) return null;
-    return {
-      body: await response.Body.transformToByteArray(),
-      contentType: response.ContentType,
-    };
-  } catch (error) {
-    const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
-    if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null;
-    throw error;
-  }
+/**
+ * The same read as a stream, for sending an object to the browser. A streamed response isn't held
+ * to the host's 4.5 MB response limit, and the function never holds the whole file.
+ */
+export async function streamFromR2(
+  key: string
+): Promise<{ body: ReadableStream<Uint8Array>; contentType: string | undefined; contentLength: number | undefined } | null> {
+  const response = await getObject(key);
+  if (!response?.Body) return null;
+  return {
+    body: response.Body.transformToWebStream() as ReadableStream<Uint8Array>,
+    contentType: response.ContentType,
+    contentLength: response.ContentLength,
+  };
+}
+
+/** Write bytes to an exact key (the caller has already chosen and checked it). */
+export async function putR2Object(key: string, body: Uint8Array, contentType: string): Promise<void> {
+  const { client, bucketName } = getBucket();
+  await client.send(new PutObjectCommand({ Bucket: bucketName, Key: key, Body: body, ContentType: contentType }));
 }
 
 /**

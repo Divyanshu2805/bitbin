@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     console.log(
       `File sweep${dryRun ? ' (dry run)' : ''}: scanned ${result.scanned}, ${result.eligible} old uploads, ` +
-        `${result.orphans} orphans, ${result.deleted} deleted`
+        `${result.orphans} orphans, ${result.staleParts} stale upload parts, ${result.deleted} deleted`
     );
     return NextResponse.json({ success: true, ...result });
   } catch (error) {

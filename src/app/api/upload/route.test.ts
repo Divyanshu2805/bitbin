@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
-const { findUnique, upload, checkRateLimit, sanitize } = vi.hoisted(() => ({
+const { findUnique, upload, checkRateLimit, sanitize, getPart, deleteKeys } = vi.hoisted(() => ({
   findUnique: vi.fn(),
   upload: vi.fn(),
   checkRateLimit: vi.fn(),
   sanitize: vi.fn(),
+  getPart: vi.fn(),
+  deleteKeys: vi.fn(),
 }));
 // The sanitizer has its own tests; here only how the route uses it
 vi.mock('@/lib/image-sanitize', () => ({ sanitizeImage: sanitize }));
@@ -19,6 +21,8 @@ vi.mock('@/lib/rate-limit', () => ({
 vi.mock('@/lib/r2', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/r2')>()),
   uploadToR2: upload,
+  getFromR2: getPart,
+  deleteR2Keys: deleteKeys,
 }));
 
 import { POST } from './route';
@@ -151,6 +155,79 @@ describe('POST /api/upload', () => {
 
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain('AKIA123');
+  });
+});
+
+describe('POST /api/upload, putting a large file together from its parts', () => {
+  const UPLOAD_ID = '0f8b7c1e-2d3a-4b5c-8d9e-0a1b2c3d4e5f';
+  const PDF = Buffer.from('%PDF-1.7 a document that arrived in parts');
+
+  function finish(fields: Record<string, string>) {
+    const form = new FormData();
+    form.set('itemType', 'file');
+    for (const [key, value] of Object.entries(fields)) form.set(key, value);
+    return POST(new Request('http://localhost/api/upload', { method: 'POST', body: form }));
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue(session);
+    findUnique.mockResolvedValue({ isPro: true });
+    checkRateLimit.mockResolvedValue({ success: true });
+    upload.mockResolvedValue({ fileUrl: 'https://r2.example/user-1/1-report.pdf' });
+    sanitize.mockImplementation(async (buffer: Buffer) => ({ ok: true, buffer }));
+    deleteKeys.mockResolvedValue(2);
+    getPart.mockImplementation(async (key: string) => {
+      const index = Number(key.split('/').pop());
+      return { body: index === 0 ? PDF.subarray(0, 10) : PDF.subarray(10), contentType: 'application/octet-stream' };
+    });
+  });
+
+  it('joins the caller\'s own parts in order, checks the result like any upload, and deletes the parts', async () => {
+    const res = await finish({ uploadId: UPLOAD_ID, partCount: '2', fileName: 'report.pdf', mimeType: 'application/pdf' });
+
+    expect(res.status).toBe(200);
+    expect(getPart).toHaveBeenNthCalledWith(1, `user-1/parts/${UPLOAD_ID}/0`);
+    expect(getPart).toHaveBeenNthCalledWith(2, `user-1/parts/${UPLOAD_ID}/1`);
+    expect(upload).toHaveBeenCalledWith(PDF, 'report.pdf', 'application/pdf', 'user-1');
+    expect(deleteKeys).toHaveBeenCalledWith([`user-1/parts/${UPLOAD_ID}/0`, `user-1/parts/${UPLOAD_ID}/1`]);
+  });
+
+  it('refuses an upload with a part missing, and cleans up', async () => {
+    getPart.mockResolvedValueOnce(null);
+
+    const res = await finish({ uploadId: UPLOAD_ID, partCount: '2', fileName: 'report.pdf', mimeType: 'application/pdf' });
+
+    expect(res.status).toBe(400);
+    expect(upload).not.toHaveBeenCalled();
+    expect(deleteKeys).toHaveBeenCalled();
+  });
+
+  it('refuses parts that add up to more than the type allows', async () => {
+    getPart.mockResolvedValue({ body: new Uint8Array(4 * 1024 * 1024), contentType: 'application/octet-stream' });
+
+    const res = await finish({ uploadId: UPLOAD_ID, partCount: '3', fileName: 'big.pdf', mimeType: 'application/pdf' });
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain('10 MB');
+    expect(upload).not.toHaveBeenCalled();
+  });
+
+  it('refuses a bad upload id, part count or file name without reading storage', async () => {
+    expect((await finish({ uploadId: '../user-2/x', partCount: '1', fileName: 'a.pdf' })).status).toBe(400);
+    expect((await finish({ uploadId: UPLOAD_ID, partCount: '4', fileName: 'a.pdf' })).status).toBe(400);
+    expect((await finish({ uploadId: UPLOAD_ID, partCount: '1' })).status).toBe(400);
+    expect(getPart).not.toHaveBeenCalled();
+  });
+
+  it('still refuses bytes that fail the upload checks once joined', async () => {
+    getPart.mockResolvedValue({ body: new TextEncoder().encode('not a pdf'), contentType: 'application/octet-stream' });
+
+    const res = await finish({ uploadId: UPLOAD_ID, partCount: '1', fileName: 'fake.pdf', mimeType: 'application/pdf' });
+
+    expect(res.status).toBe(400);
+    expect(upload).not.toHaveBeenCalled();
+    expect(deleteKeys).toHaveBeenCalledWith([`user-1/parts/${UPLOAD_ID}/0`]);
   });
 });
 

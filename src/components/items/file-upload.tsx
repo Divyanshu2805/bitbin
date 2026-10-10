@@ -6,7 +6,64 @@ import { fileViewPath } from "@/lib/file-url";
 import { Upload, X, File, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FILE_CONSTRAINTS, formatFileSize } from "@/lib/r2";
+import { UPLOAD_PART_BYTES } from "@/lib/upload-parts";
 import { cn } from "@/lib/utils";
+
+/** Send one request, reporting upload progress (0–1), and resolve with the JSON reply. */
+function send(method: string, url: string, body: XMLHttpRequestBodyInit, onProgress: (fraction: number) => void) {
+  return new Promise<{ success?: boolean; data?: unknown; error?: string }>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total);
+    };
+    xhr.onload = () => {
+      let reply: { success?: boolean; data?: unknown; error?: string } = {};
+      try {
+        reply = JSON.parse(xhr.responseText);
+      } catch {
+        // The host's own error page (a 413, say) isn't JSON
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && reply.success !== false) resolve(reply);
+      else reject(new Error(reply.error || "Upload failed"));
+    };
+    xhr.onerror = () => reject(new Error("Network error"));
+    xhr.open(method, url);
+    xhr.send(body);
+  });
+}
+
+/**
+ * Upload a file for a new item. A file that fits in one request is posted as it is; a larger one
+ * (the host refuses bodies over about 4.5 MB) goes up in parts first, which the server then joins
+ * and checks (lib/upload-parts.ts).
+ */
+async function uploadInParts(file: File, itemType: "file" | "image", onProgress: (percent: number) => void) {
+  const form = new FormData();
+  form.append("itemType", itemType);
+
+  if (file.size <= UPLOAD_PART_BYTES) {
+    form.append("file", file);
+    const reply = await send("POST", "/api/upload", form, (f) => onProgress(Math.round(f * 100)));
+    return reply.data as UploadedFile;
+  }
+
+  const uploadId = crypto.randomUUID();
+  const partCount = Math.ceil(file.size / UPLOAD_PART_BYTES);
+  for (let index = 0; index < partCount; index++) {
+    const part = file.slice(index * UPLOAD_PART_BYTES, (index + 1) * UPLOAD_PART_BYTES);
+    await send("PUT", `/api/upload/part?uploadId=${uploadId}&index=${index}`, part, (f) =>
+      // The parts are most of the work; joining and checking them is the last few percent
+      onProgress(Math.round(((index + f) / partCount) * 95))
+    );
+  }
+
+  form.append("uploadId", uploadId);
+  form.append("partCount", String(partCount));
+  form.append("fileName", file.name);
+  form.append("mimeType", file.type);
+  const reply = await send("POST", "/api/upload", form, () => onProgress(97));
+  return reply.data as UploadedFile;
+}
 
 interface FileUploadProps {
   itemType: "file" | "image";
@@ -71,42 +128,7 @@ export default function FileUpload({
       setUploadProgress(0);
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("itemType", itemType);
-
-        // Use XMLHttpRequest for progress tracking
-        const xhr = new XMLHttpRequest();
-
-        const uploadPromise = new Promise<UploadedFile>((resolve, reject) => {
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const progress = Math.round((event.loaded / event.total) * 100);
-              setUploadProgress(progress);
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const response = JSON.parse(xhr.responseText);
-              if (response.success) {
-                resolve(response.data);
-              } else {
-                reject(new Error(response.error || "Upload failed"));
-              }
-            } else {
-              const response = JSON.parse(xhr.responseText);
-              reject(new Error(response.error || "Upload failed"));
-            }
-          };
-
-          xhr.onerror = () => reject(new Error("Network error"));
-        });
-
-        xhr.open("POST", "/api/upload");
-        xhr.send(formData);
-
-        const data = await uploadPromise;
+        const data = await uploadInParts(file, itemType, setUploadProgress);
         setUploadedFile(data);
         onUploadComplete(data);
       } catch (err) {

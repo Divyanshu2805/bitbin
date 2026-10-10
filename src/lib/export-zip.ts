@@ -1,5 +1,5 @@
 import archiver from 'archiver';
-import { PassThrough } from 'stream';
+import { Readable } from 'stream';
 import { getFromR2, isOwnedFileUrl } from '@/lib/r2';
 import { fileKeyFromUrl } from '@/lib/file-url';
 import { buildTextEntries, safeFileName } from '@/lib/export-files';
@@ -11,19 +11,13 @@ import type { ExportData, ExportItem } from '@/lib/db/export';
  * items as ordinary files, and the user's stored files and images read from private storage by
  * key. Each file is named uniquely, and the manifest records that name (`zipPath`) so an import
  * can put the right bytes back on the right item even when two files share a name.
+ *
+ * The ZIP is returned as a stream and written as it is sent: a streamed response isn't held to the
+ * host's 4.5 MB response limit, so an export of any size downloads.
  */
-export async function buildExportZip(userId: string, data: ExportData): Promise<Uint8Array> {
+export async function buildExportZip(userId: string, data: ExportData): Promise<ReadableStream<Uint8Array>> {
   const archive = archiver('zip', { zlib: { level: 9 } });
-  const chunks: Buffer[] = [];
-
-  const done = new Promise<Uint8Array>((resolve, reject) => {
-    const passthrough = new PassThrough();
-    archive.pipe(passthrough);
-    passthrough.on('data', (chunk: Buffer) => chunks.push(chunk));
-    passthrough.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))));
-    passthrough.on('error', reject);
-    archive.on('error', reject);
-  });
+  archive.on('warning', (error) => console.error('Export ZIP warning:', error));
 
   const taken = new Set<string>();
   const fileEntries: { path: string; body: Uint8Array }[] = [];
@@ -70,6 +64,8 @@ export async function buildExportZip(userId: string, data: ExportData): Promise<
     archive.append(Buffer.from(entry.body), { name: entry.path });
   }
 
-  await archive.finalize();
-  return done;
+  // Not awaited: finalize() resolves once everything has been read, which only happens as the
+  // response consumes the stream
+  archive.finalize().catch((error) => console.error('Export ZIP failed:', error));
+  return Readable.toWeb(archive) as ReadableStream<Uint8Array>;
 }
