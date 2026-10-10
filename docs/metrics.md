@@ -1,19 +1,20 @@
 # Project Metrics
 
-Measured figures for BitBin, each with how it was obtained so it can be re-checked. Nothing here is an estimate unless it says "about". Last measured 2026-10-07 after the security hardening round (Lighthouse figures are from 2026-10-06).
+Measured figures for BitBin, each with how to re-check it. Nothing here is an estimate unless it says "about". Last measured on 2026-10-11; the Lighthouse scores are from 2026-10-06.
 
 ## Quality
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 809 across 67 files (Vitest), all passing | `npm run test` |
-| Desktop app tests | 29 (`node:test`), all passing | `cd desktop && npm test` |
-| Statement coverage | about 84% (2,021 of 2,408) | `npm run test:coverage` |
-| Branch coverage | about 84% (1,238 of 1,481) | same |
-| Line coverage | about 84% (1,812 of 2,160) | same |
-| Function coverage | about 75% (284 of 381) | same |
-| Coverage floor enforced in CI | 75% statements, branches and lines; 65% functions | `vitest.config.ts` |
+| Unit tests | 879 across 75 files (Vitest), all passing | `npm run test` |
+| Desktop app tests | 41 (`node:test`), all passing | `cd desktop && npm test` |
+| Statement coverage | 84.9% (2,243 of 2,642) | `npm run test:coverage` |
+| Branch coverage | 84.8% (1,422 of 1,676) | same |
+| Line coverage | 85.0% (2,003 of 2,356) | same |
+| Function coverage | 76.1% (325 of 427) | same |
+| Coverage floor enforced in CI | 80% statements, branches and lines; 70% functions | `vitest.config.ts` |
 | Scope of coverage | `src/actions`, `src/lib`, `src/app/api` (server code); components are checked in the browser | `vitest.config.ts` |
+| Route handlers with tests | 24 of 24 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
 | CI checks per push | 4: production dependency audit, lint, tests with the coverage floor, build | `.github/workflows/ci.yml` |
 | Concurrency-tested behaviours | Free-plan item and collection caps, single-use email links | `plan-limits.test.ts`, `tokens.test.ts` |
 
@@ -35,7 +36,7 @@ Lighthouse on a production build (`npm run build && npm run start`), signed-in p
 | Profile | 83 | 100 | 96 | 100 |
 | Upgrade | 82 | 100 | 96 | 100 |
 
-- Accessibility is 100 on all 12 pages measured, with no horizontal scroll at 375 px on any of them. The audit covered the dark theme (the default); the light theme hasn't been measured.
+- Accessibility is 100 on all 12 pages measured, with no horizontal scroll at 375 px on any of them. Lighthouse ran on the dark theme (the default); the light theme's colour tokens are held to WCAG AA contrast by `src/app/theme-contrast.test.ts`.
 - Best practices is 96 only because the Vercel analytics script doesn't exist on localhost; it is not an issue in production.
 - Performance was measured on localhost with simulated throttling; treat it as relative, not as production field data.
 
@@ -43,21 +44,23 @@ Lighthouse on a production build (`npm run build && npm run start`), signed-in p
 
 | Metric | Value | Source |
 |---|---|---|
-| Production dependency vulnerabilities | 72 (9 critical) reduced to 0 | `npm audit --omit=dev` |
-| Issues found and fixed in the internal audits | about 35: 5 critical or high, 9 medium, the rest low, including a hardening round that closed 9 further loopholes | [Security model](architecture/security-model.md) (what protects each part now) |
-| Password hashing | bcrypt, cost 12 | `src/app/api/auth/*` |
-| Sign-in brute-force limit | 5 attempts per 15 minutes per IP and email, plus 10 code guesses per 15 minutes per account (any IP), enforced on the server | `rateLimitConfigs` |
+| Production dependency vulnerabilities | 0 (down from 72, 9 of them critical) | `npm audit --omit=dev` |
+| Issues found and fixed in internal audits | about 35: 5 critical or high, 9 medium, the rest low, followed by a hardening round | [Security model](architecture/security-model.md) |
+| Password hashing | bcrypt, cost 12; 8 to 128 characters | `src/app/api/auth/*` |
+| Sign-in brute-force limit | 5 attempts per 15 minutes per IP and email, enforced inside `authorize()` | `rateLimitConfigs` |
 | Inbox flooding | at most 3 verification or reset mails an hour to one address, from any number of IPs | `registerEmail`, `forgotPasswordEmail`, `resendVerificationEmail` |
-| Session lifetime | 14 days (re-issued daily while used), revocable on every device at once | `lib/constants/session.ts` |
-| API token permissions | 3 scopes, checked per request; no token without an expiry | `lib/api-scopes.ts` |
-| Third-party scripts allowed in a page | 0 (Content Security Policy; the code editor is served from our own origin) | `lib/csp.ts` |
-| Photo metadata kept after upload | none (re-encoded; non-images and images over 50 megapixels refused) | `lib/image-sanitize.ts` |
-| Password-reset and verification links | stored as SHA-256 hashes; valid 1 hour and 24 hours; single use even under a race | `src/lib/tokens.ts` |
-| API token lifetime | 30, 90 or 365 days (no "never"); at most 10 per user; stored hashed | `src/actions/api-tokens.ts` |
+| Session lifetime | 14 days (re-issued daily while used), revocable on every device at once | `src/lib/constants/session.ts` |
 | Sessions after a password change or reset | all revoked on the next request | `users.sessionVersion` |
-| Public objects in file storage | 0 (private bucket, reads checked per user) | `/api/download` |
+| Password-reset and verification links | stored as SHA-256 hashes; valid 1 hour and 24 hours; single use even under a race | `src/lib/tokens.ts` |
+| API tokens | stored as SHA-256 hashes; 30, 90 or 365 days (no "never"); at most 10 per user; 4 scopes checked per request | `src/actions/api-tokens.ts`, `src/lib/api-scopes.ts` |
+| Third-party scripts allowed in a page | 0 (Content Security Policy; the code editor is served from the app's own origin) | `src/lib/csp.ts` |
+| Public objects in file storage | 0 (private bucket; every read is checked against the signed-in user) | `/api/download` |
+| Photo metadata kept after upload | none (re-encoded; non-images and images over 50 megapixels refused) | `src/lib/image-sanitize.ts` |
+| ZIP import inflation cap | 40 MB in total, 10 MB per file, 100 files, enforced while inflating | `src/lib/zip-import.ts` |
 
-### Rate limits (per user or IP, sliding window)
+### Rate limits
+
+Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or the email address. The full table is in [errors and rate limits](api/errors-and-rate-limits.md#rate-limits).
 
 | Endpoint | Limit |
 |---|---|
@@ -65,12 +68,13 @@ Lighthouse on a production build (`npm run build && npm run start`), signed-in p
 | Register, forgot password (per IP, and per address from any IP) | 3 / hour |
 | Reset password, change password | 5 / 15 min |
 | Resend verification | 3 / 15 min per IP, 3 / hour per address |
+| Search palette | 240 / minute |
+| Item, collection and tag changes | 120 / minute |
 | Import / import preview | 5 / hour, 20 / hour |
 | Export | 10 / hour |
+| File upload (web and API) | 10 / hour |
+| AI helpers (app and API) | 20 / hour |
 | Checkout / billing portal | 10 / hour, 20 / hour |
-| Item and collection creation | 120 / minute |
-| File upload | 10 / hour |
-| AI helpers | 20 / hour |
 | Sign out everywhere | 5 / hour |
 | Token API (`/api/v1`) | 60 / minute |
 
@@ -80,33 +84,37 @@ Lighthouse on a production build (`npm run build && npm run start`), signed-in p
 |---|---|
 | Free plan | 50 items, 3 collections |
 | Pro plan | unlimited; $8 / month or $72 / year |
-| Upload size | images 5 MB, other files 10 MB |
-| Item content | up to 500,000 characters; title 200; 20 tags of 50 characters |
-| Import size | 5,000 entries per file |
-| Search preview | first 100 characters, cut in SQL so full content is never loaded for the palette |
-| Query page size cap | 100 rows |
-| AI input | first 2,000 characters of an item |
+| Upload size | images 5 MB, other files 10 MB; 4 MB from the desktop app and in a ZIP import (the host's request-body limit) |
+| Item fields | content 500,000 characters; title 200; description 1,000; 20 tags of 50 characters |
+| JSON import | 5,000 items and 5,000 collections per file |
+| ZIP import | 4 MB, 100 files |
+| Search | 20 items and 8 collections per answer; previews are the first 100 characters, cut in SQL |
+| Page size | 21 items or collections; any caller-supplied limit is capped at 100 rows |
+| AI input | the first 2,000 characters of an item |
+| API tokens | 10 per user |
+| Demo account | items up to 5,000 characters, no links, no imports; reset daily |
 
 ## Scale of the codebase
 
 | Metric | Value |
 |---|---|
-| Application source (TypeScript, TSX; excluding tests and generated code) | about 30,000 lines |
-| Test code | about 10,800 lines |
-| Database tables / migrations | 10 models / 8 migrations |
-| Route handlers / server actions | 22 / 31 |
-| React components | 145 |
+| Application source (TypeScript and TSX, without tests or generated code) | about 29,700 lines |
+| Test code | about 11,600 lines |
+| Database models / migrations | 10 / 9 |
+| Route handlers / server actions | 25 (including NextAuth's) / 28 |
+| React components | 143 |
 | Item types | 7 (snippet, prompt, command, note, file, image, link) |
-| Clients on the token API | 2 (browser extension, desktop app) |
-| Architecture decision records | 11 |
-| Documentation pages | 75 |
+| Clients of the token API | 2 (browser extension, desktop app) |
+| Scheduled jobs | 2 (daily demo reset, weekly orphaned-file sweep) |
+| Architecture decision records | 10 |
 
 ## Re-measuring
 
 ```bash
 npm run test:coverage                 # tests and coverage
+cd desktop && npm test                # the desktop app's tests
 npm audit --omit=dev                  # production dependency advisories
 npm run build && npm run start        # then run Lighthouse against http://localhost:3000
 ```
 
-See [testing](practices/testing.md#coverage-and-ci) for the coverage rules and [Tooling and CI pitfalls](practices/gotchas/tooling-and-ci.md#lighthouse-numbers-need-a-production-build) for measuring Lighthouse, including signed-in pages.
+See [testing](practices/testing.md#coverage-and-ci) for the coverage rules and the [tooling pitfalls](practices/gotchas/tooling-and-ci.md#lighthouse-numbers-need-a-production-build) for measuring Lighthouse, including signed-in pages.

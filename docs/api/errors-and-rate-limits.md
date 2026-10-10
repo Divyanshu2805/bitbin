@@ -12,8 +12,9 @@ Errors are JSON with a single message and a status code:
 |---|---|
 | `400` | Invalid input, or an invalid / expired token |
 | `401` | No session, or for `/api/v1`, no valid token. (The Stripe webhook never returns `401`: it uses `400` for a bad signature) |
-| `403` | Signed in, but not allowed: not Pro, not the owner of a file path, the public demo account on an account-level action, a `/api/v1` token without the permission an endpoint needs, or a request a browser says came from another site (`Cross-site request blocked`) |
+| `403` | Signed in, but not allowed: not Pro, not the owner of a file path, the demo account importing, the public demo account on an account-level action, a `/api/v1` token without the permission an endpoint needs, or a request a browser says came from another site (`Cross-site request blocked`) |
 | `404` | Not found — including rows that belong to someone else |
+| `413` | `/api/import` and `/api/v1/files` only: the request body is larger than the route accepts |
 | `429` | Rate limited, with `Retry-After` |
 | `502` | `/api/v1/ai/tags` and `/api/v1/ai/description` only: the AI provider failed or answered in an unexpected format |
 | `500` | Unexpected error, logged server-side; the message is generic |
@@ -48,13 +49,14 @@ Actions never throw to the client. They return:
 | `resendVerificationEmail` | 3 / hour | the address (any IP) | `POST /api/auth/resend-verification` |
 | `changePassword` | 5 / 15 min | IP + user id | `POST /api/auth/change-password` |
 | `sessions` | 5 / hour | IP + user id | The `signOutEverywhere` action |
-| `import` | 5 / hour | IP + user id | the `importData` action |
-| `importPreview` | 20 / hour | IP + user id | the `previewImport` action |
+| `import` | 5 / hour | IP + user id | the `importData` action, `POST /api/import` (`mode=import`) |
+| `importPreview` | 20 / hour | IP + user id | the `previewImport` action, `POST /api/import` (`mode=preview`) |
+| `search` | 240 / minute | IP + user id | the `searchLibrary` action (the ⌘K palette) |
 | `export` | 10 / hour | IP + user id | `GET /api/export` (JSON and ZIP) |
 | `checkout` | 10 / hour | IP + user id | `POST /api/stripe/checkout` |
 | `portal` | 20 / hour | IP + user id | `POST /api/stripe/portal` |
-| `create` | 120 / minute | IP + user id | the `createItem` and `createCollection` actions |
-| `upload` | 10 / hour | IP + user id | `POST /api/upload` |
+| `create` | 120 / minute | IP + user id | the `createItem`, `createCollection`, `renameTag` and `deleteTag` actions |
+| `upload` | 10 / hour | IP + user id | `POST /api/upload`, `POST /api/v1/files` |
 | `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` and `/ai/description` |
 | `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
 
@@ -68,14 +70,14 @@ Route handlers answer `429` through `rateLimitResponse(retryAfter)`:
 
 with `Retry-After` in seconds. AI actions return "Too many AI requests. Please try again in …" as their `error`.
 
-Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`) and the server actions that change one existing thing (favorite, pin, rename, delete, collection membership). Server actions answer an over-limit call with an `error` such as "Too many imports. Please try again in 3 minutes."
+Not rate limited: the NextAuth endpoints themselves (the credentials limit is enforced inside `authorize()`), the cron routes (they need `CRON_SECRET`), the extension download (Pro, built once per process) and the server actions that change one existing thing (favorite, pin, edit, delete, collection membership). Server actions answer an over-limit call with an `error` such as "Too many imports. Please try again in 3 minutes."
 
 ### Failure mode
 
 Without Redis, production degrades instead of switching limits off; development fails open. A Redis *error* fails closed for the credential limits:
 
 - With `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` unset, still holding the `YOUR_…` placeholders from `.env.example`, or invalid (a URL without `https://`, say): **in production** the limits still apply, counted per server instance in memory (`memoryLimit` in `lib/rate-limit.ts`, a sliding-window log capped at 10,000 keys). That is weaker than Redis, because every serverless instance counts separately and a cold start forgets, so an attacker gets some multiple of a limit rather than unlimited tries. One warning is logged per process. **In development** (and tests) every check passes, so local work needs no Redis.
-- If Redis errors at runtime, the error is logged. The credential limits (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, their per-address versions, `changePassword`) then **refuse** the request with a 60-second `Retry-After`, so an outage can't switch off brute-force protection; `ai`, `upload` and `api` let the request through.
+- If Redis errors at runtime, the error is logged. The credential limits (`login`, `register`, `forgotPassword`, `resetPassword`, `resendVerification`, their per-address versions, `changePassword`) then **refuse** the request with a 60-second `Retry-After`, so an outage can't switch off brute-force protection; every other limit lets the request through.
 
 `src/lib/rate-limit.test.ts` covers the unset, placeholder, invalid-URL and Redis-error cases, the production in-memory fallback, per-address keys and the client-IP rules. See [ADR 0005](../architecture/decisions/0005-rate-limits-fail-open.md).
 

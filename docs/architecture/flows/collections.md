@@ -22,6 +22,8 @@ Collections group items by project, topic or workflow. Membership is **many-to-m
 | `toggleCollectionPin` | Pinned collections come first on the dashboard, `/collections` and `/favorites` (then by last edit) |
 | `getUserCollections` | A lightweight id + name list for the collection picker |
 
+The ⋯ menu on a collection (`collection-actions-menu.tsx`) also **exports** it, as JSON or (Pro) as a ZIP with its files, through `GET /api/export?collection={id}` — see [import and export](import-export.md#export).
+
 Items join a collection from the item side — the picker in the create dialog and the drawer sends `collectionIds` with `createItem` / `updateItem`. Two quicker ways add or remove one collection at a time through `setItemCollection` (both the item and the collection are checked for ownership):
 
 - **The card menu**: ⋯ → *Add to collection* lists the user's collections with a check on the item's (`getItemCollections`); clicking one toggles it and the menu stays open.
@@ -40,7 +42,7 @@ Collection cards and the sidebar show a colour taken from the items inside. The 
 
 ## Detail page
 
-`/collections/[id]` loads the collection with an ownership check (`findFirst({ where: { id, userId } })`) and splits its items into three blocks: regular items as cards, images as thumbnails, and files as rows. It's paginated like the type pages.
+`/collections/[id]` loads the collection with an ownership check (`findFirst({ where: { id, userId } })`) and splits its items into three blocks: regular items as cards, images as thumbnails, and files as rows. It's paged by cursor like the type pages, and `/collections` itself lists pinned collections first, then the most recently edited.
 
 ## Related
 

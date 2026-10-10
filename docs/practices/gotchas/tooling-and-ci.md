@@ -31,3 +31,11 @@ Vercel builds every push to `main` on its own. A red CI run doesn't stop that de
 ## Lighthouse numbers need a production build
 
 Measure with `npm run build && npm run start`, not `npm run dev`: the dev server is unminified and slow, and its numbers say little. Locally the Vercel analytics script doesn't exist, so "best practices" shows one console error that won't appear in production. To audit signed-in pages, sign in first and pass the `authjs.session-token` cookie to the audit.
+
+## File-name case only matters on Vercel
+
+Windows and macOS file systems ignore case, Vercel's Linux build doesn't. An import of `./AiSection` for a file named `AISection.tsx` works locally and breaks the production build (it has happened once). After renaming a file, check the import paths, and use `git mv` so Git records the new case.
+
+## Vercel refuses request bodies over about 4.5 MB
+
+A serverless function never sees a larger request; the platform answers `413` first. That is why a ZIP import stops at 4 MB (`MAX_IMPORT_ZIP_BYTES`) and the desktop app at 4 MB per file. The web uploader posts to a function too, so on Vercel a file between about 4.5 MB and the 10 MB the upload rules allow is refused by the platform before BitBin's own checks run (it is listed in [constraints](../../known-gaps/constraints-and-trade-offs.md#storage)). Moving more bytes needs a direct-to-storage upload with a presigned URL, not a bigger limit in the code.

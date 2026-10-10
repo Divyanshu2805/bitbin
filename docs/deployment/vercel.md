@@ -18,7 +18,7 @@ The live site runs on Vercel at a subdomain of a domain you own (for example `bi
    DATABASE_URL="postgresql://..." npm run db:seed
    ```
 
-   The demo user the seed also creates is the public sandbox account (see [the demo account](../schema/migrations-and-seeding.md#the-demo-account)). If you keep it, set `CRON_SECRET` (below) so it is reset daily.
+   The demo user the seed also creates is the public sandbox account (see [the demo account](../schema/migrations-and-seeding.md#the-demo-account)). Set `CRON_SECRET` (below) so it is reset daily.
 
 Use a separate Neon branch for local development, so test accounts and experimental migrations never reach live data. BitBin's own development setup does: the `dev` branch holds the schema and the seeded demo account only, its host is listed in `SAFE_DATABASE_HOSTS`, and the destructive scripts refuse any other host.
 
@@ -44,10 +44,8 @@ Every variable from [configuration](../local-development/configuration.md), with
 | `STRIPE_WEBHOOK_SECRET` | The signing secret of the **dashboard** webhook endpoint, not the one `stripe listen` prints locally |
 | `STRIPE_*` keys and price ids | Test-mode values until the Stripe account is activated for live mode — see [providers](providers.md#stripe-test-mode-in-production) |
 | `UPSTASH_*` | Set them. Without them production falls back to a weaker per-instance in-memory limiter, because every serverless instance counts separately |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional bot check on register and forgot-password; both or neither. See [Turnstile](providers.md#cloudflare-turnstile) |
-| `VIRUSTOTAL_API_KEY` | Optional known-malware check on uploads. See [VirusTotal](providers.md#virustotal) |
 | `SENTRY_DSN` | The DSN of your Sentry project; without it errors are only in Vercel's logs. See [Sentry](providers.md#sentry) |
-| `CRON_SECRET` | A long random string (for example `openssl rand -hex 32`). Vercel's cron sends it to `/api/cron/reset-demo`, which resets the public demo account once a day (`vercel.json`). Without it that route refuses to run |
+| `CRON_SECRET` | A long random string (for example `openssl rand -hex 32`). Vercel's crons send it to `/api/cron/reset-demo` (the daily demo reset) and `/api/cron/sweep-files` (the weekly orphaned-file sweep), both in `vercel.json`. Without it both refuse to run |
 | `DATABASE_URL` | The Neon pooled URL |
 
 Vercel keeps separate values for Production, Preview and Development. Point previews at a separate Neon branch and Stripe test keys, so preview deployments never touch production data.

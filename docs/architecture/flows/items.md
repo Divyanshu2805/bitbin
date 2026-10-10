@@ -16,13 +16,14 @@ Creating, reading, editing and deleting items — the core of BitBin. The per-ty
 
 ## Create
 
-`createItem(input)`:
+`createItem(input)` calls `createItemForUser` (`src/lib/item-create.ts`), which `POST /api/v1/items` and `/api/v1/files` share:
 
-1. `getAuthedSession()`, then Zod validation — title required, tags trimmed and empties dropped, `url` and `fileUrl` must be `http(s)`.
+1. `getAuthedSession()`, the `create` rate limit (120 a minute), then Zod validation — title required, tags trimmed and empties dropped, `url` and `fileUrl` must be `http(s)`, and the demo account may not save a link or more than 5,000 characters.
 2. `file` and `image` types are rejected unless the session is Pro.
 3. `canCreateItem` pre-checks the Free cap of **50 items** (`src/lib/usage.ts`); the insert itself re-checks it inside a transaction under a lock on the user's row, so concurrent requests can't overshoot it.
-4. A `link` must have a URL.
-5. `lib/db/items.createItem` looks up the system item type by name, derives the content type (`link` → `URL`, `file` / `image` → `FILE`, everything else → `TEXT`), creates the row for the session user, `connectOrCreate`s the tags and links the selected collections.
+4. A `link` must have a URL, and a `fileUrl` must point into the caller's own storage folder (`isOwnedFileUrl`).
+5. A snippet or command without a language gets one detected from its content (`lib/detect-language.ts`).
+6. `lib/db/items.createItem` looks up the system item type by name, derives the content type (`link` → `URL`, `file` / `image` → `FILE`, everything else → `TEXT`), creates the row for the session user, `connectOrCreate`s the tags and links the selected collections.
 
 The dialog then shows a toast and calls `router.refresh()`.
 
@@ -31,7 +32,7 @@ The dialog then shows a toast and calls `router.refresh()`.
 | Where | Query |
 |---|---|
 | Dashboard | `getPinnedItems`, `getRecentItems` (`DASHBOARD_RECENT_ITEMS_LIMIT`), `getDashboardStats` |
-| `/items/[type]` | `getItemsByType(userId, type, page, 21)`, paginated |
+| `/items/[type]` | `getItemsByType`, 21 to a page, paged by cursor (`?after=` / `?before=`, `lib/keyset.ts`), pinned first, then the most recently edited |
 | Drawer | `GET /api/items/[id]` → `getItemById(userId, id)` — full content, tags and collections |
 
 List queries select only what a card needs (`ItemWithType`); only the drawer loads full content.

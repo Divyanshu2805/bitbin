@@ -10,7 +10,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 | `AUTH_SECRET` | Yes | NextAuth | Signs the session JWT. Generate with `npx auth secret`. Rotating it signs everyone out |
 | `AUTH_URL` | Yes | NextAuth | Base URL of the app — `http://localhost:3000` locally |
 | `NEXT_PUBLIC_APP_URL` | Yes | Email links, Stripe redirect URLs, link previews | Public URL used to build absolute links, including the canonical URL, `robots.txt`, the sitemap and the Open Graph image. It is read at **build** time for those, so set it before the production build |
-| `CRON_SECRET` | Production, if you keep the demo account | `/api/cron/reset-demo` | A long random string. Vercel's cron sends it as `Authorization: Bearer …`. Without it the reset route refuses every request, so the demo account is never reset. Not needed locally |
+| `CRON_SECRET` | Production | `/api/cron/reset-demo`, `/api/cron/sweep-files` | A long random string. Vercel's crons send it as `Authorization: Bearer …`. Without it both routes refuse every request, so the demo account is never reset and orphaned files are never swept. Not needed locally |
 
 ## Authentication
 
@@ -32,16 +32,7 @@ All configuration comes from environment variables, read from `.env` locally (gi
 
 | Variable | Notes |
 |---|---|
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), rate limiting is **disabled** — a warning or error is logged and every check passes. See [rate limits](../api/errors-and-rate-limits.md#failure-mode) |
-
-## Bot protection and upload scanning
-
-Both are optional and off until their keys are set.
-
-| Variable | Notes |
-|---|---|
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | [Cloudflare Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile) (free). Both must be set. Registration and forgot-password then need a passing check, shown as a widget on those forms; a failed check or an unreachable Cloudflare refuses the request. The site key is public and is read at build time (it also widens the Content Security Policy for Cloudflare's challenge), so set it before deploying |
-| `VIRUSTOTAL_API_KEY` | A free [VirusTotal](https://www.virustotal.com) API key. Uploads are checked against its database of known malware by SHA-256: only the hash is sent, a file it has never seen passes, and a lookup that fails or times out lets the upload through |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | From the Upstash console's REST section. If either is unset, still a `YOUR_…` placeholder, or invalid (say, a URL without `https://`), development has **no rate limiting** and production falls back to a weaker per-instance in-memory limiter; one warning is logged per process. See [rate limits](../api/errors-and-rate-limits.md#failure-mode) |
 
 ## Safety and monitoring
 
@@ -74,7 +65,7 @@ Both are optional and off until their keys are set.
 
 | Variable | Notes |
 |---|---|
-| `OPENAI_API_KEY` | Key for the provider you use — an OpenAI key, or an OpenRouter `sk-or-…` key |
+| `AI_API_KEY` | Key for the provider you use — an OpenAI key, or an OpenRouter `sk-or-…` key. `OPENAI_API_KEY`, the original name, still works; `AI_API_KEY` wins when both are set |
 | `OPENAI_BASE_URL` | Optional. Unset for OpenAI; `https://openrouter.ai/api/v1` for OpenRouter |
 | `AI_MODEL` | Optional, default `gpt-5-nano`. The model name as the provider spells it — prefixed on OpenRouter, e.g. `openai/gpt-5-nano` |
 
@@ -88,12 +79,11 @@ See [AI features](../architecture/flows/ai-features.md#provider-and-model) for c
 | `FROM_EMAIL` on a verified domain | Emails reach only the Resend account owner's address |
 | GitHub | The GitHub button fails; email + password still works |
 | Upstash | Locally, no rate limiting. In production, a weaker per-instance in-memory limiter instead (see [rate limits](../api/errors-and-rate-limits.md#failure-mode)) |
-| Turnstile keys | No bot check on register and forgot-password (the rate limits still apply) |
-| `VIRUSTOTAL_API_KEY` | Uploads aren't checked against known malware (they are still validated and photos re-encoded) |
 | `SENTRY_DSN` | Errors are only in Vercel's function logs; nobody is told |
-| R2 | File and image uploads and ZIP exports fail |
+| R2 | File and image uploads, ZIP exports and ZIP imports fail |
+| `CRON_SECRET` (production) | The demo account isn't reset and orphaned files aren't swept |
 | Stripe | Checkout and the billing portal fail. The build still passes with a placeholder key |
-| AI key | AI buttons show an error toast |
+| AI key | AI buttons, and ✦ Suggest in the extension and desktop app, show an error |
 
 ## Related
 

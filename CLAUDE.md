@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. It exists so an agent 
 
 ## Project overview
 
-BitBin is a personal store for developer knowledge — snippets, prompts, commands, notes, files, images and links — organized into collections, tagged, and searchable with ⌘K. Free and Pro plans (Stripe); Pro adds files, images, AI helpers and ZIP export.
+BitBin is a personal store for developer knowledge — snippets, prompts, commands, notes, files, images and links — organized into collections, tagged, and searchable with ⌘K. Free and Pro plans (Stripe); Pro adds files, images, AI helpers, API tokens (a browser extension and a desktop tray app use them) and ZIP export and import. The full feature list is [`docs/features.md`](docs/features.md).
 
 - **One Next.js 16 App Router app**, React 19, TypeScript 5. No separate API server.
 - PostgreSQL (Neon) through Prisma 7 with the pg driver adapter; NextAuth v5 with JWT sessions; Tailwind v4 + shadcn/ui.
@@ -23,7 +23,8 @@ These are authoritative and kept current:
 | Every route handler and server action, errors, rate limits | [`docs/api/`](docs/api/README.md) |
 | Setup, configuration, troubleshooting | [`docs/local-development/`](docs/local-development/README.md) |
 | Constraints, trade-offs, what isn't built yet | [`docs/known-gaps/`](docs/known-gaps/README.md) |
-| Vercel, provider callbacks | [`docs/deployment/`](docs/deployment/README.md) |
+| Vercel, provider callbacks, crons, releases | [`docs/deployment/`](docs/deployment/README.md), [`operations.md`](docs/deployment/operations.md) |
+| What the app does, and its numbers | [`docs/features.md`](docs/features.md), [`docs/metrics.md`](docs/metrics.md) |
 
 If a change would make any doc inaccurate, **update that doc in the same change**.
 
@@ -31,15 +32,17 @@ If a change would make any doc inaccurate, **update that doc in the same change*
 
 ```
 src/
-  app/                pages (RSC) and api/ route handlers; (auth)/ group for the sign-in pages; privacy/ and terms/ are public legal pages
-  actions/            server actions — every UI write: items, collections, ai, api-tokens, search, settings, import, export, auth
+  app/                pages (RSC) and api/ route handlers; (auth)/ group for the sign-in pages, (app)/ for the signed-in shell;
+                      api/v1 is the token API, api/cron the two scheduled jobs; privacy/ and terms/ are public legal pages
+  actions/            server actions — every UI write: items, collections, tags, ai, api-tokens, search, settings, import, auth
   auth.ts             NextAuth: adapter, providers, jwt/session callbacks (isPro re-read every evaluation)
   auth.config.ts      edge-safe subset for proxy.ts only
   proxy.ts            guards /dashboard/* — other pages call auth() themselves
-  lib/db/             queries, every one scoped by userId
+  lib/db/             queries, every one scoped by userId; the only importer of lib/prisma.ts
   lib/                action-utils (ActionResult, getAuthedSession, requirePro), validation, usage (Free limits),
-                      rate-limit, tokens, api-tokens + api-auth (/api/v1 Bearer tokens), item-create + ai-tags
-                      (shared by actions and /api/v1), extension-package (Settings ZIP download), stripe, r2, openai, email, constants/
+                      rate-limit, tokens, api-tokens + api-auth + api-scopes (/api/v1 Bearer tokens), item-create,
+                      ai-tags + ai-description (shared by actions and /api/v1), file-ingest (every upload check),
+                      export-zip / zip-import / zip-restore, keyset (pagination), orphan-sweep, stripe, r2, openai, email, constants/
   components/         ui/ (shadcn), layout/, items/, dashboard/, collections/, search/, settings/, shared/, homepage/
   generated/prisma/   generated client — git-ignored
 prisma/               schema.prisma, migrations/, seed.ts
@@ -76,18 +79,20 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **A NextAuth provider change goes in both `auth.ts` and `auth.config.ts`** — e.g. GitHub's `issuer` override.
 - **`/api/v1/*` is the token API** — every handler starts with `authenticateApiRequest`, reuses the shared lib logic (`item-create`, `ai-tags`) instead of forking it, and stays backward compatible: the extension and the desktop app depend on it.
 - **Files live in a private bucket.** Never link to or fetch a stored `fileUrl`; use `fileViewPath` / `fileDownloadPath` (`lib/file-url.ts`) and read objects with `getFromR2`. Check client-supplied `fileUrl`s with `isOwnedFileUrl`.
+- **Every stored file goes through `ingestFile`** (`lib/file-ingest.ts`): the web upload, `/api/v1/files` and the ZIP import all use it. A new way to store a file must too.
 - **Free-plan limits are enforced under a lock.** A new way to create items or collections must pass `maxItems` / `maxCollections` so the count and insert run in one transaction (`lockUserForLimit`).
-- **`demo@bitbin.dev` is a public sandbox.** Its password is published, so anything that changes an account itself (password, name, deletion, billing, email, sessions) must refuse it with `isDemoEmail` (`lib/demo.ts`); what it saves is shown to the next visitor, so no links, long pastes or imports (`demoItemRestriction`). A daily cron (`/api/cron/reset-demo`, needs `CRON_SECRET`) restores its library.
+- **`demo@bitbin.dev` is a public sandbox.** Its password is published, so anything that changes an account itself (password, name, deletion, billing, email, sessions) must refuse it with `isDemoEmail` (`lib/demo.ts`); what it saves is shown to the next visitor, so no links, long pastes or imports (`demoItemRestriction`). A daily cron (`/api/cron/reset-demo`, needs `CRON_SECRET`) restores its library; a weekly one (`/api/cron/sweep-files`) deletes stored files no item points at.
 - **Expensive or abusable endpoints get a rate limit** (`checkRateLimit`, or `checkActionRateLimit` in actions); the table is in `docs/api/errors-and-rate-limits.md`.
 - **A cookie-authenticated route that changes state calls `rejectCrossSite(request)` first** (`lib/same-origin.ts`).
 - **Nothing third-party loads in a page.** The Content Security Policy (`lib/csp.ts`) lists this site only; the code editor is served from `public/monaco` (generated by `scripts/copy-monaco.mjs`), not a CDN. Never add `'unsafe-eval'` outside development.
 - **`/api/v1` handlers pass the scope they need** to `authenticateApiRequest(request, scope)`; tokens always expire and carry scopes (`lib/api-scopes.ts`).
 - **A schema change the new code depends on is migrated in production before the deploy** (Vercel doesn't run migrations).
 - **A redirect target from the client goes through `safeCallbackPath`** (`lib/validation.ts`), so `?callbackUrl=` can't send anyone off-site.
-- **Coverage has a floor** in `vitest.config.ts`. New server code comes with tests; never lower the floor to let a change through.
+- **Coverage has a floor** in `vitest.config.ts` (80% statements, branches and lines; 70% functions). New server code comes with tests; never lower the floor to let a change through.
 - **Scripts that delete or overwrite data call `assertSafeToRunDestructive`** (`lib/db-safety.ts`). `console.error` is the error channel: Sentry captures it, so log the real error there and return a generic message.
 - **Email tokens are stored hashed** (`lib/tokens.ts`); only the emailed link holds the raw value.
 - **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
+- **Vercel refuses request bodies over about 4.5 MB**, before the code runs. Keep anything uploaded through a function under it (the ZIP import and the desktop app stop at 4 MB).
 
 ## Practices
 
@@ -117,4 +122,4 @@ Silent-failure traps this stack has hit, imported in full. Check here first when
 
 ## Commits
 
-Commit messages are a single line in semantic-commit format (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, optionally scoped like `docs(api):`), with no mention of Claude or AI and no Co-Authored-By trailer.
+Commit messages are a single line in semantic-commit format (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`) with no scope, no mention of Claude or AI, and no Co-Authored-By trailer. Several logical changes are committed and pushed one at a time, each building on its own (every push to `main` deploys).

@@ -7,8 +7,7 @@ What lives where, and the rules for which layer may call which.
 ```
 src/
 ├── app/
-│   ├── (auth)/            sign-in, register, verify-email, forgot-password, reset-password — share the split-screen layout
-│   ├── api/               route handlers: auth/*, items/[id], upload, download/[...path], export, stripe/*, webhooks/stripe, v1/* (token API), extension/download, cron/reset-demo
+│   ├── (auth)/            sign-in, register, verify-email, forgot-password, reset-password: one split-screen layout
 │   ├── (app)/             every signed-in page; layout.tsx renders the shell (sidebar, top bar, status bar,
 │   │                      backdrop) once and keeps it mounted, loading.tsx fills only the content area
 │   │   ├── dashboard/     stats, collections, pinned and recent items (+ error.tsx)
@@ -16,59 +15,77 @@ src/
 │   │   ├── collections/   paginated list and /collections/[id]
 │   │   ├── favorites/     starred items and collections
 │   │   └── profile/, settings/, upgrade/
+│   ├── api/
+│   │   ├── auth/          [...nextauth], register, verify, resend-verification, forgot-password,
+│   │   │                  reset-password, change-password, delete-account
+│   │   ├── items/[id]/    the full item for the drawer
+│   │   ├── upload/, download/[...path]/   file transfer
+│   │   ├── export/, import/               JSON and ZIP export; ZIP import
+│   │   ├── extension/download/            the browser extension as a ZIP
+│   │   ├── stripe/, webhooks/stripe/      checkout, portal, webhook
+│   │   ├── v1/            the token API: me, collections, items, files, ai/tags, ai/description
+│   │   └── cron/          reset-demo (daily), sweep-files (weekly)
 │   ├── page.tsx           marketing homepage
-│   ├── privacy/, terms/   public Privacy Policy and Terms of Service (shared `LegalPage` frame), linked from the footer and sign-up
-│   ├── robots.ts, sitemap.ts, opengraph-image.tsx, twitter-image.tsx, apple-icon.tsx, favicon.ico, icon.svg   crawler rules, sitemap, link-preview image and icons
+│   ├── privacy/, terms/   public Privacy Policy and Terms of Service (shared `LegalPage` frame)
+│   ├── robots.ts, sitemap.ts, opengraph-image.tsx, twitter-image.tsx, apple-icon.tsx, favicon.ico, icon.svg
 │   ├── layout.tsx         fonts, ThemeProvider (next-themes, dark default), Toaster, Vercel Analytics
-│   └── globals.css        design tokens and motion utilities
-├── actions/               server actions: items, collections, ai, api-tokens, search, settings, import, auth
-├── auth.ts, auth.config.ts   NextAuth — full config, and the edge-safe subset used by proxy.ts
+│   ├── globals.css        design tokens and motion utilities
+│   └── theme-contrast.test.ts   holds the light theme's colour tokens to WCAG AA
+├── actions/               server actions: items, collections, tags, ai, api-tokens, search, settings, import, auth
+├── auth.ts, auth.config.ts   NextAuth: the full config, and the edge-safe subset used by proxy.ts
 ├── proxy.ts               guards /dashboard/*
 ├── instrumentation.ts     starts Sentry (only when SENTRY_DSN is set) and reports errors Next.js catches
 ├── components/
 │   ├── ui/                shadcn/ui primitives
-│   ├── layout/            dashboard layout, top bar, sidebar, mobile sidebar, status bar, user menu
+│   ├── layout/            the app shell: sidebar, mobile sidebar, top bar, status bar, user menu, app shortcuts
 │   ├── dashboard/         bin overview, quick create, item and collection cards, sections
-│   ├── items/             drawer, item rows, editors, new-item dialog, file upload, AI buttons, collection picker
-│   ├── collections/, favorites/, settings/, profile/, auth/, search/
-│   ├── homepage/          marketing sections
+│   ├── items/             drawer, rows, editors, new-item dialog, file upload and viewers, AI buttons,
+│   │                      collection picker, drag and drop
+│   ├── collections/, favorites/, profile/, search/, auth/
+│   ├── settings/          editor, billing, extension (API tokens), desktop, tags, data (import / export), account
+│   ├── homepage/          marketing sections (PascalCase files)
 │   └── shared/            logo, empty state, page header, panel, usage meter, pagination, confirm dialogs, …
 ├── lib/
-│   ├── db/                items, collections, users, export, api-tokens — the app's queries
-│   ├── constants/         pagination, plan limits, session lifetime, pricing, item types, editor defaults, keyboard shortcuts
+│   ├── db/                every query: items, collections, tags, search, users, accounts, billing, api-tokens,
+│   │                      verification-tokens, export, import, files, demo, auth-adapter
+│   ├── constants/         plan limits, pricing copy, pagination, session lifetime, item types, editor,
+│   │                      keyboard shortcuts, desktop download links
 │   ├── utils/             date and colour helpers
-│   ├── prisma.ts          the Prisma client (pg adapter, one instance per process)
-│   ├── action-utils.ts    ActionResult, getAuthedSession, requirePro, checkAiRateLimit
-│   ├── validation.ts      shared Zod helpers (safe URLs, ids, error flattening, `safeCallbackPath`)
-│   ├── usage.ts, limit-error.ts   Free plan limits, and the locked count-then-insert that enforces them
-│   ├── rate-limit.ts      Upstash limiters
-│   ├── tokens.ts          verification and password-reset tokens
-│   ├── api-tokens.ts, api-auth.ts   personal access tokens and the /api/v1 Bearer check
-│   ├── item-create.ts, ai-tags.ts   item creation and AI tagging shared by actions and /api/v1
-│   ├── extension-package.ts   zips extension/ for the Settings download
-│   ├── import-utils.ts, export-files.ts   duplicate detection for imports; the readable text files in a ZIP export
-│   ├── detect-language.ts, ai-description.ts, explanation-store.ts   language guessing, the shared description helper, browser-side code explanations
-│   ├── site.ts            site name, description, public origin, and which paths crawlers may or may not index
-│   ├── demo.ts            the public demo account: `isDemoEmail`, the message shown when it is refused, and what it may not save
-│   ├── credentials.ts     the email-and-password sign-in: the login limit and the errors the form reads
-│   ├── csp.ts, same-origin.ts   the Content Security Policy sent with pages; `rejectCrossSite` for cookie-authenticated mutating routes
-│   ├── turnstile.ts, virus-check.ts, image-sanitize.ts   optional Cloudflare bot check, optional VirusTotal hash lookup, photo re-encoding (strips EXIF)
-│   ├── api-scopes.ts      the permissions an API token can carry
+│   ├── prisma.ts          the Prisma client (pg adapter, one per process); imported only by lib/db
+│   ├── action-utils.ts    ActionResult, getAuthedSession, requirePro, checkActionRateLimit
+│   ├── validation.ts      shared Zod schemas and size caps, safe URLs, ids, `safeCallbackPath`
+│   ├── usage.ts, limit-error.ts         Free plan limits, and the locked count-then-insert that enforces them
+│   ├── rate-limit.ts      Upstash limiters, the in-memory fallback and the client-IP rules
+│   ├── tokens.ts, credentials.ts        hashed single-use email tokens; the email-and-password sign-in check
+│   ├── api-tokens.ts, api-auth.ts, api-scopes.ts   personal access tokens, the /api/v1 Bearer check, permissions
+│   ├── item-create.ts     item creation shared by the action and /api/v1
+│   ├── ai-tags.ts, ai-description.ts, ai-json.ts, openai.ts   AI helpers shared by actions and /api/v1, the client
+│   ├── file-ingest.ts, image-sanitize.ts, r2.ts, file-url.ts  every upload check, photo re-encoding, storage,
+│   │                                                          view and download paths
+│   ├── export-files.ts, export-zip.ts, zip-format.ts          the readable files in a ZIP export, the ZIP itself
+│   ├── import-schema.ts, import-utils.ts, zip-import.ts, zip-restore.ts   the import format, duplicates,
+│   │                                                          reading and restoring a ZIP
+│   ├── keyset.ts          cursor pagination for every list
+│   ├── orphan-sweep.ts, cron-auth.ts    the weekly file sweep; the cron routes' secret check
+│   ├── detect-language.ts, explanation-store.ts   language guessing; code explanations kept in the browser
+│   ├── extension-package.ts             zips extension/ for the Settings download
+│   ├── demo.ts            the public demo account: `isDemoEmail` and what it may not save
+│   ├── csp.ts, same-origin.ts           the Content Security Policy; `rejectCrossSite`
 │   ├── monitoring.ts      Sentry setup and the scrubbing of personal data from events
-│   ├── db-safety.ts, db-url.ts   the guard on destructive scripts; `sslmode` normalisation for the pg driver
-│   ├── file-url.ts        `fileViewPath` / `fileDownloadPath` for stored files (safe for client components)
-│   ├── view-mode.ts, view-transition.ts, smooth-scroll.ts   grid / list choice, page slides, homepage momentum scrolling
-│   └── stripe.ts, stripe-client.ts, r2.ts, openai.ts, email.ts, resend.ts
+│   ├── db-safety.ts, db-url.ts          the guard on destructive scripts; `sslmode` normalisation
+│   ├── site.ts            site name, description, public origin, and which paths crawlers may index
+│   ├── view-mode.ts, view-mode-script.ts, view-transition.ts, smooth-scroll.ts   grid / list, page slides, scrolling
+│   └── stripe.ts, stripe-client.ts, email.ts, resend.ts, utils.ts
 ├── hooks/                 use-clipboard, use-hotkey, use-motion, use-sidebar-collapsed, use-typewriter
-├── types/                 next-auth session augmentation
+├── types/                 next-auth session augmentation, CSS import types
 └── generated/prisma/      generated client (git-ignored)
-prisma/                    schema.prisma, migrations/ (8), seed.ts and demo-content.ts (the demo library)
-scripts/                   cleanup-users.ts, copy-monaco.mjs (copies the code editor into public/monaco before dev and build)
+prisma/                    schema.prisma, migrations/ (9), seed.ts and demo-content.ts (the demo library)
+scripts/                   cleanup-users.ts, copy-monaco.mjs (copies the code editor into public/monaco)
 public/monaco/             generated, git-ignored: the Monaco editor served from our own origin
-extension/                 the Chrome / Edge extension (plain JS, not part of the Next build)
-desktop/                   the Electron tray app (plain CommonJS, own package.json and tests, not part of the Next build)
-.github/                   workflows/ci.yml (audit, lint, tests with coverage floor, build)
-vercel.json                the daily cron that resets the demo account
+extension/                 the Chrome / Edge extension (plain JS, outside the Next build)
+desktop/                   the Electron tray app (plain CommonJS, own package.json and tests, outside the Next build)
+.github/workflows/         ci.yml (audit, lint, tests with the coverage floor, build); desktop-release.yml
+vercel.json                the two crons: the daily demo reset and the weekly file sweep
 ```
 
 ## Routes
@@ -81,10 +98,10 @@ vercel.json                the daily cron that resets the demo account
 | `/register`, `/forgot-password`, `/reset-password`, `/verify-email` | Static | The `(auth)` split-screen layout |
 | `/sign-in` | Dynamic | Same layout; reads `?via=` from the URL, so it renders per request |
 | `/dashboard` | Dynamic | Stats, collections, pinned and recent items |
-| `/items/[type]` | Dynamic | `snippets`, `prompts`, `commands`, `notes`, `files`, `images`, `links` — paginated |
+| `/items/[type]` | Dynamic | `snippets`, `prompts`, `commands`, `notes`, `files`, `images`, `links`, paginated by cursor |
 | `/collections`, `/collections/[id]` | Dynamic | Paginated list and detail |
 | `/favorites` | Dynamic | Starred items and collections |
-| `/profile`, `/settings`, `/upgrade` | Dynamic | Account, editor preferences, data, billing |
+| `/profile`, `/settings`, `/upgrade` | Dynamic | Usage and name; editor, billing, tokens, desktop app, tags, data and account; plans |
 
 Route handlers are listed in the [API reference](../api/README.md).
 
@@ -93,17 +110,20 @@ Route handlers are listed in the [API reference](../api/README.md).
 ```
 page / client component
    ├─► server action ─► lib/db ─► Prisma
-   │         └────────► lib/{openai, r2, rate-limit, usage}
-   └─► fetch ─► route handler ─► lib/db, lib/{r2, stripe, email, tokens, rate-limit}
+   │         └────────► lib/{item-create, ai-*, rate-limit, usage}
+   └─► fetch ─► route handler ─► lib/db, lib/{file-ingest, r2, stripe, email, tokens, rate-limit}
+
+extension / desktop app ─► /api/v1 ─► authenticateApiRequest ─► the same lib functions as the actions
 ```
 
-- **Queries belong in `lib/db`.** Some older code still imports `prisma` directly — `auth.ts`, `lib/usage.ts`, `lib/tokens.ts`, the import action, the auth / upload / Stripe route handlers, and a few pages (`dashboard`, `items/[type]`, `profile`, `upgrade`) for one-off lookups. New queries go in `lib/db`.
-- **Components never call `lib/db` functions** — they may import its types. Client components call a server action; server pages call `lib/db` directly.
-- **Every `lib/db` function takes the user id as a parameter**, and every query filters by it. The user id always comes from the session, never from request input.
+- **Queries belong in `lib/db`.** Nothing else imports `lib/prisma.ts`; the NextAuth adapter gets the client through `createAuthAdapter()` (`lib/db/auth-adapter.ts`).
+- **Components never call `lib/db` functions.** They may import its types. Client components call a server action; server pages call `lib/db` directly.
+- **Every `lib/db` function takes the user id as a parameter**, and every query filters by it. The user id comes from the session or the API token, never from request input. The exceptions are deliberate and named: the API token lookup (the token is what identifies the user), and the cron jobs (`resetDemoAccount`, `getAllReferencedFileUrls`).
+- **One path per behaviour.** Item creation (`item-create.ts`), the AI helpers (`ai-tags.ts`, `ai-description.ts`) and file checks (`file-ingest.ts`) are shared by the actions, the upload route, the ZIP import and `/api/v1`, so a new way in can't skip a check.
 - **Integration wrappers stay thin.** Business rules (who may upload, what's rate limited) live in the action or route handler, not in `lib/r2.ts` or `lib/openai.ts`.
 - **Client state is small React contexts**, not a global store: `ItemDrawerProvider`, `SearchProvider`, `EditorPreferencesProvider`. After a mutation, components call `router.refresh()` so server components re-fetch.
 
 ## Related
 
-- [Where do I change…?](where-to-change.md) — the same map, organised by task.
+- [Where do I change…?](where-to-change.md): the same map, organised by task.
 - [Coding conventions](../practices/coding-conventions.md)

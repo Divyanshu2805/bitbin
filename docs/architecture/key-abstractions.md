@@ -16,11 +16,11 @@ A named group of items. Membership is many-to-many through `item_collections`, s
 
 ## Tag
 
-A name shared across all users — `tags.name` is globally unique and case-sensitive, so `React` and `react` are different tags. Items connect to tags with `connectOrCreate`; tags are never deleted, even when no item uses them.
+A name shared across all users: `tags.name` is globally unique and case-sensitive, so `React` and `react` are different tags. Items connect to tags with `connectOrCreate`. The *link* between a tag and an item belongs to the item's owner, so renaming, merging or deleting a tag in **Settings → Tags** (`lib/db/tags.ts`) moves or removes only the caller's own links, and a tag row is deleted once no item uses it.
 
 ## Plan (Free / Pro)
 
-`users.isPro`, set only by Stripe webhooks. Pro removes the 50-item and 3-collection limits and unlocks files, images, AI and ZIP export. The flag is re-read into the session on every request, so the rest of the app just checks `session.user.isPro`. See [billing](flows/billing.md).
+`users.isPro`, set only by Stripe webhooks. Pro removes the 50-item and 3-collection limits and unlocks files, images, AI, API tokens (the extension and the desktop app) and ZIP export and import. The flag is re-read into the session on every request, so the rest of the app just checks `session.user.isPro`. See [billing](flows/billing.md).
 
 ## ActionResult
 
@@ -33,6 +33,10 @@ A NextAuth JWT carrying the user's id, `isPro` and `sessionVersion`. `getAuthedS
 ## API token
 
 A personal access token (`bb_…`, stored only as a SHA-256 hash, expiring, revocable, limited to the scopes it was created with) that lets the browser extension and the desktop app call `/api/v1` as its owner. Cookies are never accepted there. See the [token API](../api/token-api.md).
+
+## Cursor (keyset) pagination
+
+Every list (`/items/[type]`, a collection's items, `/collections`) is paged by an opaque cursor holding the position of a row (`[pinned, updatedAt, id]`), not by page number, so deep pages cost the same as the first and rows don't shift while you page (`lib/keyset.ts`). See [cross-cutting concerns](cross-cutting-concerns.md#pagination).
 
 ## The demo account
 

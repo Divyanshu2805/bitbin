@@ -22,7 +22,8 @@ npm run db:migrate:deploy     # prisma migrate deploy — apply pending migratio
 | `20260927120000_add_collection_pin` | `collections.isPinned`, so a collection can be pinned to the top |
 | `20260930150000_add_session_version` | `users.sessionVersion`, bumped on password change and reset to revoke sessions |
 | `20261005120000_add_api_token_expiry` | `api_tokens.expiresAt` |
-| `20261006190731_add_token_scopes` | `api_tokens.scopes`. Backward compatible (a defaulted column), plus two data statements: existing tokens get all three scopes, and tokens with no expiry get a year |
+| `20261006190731_add_token_scopes` | `api_tokens.scopes`. Backward compatible (a defaulted column), plus two data statements: existing tokens get the three scopes that existed then (`files:write` came later), and tokens with no expiry get a year |
+| `20261007153001_add_search_trigram_indexes` | The `pg_trgm` extension and six GIN trigram indexes (item title, content, description and URL; collection and tag names) for the search palette. Safe to run twice; old code ignores them |
 
 ### Adding one
 

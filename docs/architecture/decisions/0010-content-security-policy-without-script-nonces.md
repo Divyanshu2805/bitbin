@@ -11,7 +11,7 @@ The app sent only the non-script parts of a CSP (`frame-ancestors`, `base-uri`, 
 
 ## Decision
 
-Send a real policy (`src/lib/csp.ts`, applied from `next.config.ts`): `default-src 'self'`, `connect-src 'self'`, `frame-src 'self'`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'self'`, `img-src` limited to this site, data and blob URLs and GitHub's avatar host, and `script-src 'self' 'unsafe-inline'` with **no `eval`**. Cloudflare's challenge origin is added only when Turnstile is configured.
+Send a real policy (`src/lib/csp.ts`, applied from `next.config.ts`): `default-src 'self'`, `connect-src 'self'`, `frame-src 'self'`, `worker-src 'self' blob:`, `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'self'`, `img-src` limited to this site, data and blob URLs and GitHub's avatar host, and `script-src 'self' 'unsafe-inline'` with **no `eval`** (development alone adds `'unsafe-eval'` and websockets for hot reload).
 
 Remove the CDN: `scripts/copy-monaco.mjs` copies the pinned `monaco-editor` into `public/monaco` before `dev` and `build`, and the editor loads from `/monaco/vs`. File downloads keep a minimal policy, because the download route sets its own sandboxing policy and a PDF viewer needs room.
 

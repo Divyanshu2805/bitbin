@@ -21,7 +21,7 @@ Relations: many-to-many with `tags` (implicit `_ItemTags`) and with `collections
 
 ### Indexes
 
-Added in the `add_query_indexes` migration to back the dashboard and list queries:
+The B-tree indexes come from the `add_query_indexes` migration and back the dashboard and list queries; the trigram indexes come from `add_search_trigram_indexes` and back the ⌘K search:
 
 | Index | Serves |
 |---|---|
@@ -31,6 +31,7 @@ Added in the `add_query_indexes` migration to back the dashboard and list querie
 | `items(userId, updatedAt)` | Recent items, search ordering |
 | `items(itemTypeId)` | `/items/[type]` |
 | `items(createdAt)` | Ordering |
+| GIN trigram on `title`, `content`, `description`, `url` | `ILIKE '%text%'` in the search palette (`pg_trgm`) |
 
 ### `ContentType`
 
@@ -55,7 +56,7 @@ The columns for the other content types are left `null`. Nothing in the database
 
 Unique on (`name`, `userId`). The seven system types and their behaviour are described in [item types](item-types.md).
 
-Per-user custom types are allowed by the schema, but nothing in the app creates them, and `createItem` only looks up system types.
+Per-user custom types are allowed by the schema, but nothing in the app creates them, and `createItem` only looks up system types. Which payload column an item uses comes from `contentTypeFor` in `src/lib/db/items.ts`, shared by item creation and imports.
 
 ## Related
 

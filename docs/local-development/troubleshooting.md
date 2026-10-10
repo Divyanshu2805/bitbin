@@ -13,14 +13,15 @@
 | Creating an item fails with "Failed to create item" on a fresh database | The system item types are missing. Run `npm run db:seed` |
 | Uploads fail with 500 | An `R2_*` variable is missing (`R2_ACCOUNT_ID`, the key pair, `R2_BUCKET_NAME` or `R2_PUBLIC_URL`) |
 | Uploads fail with 403 | The account isn't Pro. Files and images are Pro-only |
+| ZIP import says the file is too large | ZIP imports stop at 4 MB, the host's request-body limit. Export one collection at a time, or, into the same account, import the JSON instead (its files and images keep pointing at your stored copies) |
+| A desktop or script request answers 403 "This token isn't allowed to do that" | The token lacks that permission. Create one with it in **Settings → Browser extension**; the desktop app needs *Save files and images* to attach files |
 | Images or downloads fail (404 or 500 from `/api/download`) | The R2 credentials can't read the bucket (the token needs *Object Read & Write*), or `R2_PUBLIC_URL` was changed after files were uploaded, so the stored URLs no longer map to keys |
-| AI buttons return an error | `OPENAI_API_KEY` is missing, the account isn't Pro, or the 20 / hour AI limit was hit |
-| "AI returned an unexpected format" | The model in `AI_MODEL` doesn't support JSON mode, which tags and descriptions need — see [provider and model](../architecture/flows/ai-features.md#provider-and-model) |
+| AI buttons return an error | `AI_API_KEY` (or `OPENAI_API_KEY`) is missing, the account isn't Pro, or the 20 / hour AI limit was hit |
+| "AI returned an unexpected format" | The model answered with no usable JSON at all. Try another model — see [provider and model](../architecture/flows/ai-features.md#provider-and-model) |
 | Upgrading succeeds in Stripe but the app still says Free | The webhook didn't arrive. Locally, `stripe listen` must be running and its `whsec_…` must be in `STRIPE_WEBHOOK_SECRET` (restart the dev server after changing it) |
 | "Too many attempts" while testing sign-in | You hit a rate limit. Wait, or [clear the counters](resetting-data.md#clear-rate-limits) |
-| ⌘K search doesn't show something just saved | The index reloads when the palette opens; close it and reopen it after a moment. See [search](../architecture/flows/search.md) |
 | The code editor never loads (blank box), or `/monaco/vs/loader.js` is a 404 | `public/monaco` is missing: `npm run dev` and `npm run build` create it, but `npx next dev` or `next start` on a fresh clone don't. Run `node scripts/copy-monaco.mjs` |
-| The console shows "Refused to … because it violates the following Content Security Policy" | Something loads from an origin the policy doesn't list (`src/lib/csp.ts`). Serve it from this site, or add the origin on purpose; don't loosen `script-src` for convenience. Cloudflare Turnstile is allowed only when its site key is set |
+| The console shows "Refused to … because it violates the following Content Security Policy" | Something loads from an origin the policy doesn't list (`src/lib/csp.ts`). Serve it from this site, or add the origin on purpose; don't loosen `script-src` for convenience |
 | `db:seed` or `db:cleanup` stops with "refusing to run" | The database host isn't marked safe to reset. Add it to `SAFE_DATABASE_HOSTS` (a Neon development branch, say) or confirm once with `CONFIRM_DATABASE_HOST`. Never do either for the production host. See [resetting data](resetting-data.md#before-you-run-either-script) |
 | `npm run test:coverage` fails with "coverage for … does not meet global threshold" | A change lowered coverage below the floor in `vitest.config.ts`. Add tests for the new code; don't lower the floor |
 | Signing in with `?callbackUrl=https://…` lands on the dashboard | Deliberate: only paths on this site are followed after sign-in (`safeCallbackPath`), so an external URL can't be used as a phishing redirect |

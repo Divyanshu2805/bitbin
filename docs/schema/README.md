@@ -12,25 +12,73 @@ BitBin's data lives in one PostgreSQL database, defined by `prisma/schema.prisma
 | `verification_tokens` | `VerificationToken` | Email verification and password-reset tokens | [Users and auth](users-and-auth.md) |
 | `api_tokens` | `ApiToken` | Personal access tokens for the extension and desktop app (hashed, expiring, with scopes) | [Users and auth](users-and-auth.md#api_tokens) |
 | `items` | `Item` | Every saved snippet, prompt, command, note, file, image and link | [Items and item types](items-and-types.md) |
-| `item_types` | `ItemType` | The seven system types (and, in principle, per-user custom types) | [Items and item types](items-and-types.md) |
+| `item_types` | `ItemType` | The seven system types (the schema allows per-user types; the app creates none) | [Items and item types](items-and-types.md) |
 | `collections` | `Collection` | Named groups of items | [Collections and tags](collections-and-tags.md) |
 | `item_collections` | `ItemCollection` | Explicit many-to-many join between items and collections | [Collections and tags](collections-and-tags.md) |
-| `tags` | `Tag` | Globally unique tag names | [Collections and tags](collections-and-tags.md) |
+| `tags` | `Tag` | Globally unique tag names, deleted once no item uses them | [Collections and tags](collections-and-tags.md) |
 | `_ItemTags` | — | Prisma's implicit many-to-many join between items and tags | [Collections and tags](collections-and-tags.md) |
 
 ## Relationships at a glance
 
+```mermaid
+erDiagram
+  users ||--o{ items : owns
+  users ||--o{ collections : owns
+  users ||--o{ api_tokens : "creates"
+  users ||--o{ accounts : "signs in with"
+  users ||--o{ sessions : "(unused, JWT)"
+  users ||--o{ item_types : "custom (none yet)"
+  item_types ||--o{ items : "types"
+  items ||--o{ item_collections : ""
+  collections ||--o{ item_collections : ""
+  items }o--o{ tags : "_ItemTags"
+  item_types |o--o{ collections : "default type (unused)"
+
+  users {
+    text id PK
+    text email UK
+    text password "bcrypt, null for GitHub-only"
+    boolean isPro
+    int sessionVersion
+    jsonb editorPreferences
+  }
+  items {
+    text id PK
+    text title
+    enum contentType "TEXT | FILE | URL"
+    text content
+    text fileUrl
+    text url
+    boolean isPinned
+    boolean isFavorite
+    text userId FK
+    text itemTypeId FK
+  }
+  collections {
+    text id PK
+    text name
+    boolean isPinned
+    boolean isFavorite
+    text userId FK
+  }
+  item_collections {
+    text itemId PK,FK
+    text collectionId PK,FK
+  }
+  tags {
+    text id PK
+    text name UK
+  }
+  api_tokens {
+    text id PK
+    text tokenHash UK "SHA-256"
+    text_array scopes
+    timestamp expiresAt
+    text userId FK
+  }
 ```
-User 1───* Item *───1 ItemType
-  │          │
-  │          *──* Tag            (implicit join _ItemTags)
-  │          │
-  │          *──* Collection     (explicit join item_collections)
-  │
-  1───* Collection
-  1───* Account / Session        (NextAuth)
-  1───* ApiToken                 (token API)
-```
+
+`verification_tokens` stands alone: it is keyed by email (or `password-reset:{email}`), not by user id.
 
 Every user-owned row cascades on user delete, so deleting a user removes all of their data in the database.
 

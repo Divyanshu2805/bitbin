@@ -31,7 +31,8 @@
 
 ## OpenAI and compatible providers
 
-- **Pick a model with JSON mode.** Tags and descriptions request `json_object` output; other models fail with *"AI returned an unexpected format"*.
+- **JSON mode isn't universal.** Tags and descriptions ask for `json_object` output, and a provider that rejects the option with `400` or `422` gets the same request again without it (`requestJsonText` in `lib/ai-json.ts`). Any other error is real and is thrown; don't widen the retry to every failure.
+- **Answers aren't always clean JSON.** `extractJson` takes the first complete object or array, so fences and preambles are fine. Keep that tolerance if you change a prompt.
 - **Model names are provider-specific.** OpenRouter needs the vendor prefix (`openai/gpt-5-nano`); OpenAI doesn't.
-- **`OPENAI_API_KEY` holds any provider's key**, including OpenRouter's — the name is historical.
-- **Tag responses aren't always the requested shape.** The parser accepts `{"tags": [...]}` or a bare array and drops anything else — keep that tolerance if you change the prompt.
+- **The key is `AI_API_KEY`**, for any provider. `OPENAI_API_KEY` still works as the original name; `AI_API_KEY` wins when both are set.
+- **Tag responses aren't always the requested shape.** The parser accepts `{"tags": [...]}` or a bare array and drops anything else.

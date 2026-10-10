@@ -39,23 +39,6 @@ A brand-new sending domain has no reputation, so the first messages often go to 
 
 Email links are built from `NEXT_PUBLIC_APP_URL`.
 
-## Cloudflare Turnstile
-
-Optional bot protection on register and forgot-password, so a script can't use BitBin to send mail to strangers (on top of the per-IP and per-address limits).
-
-1. Cloudflare dashboard → **Turnstile → Add widget**. Hostname: `bitbin.yourdomain.com`. Mode: *Managed*.
-2. Put the **site key** in `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the **secret key** in `TURNSTILE_SECRET_KEY` on Vercel, then redeploy. The site key is read at build time (the policy in `src/lib/csp.ts` then allows `https://challenges.cloudflare.com` for scripts, frames and connections), so a redeploy is needed, not just a restart.
-3. Set only one of the two and the check stays off. With both set, a request without a valid token is refused, and so is one when Cloudflare can't be reached (it fails closed). For local development use Cloudflare's [test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/).
-
-## VirusTotal
-
-Optional: uploads are checked against VirusTotal's database of known malware.
-
-1. Create a free account at virustotal.com and copy the API key from your profile.
-2. Set it as `VIRUSTOTAL_API_KEY` on Vercel.
-
-Only the file's SHA-256 is sent, never the file. A file VirusTotal has never seen passes (so this catches known samples, not new ones), and a failed or slow lookup lets the upload through. The free tier allows about 4 lookups a minute, which the 10-uploads-an-hour limit stays well under.
-
 ## Cloudflare R2
 
 - Keep the bucket **private**: no `r2.dev` URL, no custom domain. Every file is read through the app with the API token's credentials.
@@ -79,7 +62,7 @@ Two switches in the repository's **Settings → Advanced Security** belong to th
 
 ## Upstash and the AI provider
 
-No callbacks — only the keys (and, for the AI provider, `OPENAI_BASE_URL` / `AI_MODEL` if you don't use OpenAI's defaults).
+No callbacks — only the keys (`UPSTASH_*`, and `AI_API_KEY` with `OPENAI_BASE_URL` / `AI_MODEL` if you don't use OpenAI's defaults).
 
 ## Related
 

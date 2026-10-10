@@ -17,6 +17,8 @@ Pushing to `main` triggers a Vercel build (`npm run build` → `prisma generate 
 
 The build step uses placeholder values for the environment variables (the tests mock every service, and the build never contacts one), so CI needs no repository secrets. The coverage report is attached to each run as an artifact. The README's CI badge shows the latest result on `main`.
 
+A second workflow, `.github/workflows/desktop-release.yml`, runs only on a `desktop-v*` tag: it tests the desktop app, builds the unsigned Windows installer and publishes it as a GitHub Release ([releasing the desktop app](operations.md#releasing-the-desktop-app)).
+
 CI and Vercel are independent: Vercel deploys every push to `main` whether or not CI has finished, and CI neither deploys nor migrates. Treat a red run as a reason to fix forward immediately. To make CI gate deploys, add a branch-protection rule that requires the `verify` check and deploy from pull requests.
 
 GitHub's secret scanning with push protection is on for the repository.
@@ -28,6 +30,7 @@ GitHub's secret scanning with push protection is on for the repository.
 | [Vercel](vercel.md) | The database, the Vercel project, production environment variables, the custom domain, releasing a schema change |
 | [Provider callbacks](providers.md) | What to configure in GitHub, Stripe, Resend and R2 so they reach the deployed app — including the email domain and Stripe test mode |
 | [Smoke test](smoke-test.md) | The checklist to run after a deploy |
+| [Operations](operations.md) | Scheduled jobs, monitoring, backups, rotating secrets, releasing the desktop app and the extension |
 
 ## Related
 

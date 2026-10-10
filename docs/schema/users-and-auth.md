@@ -1,6 +1,6 @@
 # Users and Auth Tables
 
-The account itself, the three tables NextAuth's Prisma adapter needs, and the API tokens used by the browser extension.
+The account itself, the three tables NextAuth's Prisma adapter needs, and the API tokens used by the browser extension and the desktop app.
 
 ## `users`
 
@@ -59,8 +59,8 @@ Personal access tokens for the [token API](../api/token-api.md), created in Sett
 | `tokenHash` | text, unique | SHA-256 (hex) of the token. The token itself is never stored |
 | `prefix` | text | The token's first 10 characters (`bb_…`), shown in Settings to tell tokens apart |
 | `lastUsedAt` | timestamp, nullable | Updated by `/api/v1` requests, at most once a minute |
-| `expiresAt` | timestamp, nullable | When the token stops working. Every token is created with one |
-| `scopes` | text[], default `{}` | What the token may do: any of `collections:read`, `items:write`, `ai` ([`lib/api-scopes.ts`](../../src/lib/api-scopes.ts)) |
+| `expiresAt` | timestamp, nullable | When the token stops working. Every token is created with one; the scopes migration gave older tokens a year |
+| `scopes` | text[], default `{}` | What the token may do: any of `collections:read`, `items:write`, `files:write`, `ai` ([`lib/api-scopes.ts`](../../src/lib/api-scopes.ts)) |
 | `createdAt` | timestamp | |
 
 At most 10 per user (`MAX_API_TOKENS`, checked in `createApiToken`). A token expires after 30 days, 90 days (the default) or 1 year, chosen when it's created (there is no "never"); `authenticateApiRequest` rejects an expired one with `401` and one without the permission an endpoint needs with `403`. Revoking one deletes the row. Tokens are **not** exported or imported.

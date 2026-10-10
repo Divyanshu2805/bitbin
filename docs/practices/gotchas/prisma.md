@@ -33,3 +33,7 @@ Prisma runs each call on its own. `updateItem` (collection links plus the item),
 ## Implicit many-to-many tables
 
 `Item.tags` uses Prisma's implicit relation, stored in `_ItemTags` with columns `A` and `B`. Raw SQL against it needs those names; it has no timestamps or extra columns, and adding any means converting it to an explicit model (like `ItemCollection`) with a migration.
+
+## The search indexes are declared in the schema
+
+The trigram indexes (`gin_trgm_ops`) are written in `schema.prisma` with `@@index(..., type: Gin, map: "…")` as well as in their migration. Without the declaration, `prisma migrate dev` sees them as drift and offers to drop them. A new raw-SQL index needs the same pair.

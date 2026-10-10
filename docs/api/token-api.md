@@ -10,9 +10,18 @@ Every request sends a personal access token:
 Authorization: Bearer bb_…
 ```
 
-- Tokens are created and revoked in **Settings → Browser extension** (Pro only). The plain token is shown once. BitBin stores its SHA-256 hash.
+- Tokens are created and revoked in **Settings → Browser extension** (Pro only), at most 10 per user. The plain token is shown once. BitBin stores its SHA-256 hash.
 - A token expires after the lifetime chosen when it's created: 30 days, 90 days (the default) or 1 year. There is no "never": a leaked token has to stop working eventually. Settings shows how long each token has left, and an expired one has to be replaced.
-- A token carries **permissions** (scopes), chosen when it is created and checked on every request: `collections:read` (`GET /api/v1/collections`), `items:write` (`POST /api/v1/items`) and `ai` (`POST /api/v1/ai/tags` and `/ai/description`). `GET /api/v1/me` needs none. Use all three for the browser extension and the desktop app; a script that only saves items needs just `items:write`, and if it leaks it can't read collections or spend the AI quota.
+- A token carries **permissions** (scopes), chosen when it is created and checked on every request:
+
+  | Scope | Label in Settings | Allows |
+  |---|---|---|
+  | `collections:read` | List collections | `GET /api/v1/collections` |
+  | `items:write` | Save items | `POST /api/v1/items` |
+  | `files:write` | Save files and images | `POST /api/v1/files` |
+  | `ai` | AI suggestions | `POST /api/v1/ai/tags`, `/ai/description` |
+
+  `GET /api/v1/me` needs none. The extension uses all but `files:write`; the desktop app uses all four. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
 - Cookies are ignored. A request with a session cookie and no token is rejected.
 - The owner's plan is re-read on every request, so a user who stops being Pro gets `403` from then on, even with a valid token.
 
@@ -80,6 +89,32 @@ Creates an item. Validation and the insert are shared with the [`createItem` act
 ```json
 { "error": "Validation failed", "fieldErrors": { "title": ["Title is required"] } }
 ```
+
+## `POST /api/v1/files`
+
+Uploads a file or image and creates its item in one request. Needs `files:write`. Used by the desktop app.
+
+Multipart form:
+
+| Field | Rules |
+|---|---|
+| `file` | Required. The same rules as a web upload: images (png, jpg, jpeg, gif, webp, svg) up to 5 MB, files (pdf, txt, md, json, yaml, yml, xml, csv, toml, ini) up to 10 MB, bytes that match the extension, photos re-encoded without metadata |
+| `itemType` | Required. `file` or `image` |
+| `title` | Optional; the file name when absent |
+| `description` | Optional, at most 1000 characters |
+| `tags` | Optional, comma-separated |
+| `collectionId` | Optional. Dropped if it isn't the caller's |
+
+`201` with `{ "data": { "id": "cm…", "title": "…", "typeName": "image" } }`.
+
+| Status | When |
+|---|---|
+| `400` | Not a multipart form, no file, a bad `itemType`, a file that fails the checks, or validation errors (with `fieldErrors`) |
+| `413` | `Content-Length` above 10 MB plus 64 KB, refused before the body is read |
+| `429` | Over the `upload` limit (10 an hour per user, shared with the web uploader), with `Retry-After` |
+| `500` | Storage failed, or the item couldn't be created, in which case the stored file is deleted again |
+
+Hosts refuse request bodies above about 4.5 MB, so the desktop app stops at 4 MB.
 
 ## `POST /api/v1/ai/tags`
 

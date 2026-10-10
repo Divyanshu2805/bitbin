@@ -33,9 +33,18 @@ The shared **demo account** may not save links (no `link` items, no new URL on a
 | `toggleCollectionPin` | `collectionId` | `{ isPinned }` | Owned |
 | `getUserCollections` | — | `{ id, name }[]` for the picker | |
 
+## Tags
+
+`src/actions/tags.ts`: managing tags from **Settings → Tags**. Both work only on the caller's own items (`lib/db/tags.ts`), in a transaction, and delete a tag row nobody uses any more. Both use the `create` rate limit (120 / minute).
+
+| Action | Input | Returns | Checks |
+|---|---|---|---|
+| `renameTag` | `{ from, to }`, each 1–50 characters | `{ itemsChanged }` | `from` must differ from `to`. A `to` that already exists merges the two (an item that had both keeps one). "Tag not found" when none of the caller's items has `from` |
+| `deleteTag` | `{ name }` | `{ itemsChanged }` | Removes the tag from the caller's items; the items stay. "Tag not found" as above |
+
 ## AI
 
-`src/actions/ai.ts` — all four: session → Pro → Zod → `ai` rate limit (20 / hour per IP + user) → OpenAI. Content is truncated to 2,000 characters.
+`src/actions/ai.ts` — all four: session → Pro → Zod → `ai` rate limit (20 / hour per IP + user) → OpenAI. Content is truncated to 2,000 characters (`AI_MAX_INPUT_CHARS`).
 
 | Action | Input | Returns |
 |---|---|---|
@@ -50,8 +59,10 @@ The shared **demo account** may not save links (no `link` items, no new URL on a
 
 | Action | Input | Returns |
 |---|---|---|
-| `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…". `importPreview` rate limit (20 / hour) |
-| `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. `import` rate limit (5 / hour); one transaction; Free limits apply (under the row lock); file and image items skipped for Free users; only `http(s)` URLs and the caller's own `fileUrl`s are kept; "skip duplicates" matches on title, type and content (or URL); `createdAt` / `updatedAt` are kept |
+| `previewImport` | The export file's text | Counts by type, collections and tags — or "Invalid JSON file" / "Invalid export format…". `importPreview` rate limit (20 / hour). Refused for the demo account |
+| `importData` | The export file's text, `skipDuplicates` | Imported and skipped counts. `import` rate limit (5 / hour); one transaction; Free limits apply (under the row lock); file and image items skipped for Free users; only `http(s)` URLs and the caller's own `fileUrl`s are kept; "skip duplicates" matches on title, type and content (a link's URL, a file's name); `createdAt` / `updatedAt` are kept. Refused for the demo account |
+
+A ZIP export can't travel through a server action (it's bytes), so ZIP import is the [`POST /api/import`](export-format.md#importing-a-zip) route. Exports are the [`GET /api/export`](export-format.md) route.
 
 ## API tokens
 
@@ -59,7 +70,7 @@ The shared **demo account** may not save links (no `link` items, no new URL on a
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createApiToken` | `{ name, scopes, expiresInDays? }`: name 1–50 chars; at least one of `collections:read`, `items:write`, `ai`; `30`, `90` (default) or `365` days (there is no "never") | `{ token, summary }`. `token` is the plain `bb_…` value, returned only here | Pro; at most 10 tokens per user. Stores only the SHA-256 hash, the scopes and the expiry |
+| `createApiToken` | `{ name, scopes, expiresInDays? }`: name 1–50 chars; at least one of `collections:read`, `items:write`, `files:write`, `ai`; `30`, `90` (default) or `365` days (there is no "never") | `{ token, summary }`. `token` is the plain `bb_…` value, returned only here | Pro; at most 10 tokens per user. Stores only the SHA-256 hash, the scopes and the expiry |
 | `revokeApiToken` | `tokenId` | `null` | Owned. Works on any plan |
 
 The settings page lists tokens with `getApiTokens` (`src/lib/db/api-tokens.ts`): name, prefix, created, last used, expiry and permissions. Never the hash.

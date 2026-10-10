@@ -25,13 +25,13 @@ interface ActionResult<T = unknown> {
 - `safeUrlSchema` only accepts `http:` and `https:` URLs, so a stored link can't be a `javascript:` URL.
 - `validateId` rejects empty ids before a query runs.
 - The auth route handlers validate by hand (required fields, matching passwords, minimum length 8).
-- Uploads check both the extension and the MIME type, and a per-type size limit (`FILE_CONSTRAINTS` in `lib/r2.ts`).
+- Uploads check the extension, the MIME type, a per-type size limit (`FILE_CONSTRAINTS` in `lib/r2.ts`) and the bytes themselves, all in `ingestFile` (`lib/file-ingest.ts`).
 
 ## Rate limiting
 
 Upstash sliding windows, keyed by client IP plus an optional identifier (email or user id). Limits are listed in the [API reference](../api/errors-and-rate-limits.md#rate-limits). Two properties matter when changing anything nearby:
 
-- **Without Redis, production degrades; development fails open.** With Upstash unset, still a `YOUR_…` placeholder or invalid, production counts per server instance in memory (weaker, because every instance counts separately) and development lets everything through. When Redis *errors*, the AI, upload and token-API limits pass, but the credential limits (sign-in, register, forgot / reset password, resend verification, their per-address versions, change password) refuse the request. See [ADR 0005](decisions/0005-rate-limits-fail-open.md).
+- **Without Redis, production degrades; development fails open.** With Upstash unset, still a `YOUR_…` placeholder or invalid, production counts per server instance in memory (weaker, because every instance counts separately) and development lets everything through. When Redis *errors*, every other limit (search, writes, imports, exports, AI, uploads, the token API) passes, but the credential limits (sign-in, register, forgot / reset password, resend verification, their per-address versions, change password) refuse the request. See [ADR 0005](decisions/0005-rate-limits-fail-open.md).
 - **Per IP, and for email also per address.** The IP comes from `x-vercel-forwarded-for`, then `x-real-ip`, then the *last* `x-forwarded-for` entry (never the first, which a client can set). Limits that guard an inbox (`registerEmail`, `forgotPasswordEmail`, `resendVerificationEmail`) are keyed by the address alone (`checkRateLimit(type, email, { ignoreIp: true })`), so rotating IPs can't flood one person.
 
 ## Keeping the UI fresh
@@ -50,6 +50,7 @@ Constants in `src/lib/constants/pagination.ts`:
 | `COLLECTIONS_PER_PAGE` | 21 | `/collections` |
 | `DASHBOARD_COLLECTIONS_LIMIT` | 9 | Dashboard collections section |
 | `DASHBOARD_RECENT_ITEMS_LIMIT` | 9 | Dashboard recent items |
+| `MAX_QUERY_LIMIT` | 100 | The cap `clampLimit` puts on any caller-supplied limit |
 
 Lists are **keyset-paginated** (`src/lib/keyset.ts`): a page is the rows after (`?after=`) or before (`?before=`) an opaque cursor, in the order *pinned first, then last edited, then id*. The cursor holds the position of a row (`[pinned, updatedAt, id]`, base64url), so there are no page numbers; deep pages cost the same as the first, and rows don't shift or repeat when something is edited while you page. A query fetches `limit + 1` rows, and the extra one says there is a next page. An unreadable cursor shows the first page. Used by `getItemsByType`, `getItemsByCollection` and `getAllCollections`; `Pagination` renders first / prev / next.
 
@@ -60,16 +61,19 @@ Everything is an environment variable — see [configuration](../local-developme
 | Constant | File |
 |---|---|
 | `MAX_ITEMS` (50), `MAX_COLLECTIONS` (3) | `src/lib/constants/plan.ts` (enforced in `src/lib/usage.ts`) |
-| `MAX_CONTENT_LENGTH` (2,000) — the model itself is the `AI_MODEL` variable | `src/actions/ai.ts` |
+| `AI_MAX_INPUT_CHARS` (2,000) — the model itself is the `AI_MODEL` variable | `src/lib/openai.ts` |
 | `FILE_CONSTRAINTS` (5 MB images, 10 MB files, allowed extensions) | `src/lib/r2.ts` |
 | `rateLimitConfigs` | `src/lib/rate-limit.ts` |
-| Coverage floor (75 / 75 / 65 / 75) | `vitest.config.ts` |
+| Coverage floor (80% statements, branches and lines; 70% functions) | `vitest.config.ts` |
+| Item field caps (title 200, description 1,000, content 500,000, 20 tags of 50) | `src/lib/validation.ts` |
+| Import caps (5,000 entries; ZIP 4 MB and 100 files) | `src/lib/import-schema.ts`, `src/lib/zip-import.ts` |
+| Orphan sweep safety limits (a day old, 1,000 per run, abort above half the bucket) | `src/lib/orphan-sweep.ts` |
 | Session lifetime (14 days, re-issued daily) | `src/lib/constants/session.ts` |
 | Content Security Policy | `src/lib/csp.ts` |
 | API scopes | `src/lib/api-scopes.ts` |
 | Token lifetimes (24 h verification, 1 h reset) | `src/lib/tokens.ts` |
 | `STRIPE_APP_TAG` (`bitbin`) | `src/lib/stripe.ts` |
-| Plan feature lists (`FREE_FEATURES`, `PRO_FEATURES`) | `src/lib/constants/pricing.ts`. Displayed prices are literals in `PricingSection.tsx`, `upgrade-pricing.tsx` and `billing-settings.tsx`; the charged price comes from the Stripe price ids |
+| Plan feature lists (`FREE_FEATURES`, `PRO_FEATURES`, built from `MAX_ITEMS` / `MAX_COLLECTIONS`) | `src/lib/constants/pricing.ts`, shown by the homepage and the upgrade page. Displayed prices are literals in `PricingSection.tsx`, `upgrade-pricing.tsx` and `billing-settings.tsx`; the charged price comes from the Stripe price ids |
 
 ## Observability
 
@@ -80,7 +84,7 @@ Everything is an environment variable — see [configuration](../local-developme
 
 ## Cross-site requests
 
-The session cookie is `SameSite=Lax`. As a second line of defence, the cookie-authenticated handlers that change state or start a payment (change password, delete account, checkout, the portal, upload) call `rejectCrossSite(request)` first (`lib/same-origin.ts`): a `Sec-Fetch-Site` of `cross-site` or `same-site`, or an `Origin` that isn't this host, is a `403`. A request with neither header (curl, a server) passes, because a CSRF attack needs a browser and a browser always sends one. Next's own server actions check the origin themselves. A new cookie-authenticated mutating route handler should do the same.
+The session cookie is `SameSite=Lax`. As a second line of defence, the cookie-authenticated handlers that change state or start a payment (change password, delete account, checkout, the portal, upload, ZIP import) call `rejectCrossSite(request)` first (`lib/same-origin.ts`): a `Sec-Fetch-Site` of `cross-site` or `same-site`, or an `Origin` that isn't this host, is a `403`. A request with neither header (curl, a server) passes, because a CSRF attack needs a browser and a browser always sends one. Next's own server actions check the origin themselves. A new cookie-authenticated mutating route handler should do the same.
 
 ## Content Security Policy
 
@@ -93,6 +97,17 @@ Anything the client says to go to after an action (the sign-in `callbackUrl`) go
 ## The demo account
 
 `demo@bitbin.dev` is a public sandbox: its password is published so anyone can try the app. `lib/demo.ts` (`isDemoEmail`) is the single check. Anything that changes the account itself (password, name, deletion, billing, email, sign-out-everywhere) refuses it with a 403 or an `ActionResult` error, and `demoItemRestriction` keeps it from saving links, long pastes or imports (everything it saves is shown to the next visitor), and a daily cron (`/api/cron/reset-demo`, `vercel.json`, authorised by `CRON_SECRET`) restores its library from `prisma/demo-content.ts` in one transaction. A new feature that changes account-level state needs the same check.
+
+## Scheduled jobs
+
+`vercel.json` runs two crons, each a route authorised by `Authorization: Bearer $CRON_SECRET` (`lib/cron-auth.ts`, constant-time comparison, refused when the secret is unset):
+
+| Route | When | What it does |
+|---|---|---|
+| `/api/cron/reset-demo` | Daily, 21:00 UTC | Restores the demo account's library, name and plan in one transaction |
+| `/api/cron/sweep-files` | Sundays, 03:00 UTC | Deletes stored files no item points at, within the limits in `lib/orphan-sweep.ts`; `?dryRun=1` reports without deleting |
+
+Both log their outcome; a failure is a `console.error`, so it reaches Sentry.
 
 ## Destructive scripts
 

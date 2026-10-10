@@ -21,7 +21,9 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 ## Items
 
 - [ ] Create a snippet with tags and a collection; pin it; favorite it.
-- [ ] Find it with ⌘K (no reload needed: the index reloads when the palette opens).
+- [ ] Find it with ⌘K straight away, and by `#tag`.
+- [ ] Drag an item onto a collection in the sidebar; it appears in that collection.
+- [ ] Rename a tag in **Settings → Tags**, then delete it; the items keep everything else.
 - [ ] Edit it in the drawer; delete it.
 
 ## Pro
@@ -30,19 +32,24 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 - [ ] Upload an image → it renders; upload a file → it downloads with its name.
 - [ ] Suggest tags on an item → suggestions appear.
 - [ ] Open an item in the editor: the code editor loads (it is served from `/monaco/`), and the browser console shows no Content Security Policy errors on the homepage, the sign-in page or any signed-in page.
-- [ ] Create an API token with only **Save items**: `GET /api/v1/me` shows `scopes: ["items:write"]`, `POST /api/v1/items` works, `GET /api/v1/collections` and the AI endpoints answer `403`.
+- [ ] Create an API token with only **Save items**: `GET /api/v1/me` shows `scopes: ["items:write"]`, `POST /api/v1/items` works, `GET /api/v1/collections`, `POST /api/v1/files` and the AI endpoints answer `403`.
+- [ ] The browser extension downloads from Settings, connects with a token and saves a selection.
+- [ ] The desktop app connects with a token, saves the clipboard and attaches an image.
 - [ ] Upload a phone photo with location data: the stored image has no EXIF (download it and check).
 - [ ] "Manage subscription" opens the Customer Portal.
 
 ## Data
 
 - [ ] Export JSON downloads; export ZIP (Pro) includes `files/` and the `snippets/`, `prompts/`, `commands/`, `notes/` folders and `links.md`.
+- [ ] A collection's ⋯ menu exports just that collection.
 - [ ] Importing the JSON export with **Skip duplicates** on reports everything skipped.
+- [ ] Importing a ZIP export into another Pro account restores its files and images.
 
 ## Platform
 
 - [ ] Stripe dashboard → Webhooks shows the deliveries as succeeded (`200`).
 - [ ] Vercel's function logs show no `Upstash Redis not configured`, `Invalid Upstash Redis config` or `Rate limit check failed` lines.
-- [ ] Vercel → Cron Jobs lists `/api/cron/reset-demo`, and `CRON_SECRET` is set (the demo library is restored daily).
+- [ ] Vercel → Cron Jobs lists `/api/cron/reset-demo` and `/api/cron/sweep-files`, and `CRON_SECRET` is set. A dry run of the sweep (`?dryRun=1`, see [operations](operations.md#scheduled-jobs)) answers `200` and `aborted: null`.
+- [ ] **Settings → Desktop app → Download for Windows** downloads `BitBin-Setup.exe` (a GitHub Release exists).
 - [ ] The latest GitHub Actions run on `main` is green, and Sentry is receiving events (`SENTRY_DSN` set).
 - [ ] The Cloudflare R2 bucket still has public access off: a direct object URL returns `403`/`404`, while images render in the app.

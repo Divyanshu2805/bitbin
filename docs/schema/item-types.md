@@ -28,16 +28,17 @@ Every type also uses `title`, `description`, tags, collections, and the favorite
 
 - **Icons** — the `icon` column holds a Lucide name, mapped to a component by `ITEM_TYPE_ICONS` / `getItemTypeIcon` in `src/lib/constants/item-types.ts` (falls back to `Code`).
 - **Colours** — the `color` column tints the icon (`color`), its background (the same hex at 20% alpha) and card accents. It's data, not theme: the same in every theme. `ITEM_TYPE_COLORS` in the same constants file mirrors the seeded values for places that don't have the row.
-- **Content type** — `createItem` derives it from the name: `link` → `URL`, `file` / `image` → `FILE`, everything else → `TEXT`. `VALID_ITEM_TYPES` in `src/lib/db/items.ts` is the list actions validate against.
-- **Pro gating** — `createItem` rejects `file` and `image` for Free users, uploads require Pro, and the sidebar shows a "PRO" badge on both.
+- **Content type** — `contentTypeFor` (`src/lib/db/items.ts`) derives it from the name: `link` → `URL`, `file` / `image` → `FILE`, everything else → `TEXT`. `VALID_ITEM_TYPES` in the same file is the list actions, `/api/v1` and imports validate against, and the order the app lists the types in.
+- **Pro gating** — `createItem` rejects `file` and `image` for Free users, uploads and `/api/v1/files` require Pro, a Free import skips them, and the sidebar shows a "PRO" badge on both.
 - **Routes** — `/items/[type]` takes the plural (`snippets`), mapped to the type name.
+- **Shortcuts** — `1`–`7` open the type pages in `VALID_ITEM_TYPES` order (`TYPE_SHORTCUTS` in `src/lib/constants/shortcuts.ts`).
 
 ## Adding a type
 
 1. Add it to the seed's `systemItemTypes` and run `npm run db:seed` (existing types are left alone).
 2. Add its icon to `ITEM_TYPE_ICONS` and its colour to `ITEM_TYPE_COLORS`.
-3. Add it to `VALID_ITEM_TYPES` and to the content-type mapping in `createItem` (and the import action's copy of it).
-4. Add it to the sidebar and to the route mapping for `/items/[type]`.
+3. Add it to `VALID_ITEM_TYPES` and, if it isn't text, to `contentTypeFor` (both in `src/lib/db/items.ts`).
+4. Add it to the sidebar, the route mapping for `/items/[type]`, `TYPE_SHORTCUTS`, and the export's folders (`lib/export-files.ts`).
 5. Decide whether it's Pro, and gate it in `createItem` and the UI.
 
 ## Related

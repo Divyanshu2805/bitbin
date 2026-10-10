@@ -10,13 +10,13 @@ If you are new to the codebase, read these in order:
    - [Authentication](flows/authentication.md) — registration, email verification, credentials and GitHub sign-in, password reset.
    - [Items](flows/items.md) — creating, reading, editing and deleting items; pinning and favorites.
    - [Collections](flows/collections.md) — grouping items, the dominant colour, the sidebar.
-   - [File uploads](flows/file-uploads.md) — Pro uploads to Cloudflare R2 and the download proxy.
+   - [File uploads](flows/file-uploads.md) — Pro uploads to Cloudflare R2, the download proxy and the weekly orphan sweep.
    - [Billing](flows/billing.md) — Stripe Checkout, webhooks, and how `isPro` reaches the session.
    - [AI features](flows/ai-features.md) — the four Pro helpers and their shared guard sequence.
-   - [Import and export](flows/import-export.md) — JSON and ZIP exports, transactional imports.
-   - [Search](flows/search.md) — the ⌘K command palette.
+   - [Import and export](flows/import-export.md) — JSON and ZIP exports of the library or one collection, transactional JSON and ZIP imports.
+   - [Search](flows/search.md) — the ⌘K command palette, searched on the server as you type.
    - [Save from anywhere](flows/save-from-extension.md) — the browser extension, API tokens and `/api/v1`.
-   - [Save from the desktop](flows/save-from-desktop.md) — the tray app: a global shortcut that saves the clipboard through the same token API.
+   - [Save from the desktop](flows/save-from-desktop.md) — the tray app: a global shortcut that saves the clipboard, a screenshot or a file through the same token API.
 
 ## Reference
 
@@ -30,6 +30,7 @@ If you are new to the codebase, read these in order:
 
 ## Related
 
+- [Features](../features.md) — what all of this adds up to for the person using it.
 - [Data model](../schema/README.md) — the tables, relations, indexes and item types.
 - [API reference](../api/README.md) — every route handler and server action.
 - [Known gaps](../known-gaps/README.md) — the constraints and trade-offs this design accepts today.

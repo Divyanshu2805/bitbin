@@ -23,7 +23,7 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 |---|---|---|
 | Database | PostgreSQL (Neon in production) | All application data |
 | ORM | Prisma 7 with the `@prisma/adapter-pg` driver adapter | Schema, migrations, generated client in `src/generated/prisma` |
-| Rate limiting | Upstash Redis + `@upstash/ratelimit` | Sliding-window limits on auth, uploads and AI |
+| Rate limiting | Upstash Redis + `@upstash/ratelimit` | Sliding-window limits on auth, search, writes, uploads, AI and the token API |
 | File storage | Cloudflare R2 through `@aws-sdk/client-s3` | File and image item binaries |
 
 ## Services
@@ -33,19 +33,18 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Authentication | NextAuth v5 (Auth.js) + `@auth/prisma-adapter`, `bcryptjs` | Credentials and GitHub sign-in, JWT sessions |
 | Email | Resend | Verification and password-reset emails |
 | Payments | Stripe | Checkout (subscriptions), Customer Portal, webhooks |
-| AI | OpenAI Responses API, or any OpenAI-compatible provider (default model `gpt-5-nano`) | Auto-tags, descriptions, code explanations, prompt optimization |
-| Export | `archiver` | ZIP exports with file binaries |
+| AI | OpenAI Responses API, or any OpenAI-compatible provider (default model `gpt-5-nano`) | Tag suggestions, descriptions, code explanations, prompt optimization |
+| ZIP export and import | `archiver` (writing), `fflate` (reading, with size caps enforced while inflating) | ZIP exports with file binaries, and restoring them |
 | Image processing | `sharp` | Re-encoding uploaded photos to strip metadata and refuse non-images |
-| Bot check, malware lookup | Cloudflare Turnstile, VirusTotal (both optional) | Register / forgot-password, uploads |
 | Error monitoring | Sentry (`@sentry/nextjs`) | Server errors and `console.error`, with personal data stripped; off until `SENTRY_DSN` is set |
-| Hosting | Vercel + `@vercel/analytics` | Builds, serverless runtime, a daily cron for the demo reset, page analytics |
+| Hosting | Vercel + `@vercel/analytics` | Builds, serverless runtime, two crons (the daily demo reset and the weekly orphaned-file sweep), page analytics |
 
 ## Clients outside the web app
 
 | Area | Choice | Used for |
 |---|---|---|
 | Browser extension | Chrome / Edge Manifest V3, plain JavaScript (`extension/`) | Saving a selection from any page through the [token API](api/token-api.md) (Pro) |
-| Desktop app | Electron, plain CommonJS (`desktop/`) | A tray app whose global shortcut saves the clipboard through the same token API |
+| Desktop app | Electron, plain CommonJS (`desktop/`), packaged with `electron-builder` | A tray app whose global shortcut saves the clipboard, a screenshot or a file through the same token API |
 
 Both sit outside the Next build and have their own tests and READMEs.
 
@@ -55,7 +54,7 @@ Both sit outside the Next build and have their own tests and READMEs.
 |---|---|
 | Tests | Vitest 4 (Node environment) with `@vitest/coverage-v8`; `node:test` for `desktop/` |
 | Lint | ESLint 9 with `eslint-config-next` |
-| CI | GitHub Actions: audit, lint, tests with a coverage floor, build ([workflow](../.github/workflows/ci.yml)) |
+| CI | GitHub Actions: audit, lint, tests with a coverage floor, build ([`ci.yml`](../.github/workflows/ci.yml)); the Windows desktop installer on a `desktop-v*` tag ([`desktop-release.yml`](../.github/workflows/desktop-release.yml)) |
 | Scripts | `tsx` for `prisma/seed.ts` and `scripts/*.ts` |
 
 ## Related

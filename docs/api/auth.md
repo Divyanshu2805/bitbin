@@ -5,10 +5,8 @@ Route handlers under `src/app/api/auth/`. Sign-in itself goes through NextAuth (
 ## `POST /api/auth/register`
 
 ```json
-{ "name": "Ada", "email": "ada@example.com", "password": "…", "confirmPassword": "…", "turnstileToken": "…" }
+{ "name": "Ada", "email": "ada@example.com", "password": "…", "confirmPassword": "…" }
 ```
-
-`turnstileToken` is only needed when [Cloudflare Turnstile](../local-development/configuration.md#bot-protection-and-upload-scanning) is configured: a missing or failing token is a `400` before anything else happens. The same applies to `forgot-password`.
 
 | Status | When |
 |---|---|
@@ -34,7 +32,7 @@ Registering an address that already has an account never changes a verified or G
 
 ## `POST /api/auth/forgot-password`
 
-`{ "email": "…" }`. Always `200` with "If an account exists with this email, a password reset link has been sent." — it never reveals whether an account exists, and sends nothing for GitHub-only accounts or the public demo account. `400` without an email (or, with Turnstile on, a failing token), `429` over the `forgotPassword` limit (3 / hour per IP) or the per-address `forgotPasswordEmail` limit (3 / hour).
+`{ "email": "…" }`. Always `200` with "If an account exists with this email, a password reset link has been sent." — it never reveals whether an account exists, and sends nothing for GitHub-only accounts or the public demo account. `400` without an email, `429` over the `forgotPassword` limit (3 / hour per IP) or the per-address `forgotPasswordEmail` limit (3 / hour).
 
 ## `POST /api/auth/reset-password`
 

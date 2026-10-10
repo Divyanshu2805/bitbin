@@ -20,10 +20,6 @@ A strict nonce-based policy would make every page render dynamically. See [ADR 0
 
 An uploaded photo is decoded and written out again, so `fileSize` returned by `/api/upload` is the stored size. Code that compares it with `File.size` will see a difference. GIF and SVG are stored unchanged.
 
-## Turnstile tokens are single use
-
-The widget's token is spent by one request. After a failed submit the form resets the widget (`resetKey`); a new form that posts to a protected endpoint must do the same, or the retry fails with "complete the verification check".
-
 ## Per-address limits only mean something with the address normalised
 
 `registerEmail` and friends are keyed by the lowercased, trimmed address. Pass the same normalisation from every caller, or `A@b.com` and `a@b.com` get separate budgets.
