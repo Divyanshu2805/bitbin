@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { SegmentedTabs } from '@/components/shared/segmented-tabs';
-import { Check, Infinity as InfinityIcon, Loader2, Minus, Sparkles } from 'lucide-react';
+import { Check, Infinity as InfinityIcon, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { startCheckout } from '@/lib/stripe-client';
 import { FREE_FEATURES, PRO_FEATURES } from '@/lib/constants/pricing';
 import { MAX_COLLECTIONS, MAX_ITEMS } from '@/lib/constants/plan';
@@ -83,17 +82,10 @@ export default function UpgradePricing({ itemCount, collectionCount }: UpgradePr
           </div>
 
           <ul className="mb-5 mt-4 flex-1 space-y-2 border-t border-border/60 pt-4">
-            {FREE_FEATURES.map((f) => (
-              <li
-                key={f.text}
-                className={cn('flex items-start gap-2.5 text-[13.5px] leading-snug', f.included ? 'text-foreground/85' : 'text-faint dark:text-muted-foreground/50')}
-              >
-                {f.included ? (
-                  <Check className="mt-0.5 size-4 shrink-0 text-lime" strokeWidth={2.5} />
-                ) : (
-                  <Minus className="mt-0.5 size-4 shrink-0" />
-                )}
-                {f.text}
+            {FREE_FEATURES.map((text) => (
+              <li key={text} className="flex items-start gap-2.5 text-[13.5px] leading-snug text-foreground/85">
+                <Check className="mt-0.5 size-4 shrink-0 text-lime" strokeWidth={2.5} />
+                {text}
               </li>
             ))}
           </ul>

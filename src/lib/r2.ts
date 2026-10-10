@@ -7,7 +7,7 @@ import {
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 
-// File constraints from spec
+// What may be uploaded, per item type
 export const FILE_CONSTRAINTS = {
   image: {
     maxSize: 5 * 1024 * 1024, // 5 MB
@@ -49,7 +49,7 @@ export const FILE_CONSTRAINTS = {
   },
 } as const;
 
-// Initialize S3 client for R2
+// R2 speaks the S3 API
 function getR2Client() {
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -69,9 +69,22 @@ function getR2Client() {
   });
 }
 
-/**
- * Validate file based on item type (file or image)
- */
+/** The client and bucket every operation needs; throws when R2 isn't configured. */
+function getBucket(): { client: S3Client; bucketName: string } {
+  const client = getR2Client();
+  const bucketName = process.env.R2_BUCKET_NAME;
+  if (!bucketName) throw new Error('R2 bucket configuration missing');
+  return { client, bucketName };
+}
+
+/** The public base URL stored file URLs start with, without a trailing slash. */
+function getPublicUrl(): string {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (!publicUrl) throw new Error('R2 bucket configuration missing');
+  return publicUrl.replace(/\/+$/, '');
+}
+
+/** Check a file's size, extension and declared MIME type against what its item type allows. */
 export function validateFile(
   file: { name: string; size: number; type: string },
   itemType: 'file' | 'image'
@@ -85,7 +98,7 @@ export function validateFile(
   }
 
   // Check extension
-  const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+  const ext = extensionOf(file.name);
   if (!(constraints.extensions as readonly string[]).includes(ext)) {
     return {
       valid: false,
@@ -186,24 +199,17 @@ export function validateFileContent(
   return { valid: true };
 }
 
-/**
- * Upload file to R2
- */
+/** Store a file under the user's own `{userId}/` folder and return the URL saved on the item. */
 export async function uploadToR2(
   file: Buffer,
   fileName: string,
   contentType: string,
   userId: string
 ): Promise<{ fileUrl: string; key: string }> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  const publicUrl = process.env.R2_PUBLIC_URL;
+  const { client, bucketName } = getBucket();
+  const publicUrl = getPublicUrl();
 
-  if (!bucketName || !publicUrl) {
-    throw new Error('R2 bucket configuration missing');
-  }
-
-  // Generate unique key with user namespace
+  // A unique key inside the user's folder
   const timestamp = Date.now();
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
   const key = `${userId}/${timestamp}-${sanitizedFileName}`;
@@ -266,9 +272,7 @@ export function isOwnedFileUrl(userId: string, fileUrl: string | null | undefine
 export async function getFromR2(
   key: string
 ): Promise<{ body: Uint8Array; contentType: string | undefined } | null> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  if (!bucketName) throw new Error('R2 bucket configuration missing');
+  const { client, bucketName } = getBucket();
 
   try {
     const response = await client.send(new GetObjectCommand({ Bucket: bucketName, Key: key }));
@@ -288,9 +292,7 @@ export async function getFromR2(
  * Delete every object under a user's `{userId}/` folder (account deletion).
  */
 export async function deleteUserFilesFromR2(userId: string): Promise<void> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  if (!bucketName) throw new Error('R2 bucket configuration missing');
+  const { client, bucketName } = getBucket();
 
   let continuationToken: string | undefined;
   do {
@@ -321,9 +323,7 @@ export interface StoredObject {
  * Used by the orphan sweeper; user-facing code reads one user's folder only.
  */
 export async function* listR2Objects(): AsyncGenerator<StoredObject> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  if (!bucketName) throw new Error('R2 bucket configuration missing');
+  const { client, bucketName } = getBucket();
 
   let continuationToken: string | undefined;
   do {
@@ -345,9 +345,7 @@ const DELETE_BATCH_SIZE = 1000;
  * left out of the count (and logged), so a partial failure doesn't pass for success.
  */
 export async function deleteR2Keys(keys: string[]): Promise<number> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  if (!bucketName) throw new Error('R2 bucket configuration missing');
+  const { client, bucketName } = getBucket();
 
   let deleted = 0;
   for (let i = 0; i < keys.length; i += DELETE_BATCH_SIZE) {
@@ -362,32 +360,14 @@ export async function deleteR2Keys(keys: string[]): Promise<number> {
   return deleted;
 }
 
-/**
- * Delete file from R2 by URL
- */
+/** Delete the object a stored file URL points at. */
 export async function deleteFromR2(fileUrl: string): Promise<void> {
-  const client = getR2Client();
-  const bucketName = process.env.R2_BUCKET_NAME;
-  const publicUrl = process.env.R2_PUBLIC_URL;
-
-  if (!bucketName || !publicUrl) {
-    throw new Error('R2 bucket configuration missing');
-  }
-
-  // Extract key from URL
-  const key = fileUrl.replace(`${publicUrl}/`, '');
-
-  await client.send(
-    new DeleteObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-    })
-  );
+  const { client, bucketName } = getBucket();
+  const key = fileUrl.replace(`${getPublicUrl()}/`, '');
+  await client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: key }));
 }
 
-/**
- * Format file size for display
- */
+/** A byte count for display: `0 B`, `512 B`, `1.5 KB`, `10 MB`. */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;

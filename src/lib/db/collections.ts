@@ -2,16 +2,7 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma/client';
 import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
-
-// Maximum allowed limit for queries to prevent abuse
-const MAX_QUERY_LIMIT = 100;
-
-/**
- * Validate and cap limit parameter
- */
-function validateLimit(limit: number, defaultLimit: number): number {
-  return Math.min(Math.max(1, limit), MAX_QUERY_LIMIT) || defaultLimit;
-}
+import { clampLimit } from '@/lib/constants/pagination';
 
 /** How many collections the user has (plan limits). */
 export async function countCollections(userId: string): Promise<number> {
@@ -123,7 +114,7 @@ export async function getRecentCollections(
   userId: string,
   limit: number = 6
 ): Promise<CollectionWithTypes[]> {
-  const safeLimit = validateLimit(limit, 6);
+  const safeLimit = clampLimit(limit, 6);
 
   const collections = await prisma.collection.findMany({
     where: { userId },

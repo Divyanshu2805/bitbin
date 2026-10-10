@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { MAX_COLLECTIONS, MAX_ITEMS } from '@/lib/constants/plan';
 import { lockUserForLimit } from '@/lib/limit-error';
+import { contentTypeFor } from '@/lib/db/items';
 import { isOwnedFileUrl } from '@/lib/r2';
 import { isDuplicateItem, parseExportDate, type ItemIdentity } from '@/lib/import-utils';
 import type { ImportData, ImportResult } from '@/lib/import-schema';
@@ -169,10 +170,7 @@ export async function importLibrary(
         continue;
       }
 
-      // Determine contentType
-      let contentType: 'TEXT' | 'FILE' | 'URL' = 'TEXT';
-      if (item.type === 'link') contentType = 'URL';
-      else if (item.type === 'file' || item.type === 'image') contentType = 'FILE';
+      const contentType = contentTypeFor(item.type);
 
       // Resolve collection IDs for this item
       const itemCollectionIds: string[] = [];

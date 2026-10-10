@@ -4,33 +4,23 @@ import { useRef, useState } from "react";
 import { Check, ChevronDown, Infinity as InfinityIcon, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInView } from "@/hooks/use-motion";
+import { MAX_COLLECTIONS, MAX_ITEMS } from "@/lib/constants/plan";
+import { FREE_FEATURES as FREE, PRO_FEATURES as PRO } from "@/lib/constants/pricing";
 import { Accent, CtaLink, Section } from "./ui";
 
-// Free and Pro, side by side, then a row-by-row comparison. Prices and limits
-// match the app's upgrade page (components/settings/upgrade-pricing.tsx) and
-// lib/usage.ts: 50 items and 3 collections on Free; $8 a month or $72 a year.
-
-const FREE = ["50 items and 3 collections", "Snippets, prompts, commands, notes, links", "⌘K search, tags and favorites", "JSON export and import"];
-
-const PRO = [
-  "Unlimited items and collections",
-  "Files and images, stored with your items",
-  "AI tags, descriptions, explanations and prompt rewrites",
-  "API tokens for agents and scripts",
-  "The browser extension",
-  "ZIP export, with your files",
-];
+// Free and Pro, side by side, then a row-by-row comparison. The feature lists are shared with
+// the upgrade page (lib/constants/pricing.ts).
 
 // [feature, Free, Pro]: true/false for a tick or a dash, or text
 const COMPARE: [string, boolean | string, boolean | string][] = [
-  ["Items", "50", "Unlimited"],
-  ["Collections", "3", "Unlimited"],
+  ["Items", String(MAX_ITEMS), "Unlimited"],
+  ["Collections", String(MAX_COLLECTIONS), "Unlimited"],
   ["Snippets, prompts, commands, notes, links", true, true],
   ["Files and images", false, true],
   ["⌘K search, tags, favorites", true, true],
   ["AI helpers", false, true],
   ["Agents and API tokens", false, true],
-  ["Browser extension", false, true],
+  ["Browser extension and desktop app", false, true],
   ["JSON export and import", true, true],
   ["ZIP export with files", false, true],
 ];

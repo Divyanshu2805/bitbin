@@ -90,7 +90,7 @@ model ApiToken {
   tokenHash  String    @unique // SHA-256 of the token; the token itself is never stored
   prefix     String // First characters of the token, shown in the UI to tell tokens apart
   lastUsedAt DateTime?
-  expiresAt  DateTime? // null = never expires; checked on every API request
+  expiresAt  DateTime? // Checked on every API request; every new token gets one (null only on tokens made before expiry existed)
   scopes     String[]  @default([]) // What the token may do: collections:read, items:write, ai (see lib/api-scopes.ts)
   createdAt  DateTime  @default(now())
 

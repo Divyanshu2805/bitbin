@@ -13,7 +13,7 @@ import { SESSION_MAX_AGE_SECONDS, SESSION_UPDATE_AGE_SECONDS } from '@/lib/const
  * Note: Providers are defined here (not spread from authConfig) to allow
  * the Credentials provider to use bcrypt validation, which is not edge-compatible.
  */
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn } = NextAuth({
   adapter: createAuthAdapter(),
   session: { strategy: 'jwt', maxAge: SESSION_MAX_AGE_SECONDS, updateAge: SESSION_UPDATE_AGE_SECONDS },
   pages: {

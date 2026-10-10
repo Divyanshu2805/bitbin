@@ -5,6 +5,9 @@ import OpenAI from 'openai'
 // model name such as AI_MODEL="openai/gpt-5-nano".
 export const AI_MODEL = process.env.AI_MODEL || 'gpt-5-nano'
 
+/** How much of an item's content is sent to the model: enough to judge it, and a bounded cost. */
+export const AI_MAX_INPUT_CHARS = 2000
+
 /**
  * The provider key: AI_API_KEY, or OPENAI_API_KEY (the original name, which also still works
  * for any provider's key). AI_API_KEY wins when both are set.

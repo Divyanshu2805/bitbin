@@ -9,6 +9,7 @@ vi.mock('@/auth', () => ({
 // Mock the openai module
 vi.mock('@/lib/openai', () => ({
   AI_MODEL: 'gpt-5-nano',
+  AI_MAX_INPUT_CHARS: 2000,
   getOpenAIClient: vi.fn(),
 }))
 

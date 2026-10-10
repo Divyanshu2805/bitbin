@@ -1,9 +1,7 @@
 import { z } from 'zod'
-import { getOpenAIClient, AI_MODEL } from '@/lib/openai'
+import { getOpenAIClient, AI_MODEL, AI_MAX_INPUT_CHARS } from '@/lib/openai'
 import { extractJson, requestJsonText } from '@/lib/ai-json'
 import { checkAiRateLimit, type ActionResult } from '@/lib/action-utils'
-
-const MAX_CONTENT_LENGTH = 2000
 
 const generateDescriptionSchema = z.object({
   title: z.string().trim().min(1, 'Title is required'),
@@ -36,7 +34,7 @@ export async function describeItemForUser(
 
   // Build context for the AI
   const truncatedContent = content
-    ? content.slice(0, MAX_CONTENT_LENGTH)
+    ? content.slice(0, AI_MAX_INPUT_CHARS)
     : null
 
   const contextParts = [

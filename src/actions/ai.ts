@@ -1,13 +1,11 @@
 'use server'
 
 import { z } from 'zod'
-import { getOpenAIClient, AI_MODEL } from '@/lib/openai'
+import { getOpenAIClient, AI_MODEL, AI_MAX_INPUT_CHARS } from '@/lib/openai'
 import { extractJson, requestJsonText } from '@/lib/ai-json'
 import { suggestTagsForUser, type GenerateAutoTagsInput } from '@/lib/ai-tags'
 import { describeItemForUser, type GenerateDescriptionInput } from '@/lib/ai-description'
 import { getAuthedSession, requirePro, checkAiRateLimit, type ActionResult } from '@/lib/action-utils'
-
-const MAX_CONTENT_LENGTH = 2000
 
 export async function generateAutoTags(
   input: GenerateAutoTagsInput
@@ -138,7 +136,7 @@ export async function optimizePrompt(
   const { title, content } = parsed.data
 
   // Build context for the AI
-  const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH)
+  const truncatedContent = content.slice(0, AI_MAX_INPUT_CHARS)
 
   const contextParts = [
     `Title: ${title}`,
@@ -204,7 +202,7 @@ export async function explainCode(
   const { title, content, language, typeName } = parsed.data
 
   // Build context for the AI
-  const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH)
+  const truncatedContent = content.slice(0, AI_MAX_INPUT_CHARS)
 
   const contextParts = [
     `Type: ${typeName}`,

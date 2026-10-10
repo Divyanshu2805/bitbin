@@ -2,15 +2,17 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma/client';
 import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
+import { clampLimit } from '@/lib/constants/pagination';
 
-// Maximum allowed limit for queries to prevent abuse
-const MAX_QUERY_LIMIT = 100;
+/** The seven system item types, in the order the app lists them. */
+export const VALID_ITEM_TYPES = ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'] as const;
+export type ValidItemType = typeof VALID_ITEM_TYPES[number];
 
-/**
- * Validate and cap limit parameter
- */
-function validateLimit(limit: number, defaultLimit: number): number {
-  return Math.min(Math.max(1, limit), MAX_QUERY_LIMIT) || defaultLimit;
+/** Which payload column an item of this type uses: `url` for links, the file columns for files and images, `content` otherwise. */
+export function contentTypeFor(typeName: string): 'TEXT' | 'FILE' | 'URL' {
+  if (typeName === 'link') return 'URL';
+  if (typeName === 'file' || typeName === 'image') return 'FILE';
+  return 'TEXT';
 }
 
 export interface ItemType {
@@ -174,9 +176,6 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
   };
 }
 
-// Define the display order for item types
-const ITEM_TYPE_ORDER = ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'];
-
 /**
  * Get system item types with counts for a user
  */
@@ -204,8 +203,8 @@ export async function getItemTypesWithCounts(
 
   // Sort by predefined order
   return typesWithCounts.sort((a, b) => {
-    const indexA = ITEM_TYPE_ORDER.indexOf(a.name);
-    const indexB = ITEM_TYPE_ORDER.indexOf(b.name);
+    const indexA = VALID_ITEM_TYPES.indexOf(a.name as ValidItemType);
+    const indexB = VALID_ITEM_TYPES.indexOf(b.name as ValidItemType);
     return indexA - indexB;
   });
 }
@@ -236,7 +235,7 @@ export async function getRecentItems(
   userId: string,
   limit: number = 10
 ): Promise<ItemWithType[]> {
-  const safeLimit = validateLimit(limit, 10);
+  const safeLimit = clampLimit(limit, 10);
 
   const items = await prisma.item.findMany({
     where: {
@@ -257,8 +256,6 @@ export async function getRecentItems(
 /**
  * Valid item type names (singular form as stored in database)
  */
-export const VALID_ITEM_TYPES = ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'] as const;
-export type ValidItemType = typeof VALID_ITEM_TYPES[number];
 
 export interface PaginatedItems {
   items: ItemWithType[];
@@ -608,15 +605,8 @@ export async function createItem(
     return null;
   }
 
-  // Determine contentType based on item type
-  let contentType: 'TEXT' | 'FILE' | 'URL' = 'TEXT';
+  const contentType = contentTypeFor(data.typeName);
   const collectionIds = await filterOwnedCollectionIds(userId, data.collectionIds ?? []);
-
-  if (data.typeName === 'link') {
-    contentType = 'URL';
-  } else if (data.typeName === 'file' || data.typeName === 'image') {
-    contentType = 'FILE';
-  }
 
   const insert = (db: Pick<typeof prisma, 'item'>) =>
     db.item.create({
