@@ -26,7 +26,7 @@ Both are declared in `vercel.json` and listed under **Vercel → Project → Cro
 curl -H "Authorization: Bearer $CRON_SECRET" "https://bitbin.yourdomain.com/api/cron/sweep-files?dryRun=1"
 ```
 
-A sweep that finds more than half of the bucket orphaned aborts and logs an error instead of deleting, because that means it is reading the wrong database. Check `DATABASE_URL` before running it again.
+The sweep also deletes upload parts more than a day old (a large web upload that was never finished). A sweep that finds more than half of the bucket orphaned aborts and logs an error instead of deleting, because that means it is reading the wrong database. Check `DATABASE_URL` before running it again.
 
 ## Monitoring
 

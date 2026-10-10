@@ -14,7 +14,7 @@ Errors are JSON with a single message and a status code:
 | `401` | No session, or for `/api/v1`, no valid token. (The Stripe webhook never returns `401`: it uses `400` for a bad signature) |
 | `403` | Signed in, but not allowed: not Pro, not the owner of a file path, the demo account importing, the public demo account on an account-level action, a `/api/v1` token without the permission an endpoint needs, or a request a browser says came from another site (`Cross-site request blocked`) |
 | `404` | Not found — including rows that belong to someone else |
-| `413` | `/api/import` and `/api/v1/files` only: the request body is larger than the route accepts |
+| `413` | `/api/import`, `/api/upload/part` and `/api/v1/files` only: the request body is larger than the route accepts |
 | `429` | Rate limited, with `Retry-After` |
 | `502` | `/api/v1/ai/tags` and `/api/v1/ai/description` only: the AI provider failed or answered in an unexpected format |
 | `500` | Unexpected error, logged server-side; the message is generic |
@@ -57,6 +57,7 @@ Actions never throw to the client. They return:
 | `portal` | 20 / hour | IP + user id | `POST /api/stripe/portal` |
 | `create` | 120 / minute | IP + user id | the `createItem`, `createCollection`, `renameTag` and `deleteTag` actions |
 | `upload` | 10 / hour | IP + user id | `POST /api/upload`, `POST /api/v1/files` |
+| `uploadPart` | 30 / hour | IP + user id | `PUT /api/upload/part` (a 10 MB file is three parts) |
 | `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` and `/ai/description` |
 | `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
 

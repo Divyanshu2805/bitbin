@@ -30,6 +30,7 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 
 - [ ] Upgrade with a Stripe test card → back on `/settings?upgraded=true` → the account shows Pro without signing out.
 - [ ] Upload an image → it renders; upload a file → it downloads with its name.
+- [ ] Upload a file between 5 and 10 MB (it goes up in parts) → it is created, and downloads complete.
 - [ ] Suggest tags on an item → suggestions appear.
 - [ ] Open an item in the editor: the code editor loads (it is served from `/monaco/`), and the browser console shows no Content Security Policy errors on the homepage, the sign-in page or any signed-in page.
 - [ ] Create an API token with only **Save items**: `GET /api/v1/me` shows `scopes: ["items:write"]`, `POST /api/v1/items` works, `GET /api/v1/collections`, `POST /api/v1/files` and the AI endpoints answer `403`.

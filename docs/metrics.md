@@ -6,15 +6,15 @@ Measured figures for BitBin, each with how to re-check it. Nothing here is an es
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 879 across 75 files (Vitest), all passing | `npm run test` |
+| Unit tests | 903 across 77 files (Vitest), all passing | `npm run test` |
 | Desktop app tests | 41 (`node:test`), all passing | `cd desktop && npm test` |
-| Statement coverage | 84.9% (2,243 of 2,642) | `npm run test:coverage` |
-| Branch coverage | 84.8% (1,422 of 1,676) | same |
-| Line coverage | 85.0% (2,003 of 2,356) | same |
-| Function coverage | 76.1% (325 of 427) | same |
+| Statement coverage | 85.0% (2,309 of 2,718) | `npm run test:coverage` |
+| Branch coverage | 85.0% (1,468 of 1,727) | same |
+| Line coverage | 85.2% (2,065 of 2,423) | same |
+| Function coverage | 75.1% (328 of 437) | same |
 | Coverage floor enforced in CI | 80% statements, branches and lines; 70% functions | `vitest.config.ts` |
 | Scope of coverage | `src/actions`, `src/lib`, `src/app/api` (server code); components are checked in the browser | `vitest.config.ts` |
-| Route handlers with tests | 24 of 24 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
+| Route handlers with tests | 25 of 25 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
 | CI checks per push | 4: production dependency audit, lint, tests with the coverage floor, build | `.github/workflows/ci.yml` |
 | Concurrency-tested behaviours | Free-plan item and collection caps, single-use email links | `plan-limits.test.ts`, `tokens.test.ts` |
 
@@ -72,7 +72,7 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 | Item, collection and tag changes | 120 / minute |
 | Import / import preview | 5 / hour, 20 / hour |
 | Export | 10 / hour |
-| File upload (web and API) | 10 / hour |
+| File upload (web and API) | 10 / hour, plus 30 upload parts / hour |
 | AI helpers (app and API) | 20 / hour |
 | Checkout / billing portal | 10 / hour, 20 / hour |
 | Sign out everywhere | 5 / hour |
@@ -84,7 +84,8 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 |---|---|
 | Free plan | 50 items, 3 collections |
 | Pro plan | unlimited; $8 / month or $72 / year |
-| Upload size | images 5 MB, other files 10 MB; 4 MB from the desktop app and in a ZIP import (the host's request-body limit) |
+| Upload size | images 5 MB, other files 10 MB (files over 4 MB are sent in 4 MB parts); 4 MB from the desktop app and in a ZIP import |
+| Download and export size | unlimited (streamed) |
 | Item fields | content 500,000 characters; title 200; description 1,000; 20 tags of 50 characters |
 | JSON import | 5,000 items and 5,000 collections per file |
 | ZIP import | 4 MB, 100 files |
@@ -101,7 +102,7 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 | Application source (TypeScript and TSX, without tests or generated code) | about 29,700 lines |
 | Test code | about 11,600 lines |
 | Database models / migrations | 10 / 9 |
-| Route handlers / server actions | 25 (including NextAuth's) / 28 |
+| Route handlers / server actions | 26 (including NextAuth's) / 28 |
 | React components | 143 |
 | Item types | 7 (snippet, prompt, command, note, file, image, link) |
 | Clients of the token API | 2 (browser extension, desktop app) |

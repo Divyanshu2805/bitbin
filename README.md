@@ -130,7 +130,7 @@ The rules are written down in the [security guardrails](docs/practices/security-
 - **Accounts:** bcrypt (cost 12), hashed and single-use email tokens, 14-day revocable sessions, identical answers whether or not an email has an account, per-IP and per-address rate limits on every public auth endpoint, and an open-redirect-safe sign-in.
 - **Browser:** a Content Security Policy that lets nothing third-party into a page (the code editor is served from the app's own origin, not a CDN), and cross-site checks on every cookie-authenticated route that changes state.
 - **API tokens:** hashed, always expiring, and limited to the permissions they were created with (`collections:read`, `items:write`, `files:write`, `ai`).
-- **Files** live in a private R2 bucket and are read only through an ownership-checked route. Every stored file, from the web, the desktop app or a ZIP import, is checked by extension, type, size and file signature; photos are re-encoded so location metadata is never stored; ZIP imports are capped while they inflate; and a weekly sweep removes files no item points at.
+- **Files** live in a private R2 bucket and are read only through an ownership-checked, streamed route. Every stored file, from the web, the desktop app or a ZIP import, is checked by extension, type, size and file signature; photos are re-encoded so location metadata is never stored; ZIP imports are capped while they inflate; and a weekly sweep removes files no item points at.
 - **Payments:** the Stripe webhook verifies the raw body's signature and syncs the plan from Stripe, so retried or out-of-order events are harmless.
 - **Operations:** security headers, Sentry with personal data stripped, scripts that refuse to touch a production database, a production dependency audit in CI (0 known vulnerabilities) and secret scanning.
 
@@ -140,8 +140,8 @@ Found a problem? See [SECURITY.md](SECURITY.md).
 
 | | |
 |---|---|
-| Tests | 879 unit tests across 75 files (actions, library code and every route handler), all external services mocked; 41 more for the desktop app |
-| Coverage | 84.9% of statements over `src/actions`, `src/lib` and `src/app/api`, with an 80% floor enforced in CI |
+| Tests | 903 unit tests across 77 files (actions, library code and every route handler), all external services mocked; 41 more for the desktop app |
+| Coverage | about 85% of statements over `src/actions`, `src/lib` and `src/app/api`, with an 80% floor enforced in CI |
 | CI | audit, lint, tests with the coverage floor and a build on every push and pull request |
 | Lighthouse (production build) | accessibility 100, SEO 100, best practices 96, performance 80–95 across 12 pages |
 | Concurrency | the Free-plan limits and single-use email links are covered by race tests |
@@ -200,7 +200,7 @@ See [deployment](docs/deployment/README.md), [operations](docs/deployment/operat
 
 ## Known limitations
 
-Deliberately not built: end-to-end tests, per-device session lists, email change and OAuth account linking, custom item types, sharing, relevance-ranked or fuzzy search, Stripe live mode, store-published extension builds, and signed, auto-updating desktop builds. On Vercel, requests and unstreamed responses over about 4.5 MB are refused by the host, so very large uploads, downloads and ZIP exports need presigned URLs to work. The legal pages are generic rather than lawyer-reviewed. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
+Deliberately not built: end-to-end tests, per-device session lists, email change and OAuth account linking, custom item types, sharing, relevance-ranked or fuzzy search, Stripe live mode, store-published extension builds, and signed, auto-updating desktop builds. The host refuses request bodies over about 4.5 MB, so web uploads above 4 MB go up in parts and downloads and ZIP exports are streamed; the desktop app and ZIP imports still stop at 4 MB. The legal pages are generic rather than lawyer-reviewed. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
 
 ## Documentation
 

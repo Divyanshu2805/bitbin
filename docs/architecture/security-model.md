@@ -37,7 +37,7 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 | `/dashboard/*` | `src/proxy.ts` redirects to sign-in without a session, and the page calls `auth()` too |
 | Every other app page | The page calls `auth()` and redirects to `/sign-in` itself — the proxy only matches `/dashboard` |
 | Server actions | `getAuthedSession()` first; returns `Unauthorized` without a session |
-| `/api/items/[id]`, `/api/upload`, `/api/download/*`, `/api/export`, `/api/import`, `/api/stripe/*`, `/api/auth/change-password`, `/api/auth/delete-account` | `auth()` → `401` without a session |
+| `/api/items/[id]`, `/api/upload`, `/api/upload/part`, `/api/download/*`, `/api/export`, `/api/import`, `/api/stripe/*`, `/api/auth/change-password`, `/api/auth/delete-account` | `auth()` → `401` without a session |
 | `/api/download/{path}` | The path must start with the caller's user id → `403` otherwise |
 | `/api/extension/download` | `auth()` → `401`; session `isPro` → `403` |
 | `/api/v1/*` | `authenticateApiRequest`: valid token → `401` otherwise; owner on Pro → `403` otherwise; `api` rate limit → `429` |
@@ -45,7 +45,7 @@ NextAuth v5 with the Prisma adapter and **JWT sessions** (`session: { strategy: 
 | `/api/cron/reset-demo`, `/api/cron/sweep-files` | No session — `Authorization: Bearer $CRON_SECRET`, compared in constant time (`lib/cron-auth.ts`); refuses everyone when `CRON_SECRET` is unset |
 | Registration, password reset, resend verification | Public, rate limited per IP (and per email where relevant) |
 | After sign-in | The `callbackUrl` is reduced to a path on this site (`safeCallbackPath`), so the sign-in page can't redirect off-site |
-| Change password, delete account, checkout, the portal, upload, ZIP import | Also `rejectCrossSite` (`lib/same-origin.ts`): `Sec-Fetch-Site: cross-site` / `same-site` or a foreign `Origin` is a `403`, a second line of defence behind the `SameSite=Lax` cookie (which doesn't cover a sibling subdomain). Next's server actions check the origin themselves |
+| Change password, delete account, checkout, the portal, upload and upload parts, ZIP import | Also `rejectCrossSite` (`lib/same-origin.ts`): `Sec-Fetch-Site: cross-site` / `same-site` or a foreign `Origin` is a `403`, a second line of defence behind the `SameSite=Lax` cookie (which doesn't cover a sibling subdomain). Next's server actions check the origin themselves |
 
 ## Plan enforcement
 
@@ -67,7 +67,7 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 
 - Every action validates with Zod `safeParse`; every route handler checks its input explicitly. Size caps apply to every item field, passwords (128 characters) and imports (5,000 entries) — `lib/validation.ts`.
 - Any URL that will be rendered as a link goes through `safeUrlSchema` (only `http(s)`); imports apply the same rule.
-- Every stored file passes `ingestFile` (`lib/file-ingest.ts`), whether it comes from the web uploader, `/api/v1/files` or a ZIP import: extension, MIME type, size and file signature (`validateFileContent`), and an SVG with script is rejected. Photos are then decoded and written out again (`lib/image-sanitize.ts`): metadata such as GPS location is stripped, a file that only starts like an image is refused, and images over 50 megapixels are refused.
+- Every stored file passes `ingestFile` (`lib/file-ingest.ts`), whether it comes from the web uploader (whole or joined from parts), `/api/v1/files` or a ZIP import: extension, MIME type, size and file signature (`validateFileContent`), and an SVG with script is rejected. Photos are then decoded and written out again (`lib/image-sanitize.ts`): metadata such as GPS location is stripped, a file that only starts like an image is refused, and images over 50 megapixels are refused.
 - A ZIP import is read with every limit enforced while it inflates (`lib/zip-import.ts`): 4 MB compressed, 8 MB for the manifest, 10 MB per file, 100 files, 40 MB in total, so a ZIP bomb is stopped at the byte count rather than trusted to declare its size.
 - Email-sending endpoints (register, forgot password, resend verification) are limited per IP **and** per address, so rotating IPs can't flood one inbox.
 - Expensive or abusable endpoints are rate limited: the public auth endpoints, search, import, export, checkout, the portal, item, collection and tag changes, uploads, AI and the token API — see [errors and rate limits](../api/errors-and-rate-limits.md#rate-limits).

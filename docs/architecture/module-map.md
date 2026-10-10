@@ -19,7 +19,7 @@ src/
 │   │   ├── auth/          [...nextauth], register, verify, resend-verification, forgot-password,
 │   │   │                  reset-password, change-password, delete-account
 │   │   ├── items/[id]/    the full item for the drawer
-│   │   ├── upload/, download/[...path]/   file transfer
+│   │   ├── upload/ (+ part/), download/[...path]/   file transfer: whole or in parts; streamed reads
 │   │   ├── export/, import/               JSON and ZIP export; ZIP import
 │   │   ├── extension/download/            the browser extension as a ZIP
 │   │   ├── stripe/, webhooks/stripe/      checkout, portal, webhook
@@ -62,6 +62,7 @@ src/
 │   ├── ai-tags.ts, ai-description.ts, ai-json.ts, openai.ts   AI helpers shared by actions and /api/v1, the client
 │   ├── file-ingest.ts, image-sanitize.ts, r2.ts, file-url.ts  every upload check, photo re-encoding, storage,
 │   │                                                          view and download paths
+│   ├── upload-parts.ts    part size, ids and keys for uploads larger than one request
 │   ├── export-files.ts, export-zip.ts, zip-format.ts          the readable files in a ZIP export, the ZIP itself
 │   ├── import-schema.ts, import-utils.ts, zip-import.ts, zip-restore.ts   the import format, duplicates,
 │   │                                                          reading and restoring a ZIP

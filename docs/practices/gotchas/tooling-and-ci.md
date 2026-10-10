@@ -36,6 +36,12 @@ Measure with `npm run build && npm run start`, not `npm run dev`: the dev server
 
 Windows and macOS file systems ignore case, Vercel's Linux build doesn't. An import of `./AiSection` for a file named `AISection.tsx` works locally and breaks the production build (it has happened once). After renaming a file, check the import paths, and use `git mv` so Git records the new case.
 
-## Vercel refuses request bodies over about 4.5 MB
+## Vercel refuses bodies over about 4.5 MB
 
-A serverless function never sees a larger request; the platform answers `413` first. That is why a ZIP import stops at 4 MB (`MAX_IMPORT_ZIP_BYTES`) and the desktop app at 4 MB per file. The web uploader posts to a function too, so on Vercel a file between about 4.5 MB and the 10 MB the upload rules allow is refused by the platform before BitBin's own checks run (it is listed in [constraints](../../known-gaps/constraints-and-trade-offs.md#storage)). Moving more bytes needs a direct-to-storage upload with a presigned URL, not a bigger limit in the code.
+A function never sees a larger request, and a larger response that isn't streamed fails: the platform answers `413` (`FUNCTION_PAYLOAD_TOO_LARGE`) before or instead of the code. Local `next dev` has no such limit, so this only shows in production. BitBin works around it three ways:
+
+- **Responses are streamed.** `/api/download` pipes `streamFromR2` straight into the response, and `buildExportZip` returns a stream. Returning a `Uint8Array` or `ArrayBuffer` of a whole file would bring the limit back.
+- **Large web uploads go in parts.** Files over 4 MB are sent to `PUT /api/upload/part` in 4 MB pieces and joined by `POST /api/upload` (`lib/upload-parts.ts`).
+- **Other uploads stay small.** A ZIP import stops at 4 MB (`MAX_IMPORT_ZIP_BYTES`) and the desktop app at 4 MB per file.
+
+A new route that takes or returns file bytes has to follow one of these.

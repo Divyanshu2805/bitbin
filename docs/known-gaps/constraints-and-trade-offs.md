@@ -14,7 +14,7 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 ## Storage
 
 - **Files are served through the app.** The bucket is private ([ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md)), so every image and download passes through a function: no CDN cache, no image resizing, and function time proportional to the file (images cap at 5 MB, files at 10 MB). If that becomes a cost, use short-lived presigned URLs for large downloads from the same ownership check.
-- **The host caps a function's body at about 4.5 MB.** Vercel refuses larger requests before BitBin sees them, and the same cap applies to responses that aren't streamed. So on Vercel a web upload, a download or a ZIP export much over 4.5 MB fails even though the upload rules allow 10 MB files; the ZIP import (4 MB) and the desktop app (4 MB per file) stay under it on purpose. Lifting it means presigned URLs: the browser uploads to and downloads from R2 directly, with the same ownership checks on issuing the URL, and a streamed or stored export.
+- **The host caps a function's request body at about 4.5 MB** (and an unstreamed response). Downloads and ZIP exports are streamed, so they have no size limit. A web upload over 4 MB goes up in 4 MB parts that the server joins and checks (`lib/upload-parts.ts`), which costs a few extra requests and a moment of temporary storage. The ZIP import (4 MB) and the desktop app (4 MB per file) still send one request, so they stay under the cap; lifting that means giving them the same parts protocol.
 
 ## Data and scale
 

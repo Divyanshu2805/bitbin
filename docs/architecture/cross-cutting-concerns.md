@@ -105,7 +105,7 @@ Anything the client says to go to after an action (the sign-in `callbackUrl`) go
 | Route | When | What it does |
 |---|---|---|
 | `/api/cron/reset-demo` | Daily, 21:00 UTC | Restores the demo account's library, name and plan in one transaction |
-| `/api/cron/sweep-files` | Sundays, 03:00 UTC | Deletes stored files no item points at, within the limits in `lib/orphan-sweep.ts`; `?dryRun=1` reports without deleting |
+| `/api/cron/sweep-files` | Sundays, 03:00 UTC | Deletes stored files no item points at, and abandoned upload parts, within the limits in `lib/orphan-sweep.ts`; `?dryRun=1` reports without deleting |
 
 Both log their outcome; a failure is a `console.error`, so it reaches Sentry.
 

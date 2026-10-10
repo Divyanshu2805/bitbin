@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-879 tests in 75 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+903 tests in 77 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -21,9 +21,9 @@ npm run test:watch   # watch mode
 | Pagination | `src/lib/keyset.test.ts` | Cursor round trips, bad cursors, `after` / `before`, page edges |
 | AI | `src/actions/ai.test.ts`, `src/lib/ai-json.test.ts`, `src/lib/openai.test.ts`, `src/app/api/v1/ai/*/route.test.ts` | Auth and Pro guards, validation, rate limiting, prompts, JSON mode with a fallback, JSON found in fences and sentences, the `AI_API_KEY` / `OPENAI_API_KEY` names, the token endpoints' status codes |
 | API tokens and `/api/v1` | `src/actions/api-tokens.test.ts`, `src/lib/api-tokens.test.ts`, `src/lib/api-auth.test.ts`, `src/app/api/v1/*/route.test.ts` | Pro guard, token limit, hash-only storage, expiry, scopes per endpoint, scoped revoke; Bearer parsing; `401` / `403` / `413` / `429`; `POST /api/v1/files` cleaning up after a failed create |
-| Files | `src/lib/r2.test.ts`, `file-ingest.test.ts`, `image-sanitize.test.ts`, `file-url.test.ts`, `src/app/api/upload/route.test.ts`, `download/[...path]/route.test.ts` | Validation and signatures, EXIF stripped by a real `sharp` round trip, decompression bombs refused, key parsing, ownership (`403` for another user's file), attachment headers, the sandboxed `?inline=1` preview |
-| Orphan sweep | `src/lib/orphan-sweep.test.ts`, `src/app/api/cron/sweep-files/route.test.ts` | Only old, upload-shaped, unreferenced objects; the abort when most of the bucket looks orphaned; dry runs; the cron secret |
-| Export | `src/lib/db/export.test.ts`, `export-files.test.ts`, `export-zip.test.ts`, `src/app/api/export/route.test.ts` | Whole-library and per-collection data, the ZIP's folders, extensions and safe unique names, `zipPath`, never reading another user's object |
+| Files | `src/lib/r2.test.ts`, `file-ingest.test.ts`, `image-sanitize.test.ts`, `file-url.test.ts`, `upload-parts.test.ts`, `src/app/api/upload/route.test.ts`, `upload/part/route.test.ts`, `download/[...path]/route.test.ts` | Validation and signatures, EXIF stripped by a real `sharp` round trip, decompression bombs refused, key parsing; uploads in parts (ids, indexes, sizes, joining in order, missing parts, cleanup); ownership (`403` for another user's file), streamed downloads with their length, attachment headers, the sandboxed `?inline=1` preview |
+| Orphan sweep | `src/lib/orphan-sweep.test.ts`, `src/app/api/cron/sweep-files/route.test.ts` | Only old, upload-shaped, unreferenced objects, and abandoned upload parts; the abort when most of the bucket looks orphaned; dry runs; the cron secret |
+| Export | `src/lib/db/export.test.ts`, `export-files.test.ts`, `export-zip.test.ts`, `src/app/api/export/route.test.ts` | Whole-library and per-collection data, the ZIP returned as a stream, its folders, extensions and safe unique names, `zipPath`, never reading another user's object |
 | Import | `src/actions/import.test.ts`, `src/lib/import-utils.test.ts`, `zip-import.test.ts`, `zip-restore.test.ts`, `src/app/api/import/route.test.ts` | Manifest validation, duplicates, dates, Free limits, input hardening; ZIP signature, size caps while inflating, restoring files through the upload checks, rollback cleanup |
 | Accounts | `src/lib/credentials.test.ts`, `tokens.test.ts`, `src/app/api/auth/*/route.test.ts`, `src/actions/settings.test.ts` | The login limit, unknown and GitHub-only accounts answering like a wrong password, unverified email; hashed single-use tokens under a race; register, verify, resend, forgot (the same answer for every address), reset, change password, delete account (subscription and storage failures); name and editor-preference updates |
 | Billing | `src/app/api/stripe/*/route.test.ts`, `src/app/api/webhooks/stripe/route.test.ts` | Checkout and portal guards, `409` for Pro users, signature verification, the `metadata.app` tag, plan sync |

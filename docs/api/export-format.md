@@ -69,7 +69,7 @@ links.md             every link as a Markdown list, with descriptions
 files/               the uploaded files and images, read from the private R2 bucket by key
 ```
 
-Built by `buildExportZip` (`src/lib/export-zip.ts`) with `archiver`. File names come from the item titles with path separators and characters Windows refuses replaced by `-`, cut to 80 characters; two items with the same title in a folder become `name.ext` and `name-2.ext`. Only the manifest and `files/` are read back on import; the readable folders are for the user.
+Built by `buildExportZip` (`src/lib/export-zip.ts`) with `archiver` and **streamed** to the browser as it is written, so an export of any size downloads (a buffered response would hit the host's 4.5 MB limit). File names come from the item titles with path separators and characters Windows refuses replaced by `-`, cut to 80 characters; two items with the same title in a folder become `name.ext` and `name-2.ext`. Only the manifest and `files/` are read back on import; the readable folders are for the user.
 
 ## Importing JSON
 

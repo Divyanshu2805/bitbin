@@ -18,8 +18,9 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `POST` | `/api/auth/change-password` | Session | Change the password | [Auth](auth.md) |
 | `DELETE` | `/api/auth/delete-account` | Session | Delete the account (password required for password accounts) | [Auth](auth.md) |
 | `GET` | `/api/items/[id]` | Session | Full item for the drawer | [Items and files](items-and-files.md) |
-| `POST` | `/api/upload` | Session, Pro | Upload a file or image to R2 | [Items and files](items-and-files.md) |
-| `GET` | `/api/download/[...path]` | Session, owner | Download a file with its name | [Items and files](items-and-files.md) |
+| `POST` | `/api/upload` | Session, Pro | Upload a file or image to R2 (whole, or joined from parts) | [Items and files](items-and-files.md) |
+| `PUT` | `/api/upload/part` | Session, Pro | Send one 4 MB part of a larger file | [Items and files](items-and-files.md#put-apiuploadpart) |
+| `GET` | `/api/download/[...path]` | Session, owner | Stream a file, as a download or an inline preview | [Items and files](items-and-files.md) |
 | `GET` | `/api/export` | Session (ZIP: Pro) | Download a JSON or ZIP export of the library or one collection | [Export format](export-format.md) |
 | `POST` | `/api/import` | Session, Pro | Preview or import an export ZIP, files included | [Export format](export-format.md#importing-a-zip) |
 | `GET` | `/api/extension/download` | Session, Pro | Download the browser extension as a ZIP | [Token API](token-api.md#downloading-the-extension) |
@@ -51,7 +52,7 @@ Called by the crons in `vercel.json`, never by the UI. Vercel sends `Authorizati
 
 | Status | When |
 |---|---|
-| `200` | `{ success: true, scanned, eligible, orphans, deleted, dryRun, aborted: null }` |
+| `200` | `{ success: true, scanned, eligible, orphans, staleParts, deleted, dryRun, aborted: null }` |
 | `401` | Missing or wrong bearer value, or no `CRON_SECRET` |
 | `500` | `{ error: 'Sweep aborted', … }` when the safety check stopped it (more than half the eligible objects looked orphaned), or `Sweep failed`; both logged as errors |
 
@@ -77,7 +78,7 @@ The public [Privacy Policy](../../src/app/privacy/page.tsx) (`/privacy`) and [Te
 
 - Route handlers return JSON; errors are `{ "error": "…" }` with a meaningful status. Server actions return an `ActionResult`. Both are described in [errors and rate limits](errors-and-rate-limits.md).
 - The user is always taken from the session, or for `/api/v1`, from the token. No endpoint accepts a user id as input.
-- Cookie-authenticated endpoints that change state (change password, delete account, checkout, the billing portal, upload, ZIP import) refuse a request a browser marks `Sec-Fetch-Site: cross-site` / `same-site`, or whose `Origin` isn't this host, with `403 Cross-site request blocked` (`lib/same-origin.ts`), on top of the `SameSite=Lax` cookie. Next's server actions do the equivalent check themselves.
+- Cookie-authenticated endpoints that change state (change password, delete account, checkout, the billing portal, upload and upload parts, ZIP import) refuse a request a browser marks `Sec-Fetch-Site: cross-site` / `same-site`, or whose `Origin` isn't this host, with `403 Cross-site request blocked` (`lib/same-origin.ts`), on top of the `SameSite=Lax` cookie. Next's server actions do the equivalent check themselves.
 
 ## Related
 
