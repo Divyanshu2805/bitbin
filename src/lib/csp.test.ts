@@ -38,19 +38,8 @@ describe('buildContentSecurityPolicy (production)', () => {
     expect(policy).not.toContain('cdn.');
   });
 
-  it('does not open up Cloudflare unless Turnstile is on', () => {
-    expect(policy).not.toContain('challenges.cloudflare.com');
-  });
-});
-
-describe('with Turnstile', () => {
-  const policy = buildContentSecurityPolicy({ turnstile: true });
-
-  it('allows exactly the challenge origin for its script, frame and verification call', () => {
-    for (const name of ['script-src', 'frame-src', 'connect-src']) {
-      expect(directive(policy, name)).toContain('https://challenges.cloudflare.com');
-    }
-    expect(directive(policy, 'img-src')).not.toContain('cloudflare');
+  it('frames nothing from another site', () => {
+    expect(directive(policy, 'frame-src')).toBe("frame-src 'self'");
   });
 });
 

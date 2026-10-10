@@ -5,7 +5,6 @@ import {
   validateFileContent,
 } from '@/lib/r2';
 import { sanitizeImage } from '@/lib/image-sanitize';
-import { checkKnownMalware } from '@/lib/virus-check';
 
 export type IngestResult =
   | { ok: true; fileUrl: string; fileName: string; fileSize: number }
@@ -22,8 +21,7 @@ interface IngestInput {
 
 /**
  * Every check a stored file passes, in one place: size, extension and MIME type, the bytes
- * matching the extension, images re-encoded (metadata stripped), the optional malware lookup,
- * and then the upload under the user's own folder. Uploads, ZIP imports and the token API all
+ * matching the extension, images re-encoded (metadata stripped), and then the upload under the user's own folder. Uploads, ZIP imports and the token API all
  * go through it so a new way to add a file can't skip a check.
  */
 export async function ingestFile({ userId, itemType, fileName, bytes, mimeType }: IngestInput): Promise<IngestResult> {
@@ -41,10 +39,6 @@ export async function ingestFile({ userId, itemType, fileName, bytes, mimeType }
   // real image is refused. Other types pass through unchanged.
   const sanitized = await sanitizeImage(bytes, fileName);
   if (!sanitized.ok) return { ok: false, error: sanitized.error };
-
-  // Optional: refuse a file whose hash VirusTotal knows as malware (off without VIRUSTOTAL_API_KEY)
-  const scan = await checkKnownMalware(sanitized.buffer);
-  if (!scan.safe) return { ok: false, error: scan.reason };
 
   const { fileUrl } = await uploadToR2(sanitized.buffer, fileName, contentTypeForFile(fileName), userId);
   return { ok: true, fileUrl, fileName, fileSize: sanitized.buffer.length };

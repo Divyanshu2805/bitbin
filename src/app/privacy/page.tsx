@@ -56,14 +56,6 @@ export default function PrivacyPage() {
         <li>Sentry: error monitoring, with personal data removed.</li>
         <li>GitHub: sign-in, if you choose it.</li>
         <li>
-          Cloudflare Turnstile: where it is switched on, a bot check on the sign-up and password-reset forms. Cloudflare
-          receives your IP address and browser signals to decide whether you are a person.
-        </li>
-        <li>
-          VirusTotal: where it is switched on, a check of uploaded files against known malware. Only a hash (a fingerprint)
-          of the file is sent, never the file.
-        </li>
-        <li>
           An AI provider (OpenAI or a compatible one): only when you use an AI feature (Pro). The text of the item you
           ask about is sent to it to produce tags, a description, an explanation or a rewritten prompt.
         </li>

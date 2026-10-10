@@ -12,13 +12,8 @@ const baseHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
 ];
 
-// The full policy for pages (see src/lib/csp.ts). Read when the server starts, so a Turnstile
-// site key set in the environment is allowed through.
-const turnstileKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-const pagePolicy = buildContentSecurityPolicy({
-  turnstile: !!turnstileKey && !turnstileKey.startsWith('YOUR_'),
-  dev: process.env.NODE_ENV !== 'production',
-});
+// The full policy for pages (see src/lib/csp.ts)
+const pagePolicy = buildContentSecurityPolicy({ dev: process.env.NODE_ENV !== 'production' });
 
 const nextConfig: NextConfig = {
   reactCompiler: true,

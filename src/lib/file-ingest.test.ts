@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { upload, sanitize, scan } = vi.hoisted(() => ({ upload: vi.fn(), sanitize: vi.fn(), scan: vi.fn() }));
+const { upload, sanitize } = vi.hoisted(() => ({ upload: vi.fn(), sanitize: vi.fn() }));
 vi.mock('@/lib/image-sanitize', () => ({ sanitizeImage: sanitize }));
-vi.mock('@/lib/virus-check', () => ({ checkKnownMalware: scan }));
 // Keep the real validators; only the network call is replaced
 vi.mock('@/lib/r2', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/r2')>()),
@@ -18,7 +17,6 @@ describe('ingestFile', () => {
     vi.clearAllMocks();
     upload.mockResolvedValue({ fileUrl: 'https://r2.example/user-1/1-logo.png', key: 'user-1/1-logo.png' });
     sanitize.mockImplementation(async (buffer: Buffer) => ({ ok: true, buffer }));
-    scan.mockResolvedValue({ safe: true, checked: false });
   });
 
   it('stores a valid image under the user and reports the stored size', async () => {
@@ -53,17 +51,11 @@ describe('ingestFile', () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it('refuses what the image sanitizer or the malware lookup refuses', async () => {
+  it('refuses what the image sanitizer refuses', async () => {
     sanitize.mockResolvedValueOnce({ ok: false, error: 'Not a real image' });
     expect(await ingestFile({ userId: 'user-1', itemType: 'image', fileName: 'logo.png', bytes: PNG })).toEqual({
       ok: false,
       error: 'Not a real image',
-    });
-
-    scan.mockResolvedValueOnce({ safe: false, reason: 'Known malware' });
-    expect(await ingestFile({ userId: 'user-1', itemType: 'image', fileName: 'logo.png', bytes: PNG })).toEqual({
-      ok: false,
-      error: 'Known malware',
     });
     expect(upload).not.toHaveBeenCalled();
   });

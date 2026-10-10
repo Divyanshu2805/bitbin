@@ -8,8 +8,7 @@ import {
 } from '@/lib/db/accounts';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/email';
-import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit';
-import { isTurnstileEnabled, verifyTurnstile } from '@/lib/turnstile';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { MAX_PASSWORD_LENGTH } from '@/lib/validation';
 
 const MAX_NAME_LENGTH = 50;
@@ -33,14 +32,6 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { name, email, password, confirmPassword } = body;
-
-    // Bot check, when Turnstile is configured
-    if (isTurnstileEnabled()) {
-      const verdict = await verifyTurnstile(body?.turnstileToken, await getClientIP());
-      if (!verdict.ok) {
-        return NextResponse.json({ error: verdict.message }, { status: 400 });
-      }
-    }
 
     // Validate required fields
     if (

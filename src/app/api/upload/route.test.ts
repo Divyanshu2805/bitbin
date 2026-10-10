@@ -2,16 +2,14 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { Session } from 'next-auth';
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
-const { findUnique, upload, checkRateLimit, sanitize, scan } = vi.hoisted(() => ({
+const { findUnique, upload, checkRateLimit, sanitize } = vi.hoisted(() => ({
   findUnique: vi.fn(),
   upload: vi.fn(),
   checkRateLimit: vi.fn(),
   sanitize: vi.fn(),
-  scan: vi.fn(),
 }));
-// The sanitizer and the malware check have their own tests; here only how the route uses them
+// The sanitizer has its own tests; here only how the route uses it
 vi.mock('@/lib/image-sanitize', () => ({ sanitizeImage: sanitize }));
-vi.mock('@/lib/virus-check', () => ({ checkKnownMalware: scan }));
 vi.mock('@/lib/prisma', () => ({ prisma: { user: { findUnique } } }));
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit,
@@ -47,7 +45,6 @@ describe('POST /api/upload', () => {
     checkRateLimit.mockResolvedValue({ success: true });
     upload.mockResolvedValue({ fileUrl: 'https://r2.example/user-1/abc.png' });
     sanitize.mockImplementation(async (buffer: Buffer) => ({ ok: true, buffer }));
-    scan.mockResolvedValue({ safe: true, checked: false });
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -138,23 +135,13 @@ describe('POST /api/upload', () => {
     expect(upload).not.toHaveBeenCalled();
   });
 
-  it('refuses a file flagged as known malware, and stores nothing', async () => {
-    scan.mockResolvedValue({ safe: false, reason: 'This file was flagged as malware and cannot be uploaded.' });
-
-    const res = await post({ file: png(), itemType: 'image' });
-
-    expect(res.status).toBe(400);
-    expect((await res.json()).error).toContain('malware');
-    expect(upload).not.toHaveBeenCalled();
-  });
-
-  it('checks the processed bytes for malware, not the original upload', async () => {
+  it('stores the processed bytes, not the original upload', async () => {
     const cleaned = Buffer.from('cleaned');
     sanitize.mockResolvedValue({ ok: true, buffer: cleaned });
 
     await post({ file: png(), itemType: 'image' });
 
-    expect(scan).toHaveBeenCalledWith(cleaned);
+    expect(upload.mock.calls[0][0]).toBe(cleaned);
   });
 
   it('returns a generic 500 when storage fails', async () => {

@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/db/accounts'
 import { generatePasswordResetToken } from '@/lib/tokens'
 import { sendPasswordResetEmail } from '@/lib/email'
-import { checkRateLimit, getClientIP, rateLimitResponse } from '@/lib/rate-limit'
-import { isTurnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { isDemoEmail } from '@/lib/demo'
 
 export async function POST(request: Request) {
@@ -22,14 +21,6 @@ export async function POST(request: Request) {
         { error: 'Email is required' },
         { status: 400 }
       )
-    }
-
-    // Bot check, when Turnstile is configured
-    if (isTurnstileEnabled()) {
-      const verdict = await verifyTurnstile(body?.turnstileToken, await getClientIP())
-      if (!verdict.ok) {
-        return NextResponse.json({ error: verdict.message }, { status: 400 })
-      }
     }
 
     // At most 3 reset mails an hour to one address, from any number of IPs

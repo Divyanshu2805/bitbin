@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Size, type, content, image re-encoding, malware lookup and the upload itself
+    // Size, type, content, image re-encoding and the upload itself
     const result = await ingestFile({
       userId: session.user.id,
       itemType,
