@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://bitbin.divyanshuagrahari.dev"><img src="docs/assets/screenshots/dashboard.webp" alt="BitBin dashboard" width="820" /></a>
+  <img src="docs/assets/banner.svg" alt="BitBin" width="820" />
 </p>
 
 <p align="center">
@@ -37,6 +37,10 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 | **Upgrading** | Production runs Stripe in **test mode**: use card `4242 4242 4242 4242`, any future date and any CVC. No money moves |
 
 ## Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshots/dashboard.webp" alt="The dashboard: library stats, usage by type, pinned items and the sidebar with types and collections" width="900" />
+</p>
 
 | | |
 |---|---|
