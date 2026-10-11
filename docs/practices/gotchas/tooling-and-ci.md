@@ -41,7 +41,6 @@ Windows and macOS file systems ignore case, Vercel's Linux build doesn't. An imp
 A function never sees a larger request, and a larger response that isn't streamed fails: the platform answers `413` (`FUNCTION_PAYLOAD_TOO_LARGE`) before or instead of the code. Local `next dev` has no such limit, so this only shows in production. BitBin works around it three ways:
 
 - **Responses are streamed.** `/api/download` pipes `streamFromR2` straight into the response, and `buildExportZip` returns a stream. Returning a `Uint8Array` or `ArrayBuffer` of a whole file would bring the limit back.
-- **Large web uploads go in parts.** Files over 4 MB are sent to `PUT /api/upload/part` in 4 MB pieces and joined by `POST /api/upload` (`lib/upload-parts.ts`).
-- **Other uploads stay small.** A ZIP import stops at 4 MB (`MAX_IMPORT_ZIP_BYTES`) and the desktop app at 4 MB per file.
+- **Large uploads go in parts.** Anything over 4 MB is sent in 4 MB pieces (`PUT /api/upload/part` from the browser, `PUT /api/v1/files/part` from the desktop app) and joined by the request that uses it (`POST /api/upload`, `POST /api/import`, `POST /api/v1/files`) with `lib/upload-assembly.ts`. Those requests themselves refuse a single body over one part.
 
 A new route that takes or returns file bytes has to follow one of these.

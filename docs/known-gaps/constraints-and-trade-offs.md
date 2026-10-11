@@ -14,11 +14,11 @@ Limits that come from how BitBin is built, not from missing work. Each is fine a
 ## Storage
 
 - **Files are served through the app.** The bucket is private ([ADR 0004](../architecture/decisions/0004-files-in-r2-behind-a-download-proxy.md)), so every image and download passes through a function: no CDN cache, no image resizing, and function time proportional to the file (images cap at 5 MB, files at 10 MB). If that becomes a cost, use short-lived presigned URLs for large downloads from the same ownership check.
-- **The host caps a function's request body at about 4.5 MB** (and an unstreamed response). Downloads and ZIP exports are streamed, so they have no size limit. A web upload over 4 MB goes up in 4 MB parts that the server joins and checks (`lib/upload-parts.ts`), which costs a few extra requests and a moment of temporary storage. The ZIP import (4 MB) and the desktop app (4 MB per file) still send one request, so they stay under the cap; lifting that means giving them the same parts protocol.
+- **The host caps a function's request body at about 4.5 MB** (and an unstreamed response). Downloads and ZIP exports are streamed, so they have no size limit. Any upload over 4 MB (from the web, the desktop app or a ZIP import) goes up in 4 MB parts that the server joins and checks (`lib/upload-parts.ts`), which costs a few extra requests and a moment of temporary storage. The real limits are the product's own: 5 MB images, 10 MB files, 20 MB ZIP imports.
 
 ## Data and scale
 
-- **Exports and imports run in one function call.** A ZIP export fetches every file from R2 and compresses it in memory inside a single serverless invocation, and an import is one transaction capped at 5,000 entries (a ZIP import at 4 MB and 100 files), so a very large library can hit Vercel's function time, memory or body limit. Exporting one collection at a time keeps each export small.
+- **Exports and imports run in one function call.** A ZIP export fetches every file from R2 and compresses it in memory inside a single serverless invocation, and an import is one transaction capped at 5,000 entries (a ZIP import at 20 MB and 100 files), so a very large library can hit Vercel's function time, memory or body limit. Exporting one collection at a time keeps each export small.
 - **Search is substring matching.** `ILIKE '%text%'` over trigram indexes is fast at personal-library sizes and ranks only by "title matched" and recency. Relevance ranking or typo tolerance would need PostgreSQL full-text search or a search service.
 - **Tags are global rows.** A tag name is one row shared by every user; only the links are per user. That is harmless while a tag holds nothing but its name, but per-user tag colours or descriptions would need a per-user tag table.
 

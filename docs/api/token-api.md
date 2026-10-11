@@ -18,7 +18,7 @@ Authorization: Bearer bb_…
   |---|---|---|
   | `collections:read` | List collections | `GET /api/v1/collections` |
   | `items:write` | Save items | `POST /api/v1/items` |
-  | `files:write` | Save files and images | `POST /api/v1/files` |
+  | `files:write` | Save files and images | `POST /api/v1/files`, `PUT /api/v1/files/part` |
   | `ai` | AI suggestions | `POST /api/v1/ai/tags`, `/ai/description` |
 
   `GET /api/v1/me` needs none. The extension uses all but `files:write`; the desktop app uses all four. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
@@ -98,7 +98,8 @@ Multipart form:
 
 | Field | Rules |
 |---|---|
-| `file` | Required. The same rules as a web upload: images (png, jpg, jpeg, gif, webp, svg) up to 5 MB, files (pdf, txt, md, json, yaml, yml, xml, csv, toml, ini) up to 10 MB, bytes that match the extension, photos re-encoded without metadata |
+| `file` | The file, if it is 4 MB or less. The same rules as a web upload: images (png, jpg, jpeg, gif, webp, svg) up to 5 MB, files (pdf, txt, md, json, yaml, yml, xml, csv, toml, ini) up to 10 MB, bytes that match the extension, photos re-encoded without metadata |
+| `uploadId`, `partCount`, `fileName` | Instead of `file`, for a larger file already sent to [`PUT /api/v1/files/part`](#put-apiv1filespart). The parts are deleted once read |
 | `itemType` | Required. `file` or `image` |
 | `title` | Optional; the file name when absent |
 | `description` | Optional, at most 1000 characters |
@@ -110,11 +111,15 @@ Multipart form:
 | Status | When |
 |---|---|
 | `400` | Not a multipart form, no file, a bad `itemType`, a file that fails the checks, or validation errors (with `fieldErrors`) |
-| `413` | `Content-Length` above 10 MB plus 64 KB, refused before the body is read |
+| `413` | `Content-Length` above 4 MB plus 64 KB, refused before the body is read (send the file in parts) |
 | `429` | Over the `upload` limit (10 an hour per user, shared with the web uploader), with `Retry-After` |
 | `500` | Storage failed, or the item couldn't be created, in which case the stored file is deleted again |
 
-Hosts refuse request bodies above about 4.5 MB, so the desktop app stops at 4 MB.
+Hosts refuse request bodies above about 4.5 MB, so a larger file goes in parts.
+
+## `PUT /api/v1/files/part`
+
+`?uploadId={uuid}&index={0–4}`, with up to 4 MB of the file's raw bytes as the body. Needs `files:write`. Stores the part in the token owner's folder for `POST /api/v1/files` to join; parts never joined are deleted by the weekly sweep after a day. `200` with `{ "data": { "stored": true } }`; `400` for a bad id, index or body; `413` for a declared body over 4 MB; `429` over the `uploadPart` limit (30 an hour). The desktop app cuts a file over 4 MB into parts, sends each, then sends the save request naming them.
 
 ## `POST /api/v1/ai/tags`
 

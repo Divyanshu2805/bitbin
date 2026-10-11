@@ -22,7 +22,7 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `PUT` | `/api/upload/part` | Session, Pro | Send one 4 MB part of a larger file | [Items and files](items-and-files.md#put-apiuploadpart) |
 | `GET` | `/api/download/[...path]` | Session, owner | Stream a file, as a download or an inline preview | [Items and files](items-and-files.md) |
 | `GET` | `/api/export` | Session (ZIP: Pro) | Download a JSON or ZIP export of the library or one collection | [Export format](export-format.md) |
-| `POST` | `/api/import` | Session, Pro | Preview or import an export ZIP, files included | [Export format](export-format.md#importing-a-zip) |
+| `POST` | `/api/import` | Session, Pro | Preview or import an export ZIP (whole, or joined from parts), files included | [Export format](export-format.md#importing-a-zip) |
 | `GET` | `/api/extension/download` | Session, Pro | Download the browser extension as a ZIP | [Token API](token-api.md#downloading-the-extension) |
 | `POST` | `/api/stripe/checkout` | Session | Start a Checkout Session | [Billing](billing.md) |
 | `POST` | `/api/stripe/portal` | Session | Open the Customer Portal | [Billing](billing.md) |
@@ -32,7 +32,8 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `GET` | `/api/v1/me` | Token, Pro | Check an API token | [Token API](token-api.md) |
 | `GET` | `/api/v1/collections` | Token, Pro | The caller's collections, for the extension's picker | [Token API](token-api.md) |
 | `POST` | `/api/v1/items` | Token, Pro | Create a text or link item | [Token API](token-api.md) |
-| `POST` | `/api/v1/files` | Token, Pro | Upload a file or image and create its item | [Token API](token-api.md#post-apiv1files) |
+| `POST` | `/api/v1/files` | Token, Pro | Upload a file or image (whole, or joined from parts) and create its item | [Token API](token-api.md#post-apiv1files) |
+| `PUT` | `/api/v1/files/part` | Token, Pro | Send one 4 MB part of a larger file | [Token API](token-api.md#put-apiv1filespart) |
 | `POST` | `/api/v1/ai/tags` | Token, Pro | AI tag suggestions | [Token API](token-api.md) |
 | `POST` | `/api/v1/ai/description` | Token, Pro | AI-written description | [Token API](token-api.md) |
 

@@ -92,7 +92,7 @@ Two companion apps save into BitBin without opening it, through the [token API](
 | | ZIP: the JSON, the text items as readable files (`snippets/`, `prompts/`, `commands/`, `notes/`, `links.md`) and every uploaded file | Pro |
 | Export one collection | The same two formats, for that collection and its items | Free (JSON), Pro (ZIP) |
 | Import | A JSON export (up to 5,000 entries) | Free and Pro |
-| | A ZIP export, files included (up to 4 MB and 100 files) | Pro |
+| | A ZIP export, files included (up to 20 MB and 100 files) | Pro |
 
 An import shows a preview first (counts by type, collections, tags), can skip items you already have, keeps the original dates, and either completes or changes nothing. Free plan limits apply to imports too.
 

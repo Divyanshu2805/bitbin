@@ -66,7 +66,7 @@ Everything is an environment variable — see [configuration](../local-developme
 | `rateLimitConfigs` | `src/lib/rate-limit.ts` |
 | Coverage floor (80% statements, branches and lines; 70% functions) | `vitest.config.ts` |
 | Item field caps (title 200, description 1,000, content 500,000, 20 tags of 50) | `src/lib/validation.ts` |
-| Import caps (5,000 entries; ZIP 4 MB and 100 files) | `src/lib/import-schema.ts`, `src/lib/zip-import.ts` |
+| Import caps (5,000 entries; ZIP 20 MB and 100 files); upload part size (4 MB) | `src/lib/upload-parts.ts`, `src/lib/import-schema.ts`, `src/lib/zip-import.ts` |
 | Orphan sweep safety limits (a day old, 1,000 per run, abort above half the bucket) | `src/lib/orphan-sweep.ts` |
 | Session lifetime (14 days, re-issued daily) | `src/lib/constants/session.ts` |
 | Content Security Policy | `src/lib/csp.ts` |

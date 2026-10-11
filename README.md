@@ -33,6 +33,19 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 | **Your own account** | Register with an email: a verification link arrives from `noreply@bitbin.divyanshuagrahari.dev`. The sending domain is new, so **check your spam folder** if it doesn't show up |
 | **Upgrading** | Production runs Stripe in **test mode**: use card `4242 4242 4242 4242`, any future date and any CVC. No money moves |
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshots/dashboard.webp" alt="The dashboard: library stats, usage by type, pinned items and the sidebar with types and collections" width="900" />
+</p>
+
+| | |
+|---|---|
+| <img src="docs/assets/screenshots/drawer.webp" alt="A snippet open in the drawer, with the code editor, tags, collections and dates" /> | <img src="docs/assets/screenshots/search.webp" alt="The search palette showing items and a collection that match 'react'" /> |
+| An item in the drawer, with the Monaco editor | ⌘K search across titles, content, tags and collections |
+| <img src="docs/assets/screenshots/collections.webp" alt="The collections page with favorite and pinned collections" /> | <img src="docs/assets/screenshots/settings.webp" alt="Settings: editor preferences and the plan" /> |
+| Collections, coloured by their contents | Settings: editor, billing, tokens, desktop app, tags, data and account |
+
 ## Features
 
 **Capture and organize**
@@ -140,7 +153,7 @@ Found a problem? See [SECURITY.md](SECURITY.md).
 
 | | |
 |---|---|
-| Tests | 903 unit tests across 77 files (actions, library code and every route handler), all external services mocked; 41 more for the desktop app |
+| Tests | 914 unit tests across 78 files (actions, library code and every route handler), all external services mocked; 44 more for the desktop app |
 | Coverage | about 85% of statements over `src/actions`, `src/lib` and `src/app/api`, with an 80% floor enforced in CI |
 | CI | audit, lint, tests with the coverage floor and a build on every push and pull request |
 | Lighthouse (production build) | accessibility 100, SEO 100, best practices 96, performance 80–95 across 12 pages |
@@ -200,7 +213,7 @@ See [deployment](docs/deployment/README.md), [operations](docs/deployment/operat
 
 ## Known limitations
 
-Deliberately not built: end-to-end tests, per-device session lists, email change and OAuth account linking, custom item types, sharing, relevance-ranked or fuzzy search, Stripe live mode, store-published extension builds, and signed, auto-updating desktop builds. The host refuses request bodies over about 4.5 MB, so web uploads above 4 MB go up in parts and downloads and ZIP exports are streamed; the desktop app and ZIP imports still stop at 4 MB. The legal pages are generic rather than lawyer-reviewed. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
+Deliberately not built: end-to-end tests, per-device session lists, email change and OAuth account linking, custom item types, sharing, relevance-ranked or fuzzy search, Stripe live mode, store-published extension builds, and signed, auto-updating desktop builds. The host refuses request bodies over about 4.5 MB, so uploads (web, desktop and ZIP import) over 4 MB go up in 4 MB parts, and downloads and ZIP exports are streamed. The legal pages are generic rather than lawyer-reviewed. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
 
 ## Documentation
 

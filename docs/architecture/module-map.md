@@ -23,7 +23,7 @@ src/
 │   │   ├── export/, import/               JSON and ZIP export; ZIP import
 │   │   ├── extension/download/            the browser extension as a ZIP
 │   │   ├── stripe/, webhooks/stripe/      checkout, portal, webhook
-│   │   ├── v1/            the token API: me, collections, items, files, ai/tags, ai/description
+│   │   ├── v1/            the token API: me, collections, items, files (+ files/part), ai/tags, ai/description
 │   │   └── cron/          reset-demo (daily), sweep-files (weekly)
 │   ├── page.tsx           marketing homepage
 │   ├── privacy/, terms/   public Privacy Policy and Terms of Service (shared `LegalPage` frame)
@@ -62,7 +62,7 @@ src/
 │   ├── ai-tags.ts, ai-description.ts, ai-json.ts, openai.ts   AI helpers shared by actions and /api/v1, the client
 │   ├── file-ingest.ts, image-sanitize.ts, r2.ts, file-url.ts  every upload check, photo re-encoding, storage,
 │   │                                                          view and download paths
-│   ├── upload-parts.ts    part size, ids and keys for uploads larger than one request
+│   ├── upload-parts.ts, upload-assembly.ts   uploads larger than one request: part size, ids and keys; storing and joining parts
 │   ├── export-files.ts, export-zip.ts, zip-format.ts          the readable files in a ZIP export, the ZIP itself
 │   ├── import-schema.ts, import-utils.ts, zip-import.ts, zip-restore.ts   the import format, duplicates,
 │   │                                                          reading and restoring a ZIP

@@ -23,11 +23,12 @@ Ctrl+Alt+B (global), the tray icon, or a second launch of the app
                                              the description fills the field if it's empty)
   → POST /api/v1/items                 → createItemForUser → lib/db createItem
   → or, with a file attached (picker, drop, or the clipboard image):
+    [PUT /api/v1/files/part × n, for a file over 4 MB]
     POST /api/v1/files (multipart)     → ingestFile (the web upload's checks) → createItemForUser
 ```
 
 - **Everything that touches the network runs in the main process.** The capture page calls named IPC handlers (`capture:collections`, `capture:suggest`, `capture:save`, `capture:pick-file`, `capture:attach`). The token never reaches a page, and `buildItemBody` / `buildFileForm` rebuild each request from known fields.
-- **A file's bytes stay in the main process.** The page is told only its name, type and size. A dropped file is read by the page (it has no path) and handed over once; the main process re-checks the extension and size (`src/files.js`, the server's rules capped at 4 MB) before holding it, and the server checks again.
+- **A file's bytes stay in the main process.** The page is told only its name, type and size. A dropped file is read by the page (it has no path) and handed over once; the main process re-checks the extension and size (`src/files.js`, the server's rules: 5 MB images, 10 MB files) before holding it, and the server checks again.
 - **Type guessing is `desktop/src/guess.js`**, a copy of the extension's `lib.js`. There is no language picker: a snippet or command sent without `language` gets one detected on the server.
 - **The window is reused.** Closing it hides it. Each time it's shown, the main process sends `capture:open` and the page resets the form from a fresh clipboard read.
 - **Errors** reach the page as `{ ok: false, error, status }`. A `401` or `403` shows the "connect" panel again.
@@ -44,6 +45,6 @@ Ctrl+Alt+B (global), the tray icon, or a second launch of the app
 
 ## Constraints
 
-- Files and images stop at 4 MB, under the hosts' request-body limit of about 4.5 MB (the server's own caps are 5 MB for images, 10 MB for files).
+- A file over 4 MB is cut into 4 MB parts (`splitParts`), each sent to `PUT /api/v1/files/part`, and the save request names them, because hosts refuse request bodies over about 4.5 MB. The limits are the server's: 5 MB for images, 10 MB for files.
 - The clipboard read is asynchronous in Electron 44 and must be awaited; see the [known limits](../../../desktop/README.md#known-limits).
 - Unsigned builds, so SmartScreen warns on first launch, and no auto-update.

@@ -22,7 +22,7 @@ Multipart form data, in one of two shapes. A file of 4 MB or less is sent whole;
 | `itemType` | `file` or `image` | `file` or `image` |
 | `file` | The file | — |
 | `uploadId` | — | The UUID the parts were sent under |
-| `partCount` | — | How many parts (1 to 3) |
+| `partCount` | — | How many parts (1 to 5) |
 | `fileName`, `mimeType` | — | The file's name and declared type |
 
 From parts, the server reads `{userId}/parts/{uploadId}/0…n` back from storage, joins them (refusing a missing part or a total over the type's limit), runs the same checks as a whole file, and deletes the parts whether or not the file was accepted.
@@ -46,7 +46,7 @@ Limits per type are in the [file uploads flow](../architecture/flows/file-upload
 
 ## `PUT /api/upload/part`
 
-`?uploadId={uuid}&index={0–2}`, with up to 4 MB of the file's raw bytes as the body. Stores the part at `{userId}/parts/{uploadId}/{index}` until `POST /api/upload` joins it. Nothing is checked as a file until then; parts that are never joined are deleted by the weekly sweep once they are a day old.
+`?uploadId={uuid}&index={0–4}`, with up to 4 MB of the raw bytes as the body. Stores the part at `{userId}/parts/{uploadId}/{index}` until `POST /api/upload` (a file) or `POST /api/import` (a ZIP) joins it. The token API has the same route for the desktop app, [`PUT /api/v1/files/part`](token-api.md#put-apiv1filespart). Nothing is checked as a file until then; parts that are never joined are deleted by the weekly sweep once they are a day old.
 
 | Status | When |
 |---|---|

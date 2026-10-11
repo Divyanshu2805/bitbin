@@ -6,4 +6,4 @@ What is left to do, the trade-offs its design accepts, and behaviour worth knowi
 |---|---|
 | [Constraints and trade-offs](constraints-and-trade-offs.md) | Structural limits of the current design: what would have to change to scale or harden it |
 | [App behavior](app-behavior.md) | Responses and UI behaviour that are easy to mistake for bugs |
-| [Remaining work](remaining-work.md) | What is left before the project is finished |
+| [Remaining work](remaining-work.md) | What is left (nothing, as of 2026-10-11) |

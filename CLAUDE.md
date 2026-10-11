@@ -92,7 +92,7 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **Scripts that delete or overwrite data call `assertSafeToRunDestructive`** (`lib/db-safety.ts`). `console.error` is the error channel: Sentry captures it, so log the real error there and return a generic message.
 - **Email tokens are stored hashed** (`lib/tokens.ts`); only the emailed link holds the raw value.
 - **After `npm run db:migrate`, run `npm run db:generate`** — Prisma 7 doesn't regenerate the client on migrate.
-- **Vercel refuses request and unstreamed response bodies over about 4.5 MB**, before the code runs. Send large responses as streams (`streamFromR2`, the ZIP export); large web uploads go in 4 MB parts (`lib/upload-parts.ts`, `PUT /api/upload/part`). The ZIP import and the desktop app stop at 4 MB.
+- **Vercel refuses request and unstreamed response bodies over about 4.5 MB**, before the code runs. Send large responses as streams (`streamFromR2`, the ZIP export); any upload over 4 MB goes in 4 MB parts (`lib/upload-parts.ts`; `PUT /api/upload/part`, `PUT /api/v1/files/part`), joined by `lib/upload-assembly.ts` in the route that uses them (`/api/upload`, `/api/import`, `/api/v1/files`).
 
 ## Practices
 

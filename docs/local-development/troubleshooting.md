@@ -13,7 +13,7 @@
 | Creating an item fails with "Failed to create item" on a fresh database | The system item types are missing. Run `npm run db:seed` |
 | Uploads fail with 500 | An `R2_*` variable is missing (`R2_ACCOUNT_ID`, the key pair, `R2_BUCKET_NAME` or `R2_PUBLIC_URL`) |
 | Uploads fail with 403 | The account isn't Pro. Files and images are Pro-only |
-| ZIP import says the file is too large | ZIP imports stop at 4 MB, the host's request-body limit. Export one collection at a time, or, into the same account, import the JSON instead (its files and images keep pointing at your stored copies) |
+| ZIP import says the file is too large | ZIP imports stop at 20 MB. Export one collection at a time, or, into the same account, import the JSON instead (its files and images keep pointing at your stored copies) |
 | A desktop or script request answers 403 "This token isn't allowed to do that" | The token lacks that permission. Create one with it in **Settings → Browser extension**; the desktop app needs *Save files and images* to attach files |
 | Images or downloads fail (404 or 500 from `/api/download`) | The R2 credentials can't read the bucket (the token needs *Object Read & Write*), or `R2_PUBLIC_URL` was changed after files were uploaded, so the stored URLs no longer map to keys |
 | AI buttons return an error | `AI_API_KEY` (or `OPENAI_API_KEY`) is missing, the account isn't Pro, or the 20 / hour AI limit was hit |

@@ -84,16 +84,17 @@ Session and Pro required, and refused for the demo account. Multipart form:
 | Field | Value |
 |---|---|
 | `mode` | `preview` or `import` |
-| `file` | The export ZIP, at most 4 MB (hosts refuse larger request bodies) |
+| `file` | The export ZIP, if it is 4 MB or less (hosts refuse larger request bodies) |
+| `uploadId`, `partCount` | Instead of `file`, for a ZIP of up to 20 MB already sent in parts to [`PUT /api/upload/part`](items-and-files.md#put-apiuploadpart). A preview leaves the parts in place; the import deletes them |
 | `skipDuplicates` | `import` only. Anything but `false` skips items the account already has |
 
 | Status | When |
 |---|---|
 | `200` | `preview`: `{ success: true, data: { …counts, fileCount } }`. `import`: `{ success: true, data: { itemsImported, itemsSkipped, collectionsImported, collectionsSkipped }, warning }`, where `warning` names the first file that couldn't be restored, if any |
-| `400` | A bad `mode`, no file, not a ZIP, an archive over a limit (8 MB manifest, 10 MB per file, 100 files, 40 MB inflated), or a manifest that isn't a BitBin export |
+| `400` | A bad `mode`, no file, a missing part, not a ZIP, an archive over a limit (8 MB manifest, 10 MB per file, 100 files, 40 MB inflated), or a manifest that isn't a BitBin export |
 | `401` | No session |
 | `403` | Not Pro, the demo account, or a cross-site request |
-| `413` | The ZIP is over 4 MB |
+| `413` | A `file` over 4 MB (send it in parts), or a ZIP over 20 MB |
 | `429` | Over the `importPreview` (20 / hour) or `import` (5 / hour) limit |
 | `500` | The import failed and was rolled back; the files it had stored are deleted again |
 

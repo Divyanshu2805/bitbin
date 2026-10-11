@@ -6,15 +6,15 @@ Measured figures for BitBin, each with how to re-check it. Nothing here is an es
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 903 across 77 files (Vitest), all passing | `npm run test` |
-| Desktop app tests | 41 (`node:test`), all passing | `cd desktop && npm test` |
-| Statement coverage | 85.0% (2,309 of 2,718) | `npm run test:coverage` |
-| Branch coverage | 85.0% (1,468 of 1,727) | same |
-| Line coverage | 85.2% (2,065 of 2,423) | same |
-| Function coverage | 75.1% (328 of 437) | same |
+| Unit tests | 914 across 78 files (Vitest), all passing | `npm run test` |
+| Desktop app tests | 44 (`node:test`), all passing | `cd desktop && npm test` |
+| Statement coverage | 85.2% (2,353 of 2,761) | `npm run test:coverage` |
+| Branch coverage | 85.3% (1,501 of 1,760) | same |
+| Line coverage | 85.4% (2,106 of 2,465) | same |
+| Function coverage | 75.5% (333 of 441) | same |
 | Coverage floor enforced in CI | 80% statements, branches and lines; 70% functions | `vitest.config.ts` |
 | Scope of coverage | `src/actions`, `src/lib`, `src/app/api` (server code); components are checked in the browser | `vitest.config.ts` |
-| Route handlers with tests | 25 of 25 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
+| Route handlers with tests | 26 of 26 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
 | CI checks per push | 4: production dependency audit, lint, tests with the coverage floor, build | `.github/workflows/ci.yml` |
 | Concurrency-tested behaviours | Free-plan item and collection caps, single-use email links | `plan-limits.test.ts`, `tokens.test.ts` |
 
@@ -84,11 +84,11 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 |---|---|
 | Free plan | 50 items, 3 collections |
 | Pro plan | unlimited; $8 / month or $72 / year |
-| Upload size | images 5 MB, other files 10 MB (files over 4 MB are sent in 4 MB parts); 4 MB from the desktop app and in a ZIP import |
+| Upload size | images 5 MB, other files 10 MB, from the web and the desktop app; anything over 4 MB is sent in 4 MB parts |
 | Download and export size | unlimited (streamed) |
 | Item fields | content 500,000 characters; title 200; description 1,000; 20 tags of 50 characters |
 | JSON import | 5,000 items and 5,000 collections per file |
-| ZIP import | 4 MB, 100 files |
+| ZIP import | 20 MB, 100 files |
 | Search | 20 items and 8 collections per answer; previews are the first 100 characters, cut in SQL |
 | Page size | 21 items or collections; any caller-supplied limit is capped at 100 rows |
 | AI input | the first 2,000 characters of an item |
@@ -102,7 +102,7 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 | Application source (TypeScript and TSX, without tests or generated code) | about 29,700 lines |
 | Test code | about 11,600 lines |
 | Database models / migrations | 10 / 9 |
-| Route handlers / server actions | 26 (including NextAuth's) / 28 |
+| Route handlers / server actions | 27 (including NextAuth's) / 28 |
 | React components | 143 |
 | Item types | 7 (snippet, prompt, command, note, file, image, link) |
 | Clients of the token API | 2 (browser extension, desktop app) |

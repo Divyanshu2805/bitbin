@@ -38,10 +38,10 @@ The full shape is in the [export format](../../api/export-format.md).
 
 ## Importing a ZIP (Pro)
 
-A ZIP is bytes, which a server action can't carry, so it goes to `POST /api/import` as a multipart form, first with `mode=preview` and then `mode=import`.
+A ZIP is bytes, which a server action can't carry, so it goes to `POST /api/import` as a multipart form, first with `mode=preview` and then `mode=import`. A ZIP over 4 MB is first sent in 4 MB parts to `PUT /api/upload/part`, once; both requests then name the parts (`uploadId`, `partCount`) instead of carrying the file, and the import deletes them.
 
 1. The route checks the origin, the session, the demo account and Pro, then the `importPreview` or `import` rate limit.
-2. `readImportZip` (`src/lib/zip-import.ts`) inflates the archive with every limit enforced as it goes: 4 MB compressed, 8 MB for the manifest, 10 MB per file, 100 files and 40 MB in total. A ZIP bomb is stopped at the byte count rather than trusted to declare its own size.
+2. `readImportZip` (`src/lib/zip-import.ts`) inflates the archive with every limit enforced as it goes: 20 MB compressed, 8 MB for the manifest, 10 MB per file, 100 files and 40 MB in total. A ZIP bomb is stopped at the byte count rather than trusted to declare its own size.
 3. The manifest is validated like a JSON import.
 4. `restoreZipFiles` (`src/lib/zip-restore.ts`) passes each file through `ingestFile`, the same checks as an upload, and stores it in the caller's own folder. Items an import would skip as duplicates aren't restored; a file item whose bytes are missing or refused is dropped rather than imported as an empty shell, and the first reason is returned as a `warning`.
 5. `importLibrary` writes everything in one transaction. If it fails, the files just stored are deleted again.

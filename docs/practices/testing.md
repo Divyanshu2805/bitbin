@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-903 tests in 77 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+914 tests in 78 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -21,7 +21,7 @@ npm run test:watch   # watch mode
 | Pagination | `src/lib/keyset.test.ts` | Cursor round trips, bad cursors, `after` / `before`, page edges |
 | AI | `src/actions/ai.test.ts`, `src/lib/ai-json.test.ts`, `src/lib/openai.test.ts`, `src/app/api/v1/ai/*/route.test.ts` | Auth and Pro guards, validation, rate limiting, prompts, JSON mode with a fallback, JSON found in fences and sentences, the `AI_API_KEY` / `OPENAI_API_KEY` names, the token endpoints' status codes |
 | API tokens and `/api/v1` | `src/actions/api-tokens.test.ts`, `src/lib/api-tokens.test.ts`, `src/lib/api-auth.test.ts`, `src/app/api/v1/*/route.test.ts` | Pro guard, token limit, hash-only storage, expiry, scopes per endpoint, scoped revoke; Bearer parsing; `401` / `403` / `413` / `429`; `POST /api/v1/files` cleaning up after a failed create |
-| Files | `src/lib/r2.test.ts`, `file-ingest.test.ts`, `image-sanitize.test.ts`, `file-url.test.ts`, `upload-parts.test.ts`, `src/app/api/upload/route.test.ts`, `upload/part/route.test.ts`, `download/[...path]/route.test.ts` | Validation and signatures, EXIF stripped by a real `sharp` round trip, decompression bombs refused, key parsing; uploads in parts (ids, indexes, sizes, joining in order, missing parts, cleanup); ownership (`403` for another user's file), streamed downloads with their length, attachment headers, the sandboxed `?inline=1` preview |
+| Files | `src/lib/r2.test.ts`, `file-ingest.test.ts`, `image-sanitize.test.ts`, `file-url.test.ts`, `upload-parts.test.ts`, `src/app/api/upload/route.test.ts`, `upload/part/route.test.ts`, `v1/files/part/route.test.ts`, `download/[...path]/route.test.ts` | Validation and signatures, EXIF stripped by a real `sharp` round trip, decompression bombs refused, key parsing; uploads in parts (ids, indexes, sizes, joining in order, missing parts, cleanup); ownership (`403` for another user's file), streamed downloads with their length, attachment headers, the sandboxed `?inline=1` preview |
 | Orphan sweep | `src/lib/orphan-sweep.test.ts`, `src/app/api/cron/sweep-files/route.test.ts` | Only old, upload-shaped, unreferenced objects, and abandoned upload parts; the abort when most of the bucket looks orphaned; dry runs; the cron secret |
 | Export | `src/lib/db/export.test.ts`, `export-files.test.ts`, `export-zip.test.ts`, `src/app/api/export/route.test.ts` | Whole-library and per-collection data, the ZIP returned as a stream, its folders, extensions and safe unique names, `zipPath`, never reading another user's object |
 | Import | `src/actions/import.test.ts`, `src/lib/import-utils.test.ts`, `zip-import.test.ts`, `zip-restore.test.ts`, `src/app/api/import/route.test.ts` | Manifest validation, duplicates, dates, Free limits, input hardening; ZIP signature, size caps while inflating, restoring files through the upload checks, rollback cleanup |
@@ -47,7 +47,7 @@ Check these by hand when a change touches them:
 
 - Route handlers are unit-tested, but not against real services (R2, Stripe, Resend); try those in test mode. The route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/auth` or `@/lib/api-auth`, Prisma and the library underneath.
 - The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
-- The desktop app (`desktop/`): `cd desktop && npm test` runs its 41 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
+- The desktop app (`desktop/`): `cd desktop && npm test` runs its 44 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
 - NextAuth callbacks and `proxy.ts`.
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.
