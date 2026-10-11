@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="BitBin" width="820" />
+  <a href="https://bitbin.divyanshuagrahari.dev"><img src="docs/assets/screenshots/landing.webp" alt="The BitBin landing page: 'Every prompt you copy-paste twice, in one bin', with the app's dashboard below" width="900" /></a>
 </p>
 
 <p align="center">
