@@ -59,4 +59,3 @@ A ZIP is bytes, which a server action can't carry, so it goes to `POST /api/impo
 
 - [Export endpoint and format](../../api/export-format.md)
 - [Import actions](../../api/server-actions.md#import-and-export)
-- [Constraints](../../known-gaps/constraints-and-trade-offs.md#data-and-scale)

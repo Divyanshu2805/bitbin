@@ -42,9 +42,3 @@ Ctrl+Alt+B (global), the tray icon, or a second launch of the app
 | Language picker | Yes, pre-filled by `guessLanguage` | No; detected by the API |
 | Files and images | No | Yes: the file picker, a drop, or a copied screenshot |
 | Install | ZIP from Settings | Installer from Settings (Windows); source elsewhere |
-
-## Constraints
-
-- A file over 4 MB is cut into 4 MB parts (`splitParts`), each sent to `PUT /api/v1/files/part`, and the save request names them, because hosts refuse request bodies over about 4.5 MB. The limits are the server's: 5 MB for images, 10 MB for files.
-- The clipboard read is asynchronous in Electron 44 and must be awaited; see the [known limits](../../../desktop/README.md#known-limits).
-- Unsigned builds, so SmartScreen warns on first launch, and no auto-update.

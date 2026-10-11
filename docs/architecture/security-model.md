@@ -73,10 +73,6 @@ Free / Pro limits are enforced on the server; the UI only mirrors them.
 - Expensive or abusable endpoints are rate limited: the public auth endpoints, search, import, export, checkout, the portal, item, collection and tag changes, uploads, AI and the token API — see [errors and rate limits](../api/errors-and-rate-limits.md#rate-limits).
 - Responses carry `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, a strict `Referrer-Policy`, `Permissions-Policy`, HSTS and a **Content Security Policy** (`src/lib/csp.ts`, applied from `next.config.ts`): everything may load only from this site (plus GitHub's avatar host for profile pictures), `connect-src 'self'` so injected code can't send data elsewhere, no `eval`, no plugins, `frame-ancestors 'self'`. The code editor is served from `/monaco/` on this site rather than a CDN, so no third-party script runs in the page. File downloads keep a minimal policy so previews work. See the trade-off below and [ADR 0010](decisions/0010-content-security-policy-without-script-nonces.md).
 
-### What the policy does not do
-
-`script-src` still allows `'unsafe-inline'`, so an injected inline script would run. A strict policy needs a per-request nonce on every inline script, and a nonce forces every page to render dynamically, which gives up the static homepage, auth and legal pages. The pages that show other people's text (items, collections) render it through React, which escapes it, and markdown is rendered without raw HTML, so there is no known injection to defend against; the policy limits what an injection could do, it isn't the only protection.
-
 ## Files
 
 - Uploads are stored under `{userId}/{timestamp}-{sanitised name}` in R2.

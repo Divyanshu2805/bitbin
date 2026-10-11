@@ -62,7 +62,7 @@ A task-oriented index into the code. Each row names the files to start from; fol
 | Navigation | `components/layout/sidebar-nav.tsx` (shared by desktop and mobile), `top-bar.tsx`, `status-bar.tsx`; the sidebar's data is loaded in `src/app/(app)/layout.tsx` |
 | Keyboard shortcuts | `lib/constants/shortcuts.ts` (the list), `hooks/use-hotkey.ts`, `layout/app-shortcuts.tsx` (G-sequences, 1–7, `[`, `?`), `top-bar.tsx`, `items/items-page-header.tsx`, `items/item-drawer.tsx` |
 | Homepage | `src/app/page.tsx`, `components/homepage/*` |
-| Logo and favicon | `components/shared/logo.tsx`, `src/app/icon.svg`, the README banner in `docs/assets/` |
+| Logo, favicon and README images | `components/shared/logo.tsx`, `src/app/icon.svg`; the README screenshots in `docs/assets/screenshots/` |
 
 ## Data and infrastructure
 

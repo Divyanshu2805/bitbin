@@ -33,12 +33,5 @@ CommandPalette (cmdk dialog) → PaletteBody (mounted only while open)
 | `src/components/search/command-palette.tsx` | UI, debounce, stale-answer handling |
 | `src/components/ui/command.tsx` | shadcn wrapper around `cmdk` |
 
-## Limitations
-
-- It is a substring match, not fuzzy: "dbnc" won't find "debounce". (cmdk's fuzzy matching was too loose, so the original palette was substring-only too.)
-- Ranking is simple: title matches first, then recency. There is no relevance score across content, description and tags.
-- Searches under three characters can't use the trigram index and scan the user's rows; that is fine at personal-library sizes.
-
 ## Related
 
-- [Constraints and trade-offs](../../known-gaps/constraints-and-trade-offs.md#data-and-scale)

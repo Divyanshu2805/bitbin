@@ -67,12 +67,6 @@ Besides the web UI, two small programs outside the Next build talk to BitBin thr
 - the Chrome / Edge **extension** (`extension/`) saves the selected text on a page — [flow](flows/save-from-extension.md);
 - the Electron **desktop tray app** (`desktop/`) saves the clipboard, a screenshot or a file from a global shortcut — [flow](flows/save-from-desktop.md).
 
-## What BitBin is not
-
-- **Not multi-user within an account.** Every row belongs to exactly one user; there is no sharing, team or public link.
-- **Not offline.** Every read and write goes to the server; there is no client cache beyond what React holds for the current page.
-- **Not a public API.** Server actions and most route handlers are for BitBin's own UI. The one exception is the small, versioned [token API](../api/token-api.md) (`/api/v1`) used by the extension and the desktop app; it stays backward compatible for them.
-
 ## Related
 
 - [Module map](module-map.md) — the folders and routes behind each layer.

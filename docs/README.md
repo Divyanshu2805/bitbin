@@ -20,7 +20,6 @@ Everything about how BitBin works, how it is built, and how to run and change it
 - [Browser extension](../extension/README.md) — the Chrome / Edge "save from anywhere" extension: files, installing, loading it locally.
 - [Desktop tray app](../desktop/README.md) — the Electron app that saves the clipboard or a file from a global shortcut: files, running, packaging, releasing.
 - [Project metrics](metrics.md) — measured quality, accessibility, security and scale figures, and how to re-check them.
-- [Known gaps](known-gaps/README.md) — constraints, trade-offs, behaviour that looks like a bug, and the remaining work.
 
 ## Contributing
 

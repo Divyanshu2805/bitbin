@@ -40,7 +40,7 @@ The sweep also deletes upload parts more than a day old (a large web upload that
 
 Errors worth an alert, all logged with `console.error` and so reaching Sentry: `Rate limit check failed` (Redis is erroring, so sign-in is refused), `Error handling <event>` from the Stripe webhook, `Demo reset failed`, `File sweep aborted` / `File sweep failed`. `Upstash Redis not configured` is a warning, so it only shows in Vercel's logs; the smoke test checks for it.
 
-There are no uptime checks or metrics endpoints. The [constraints](../known-gaps/constraints-and-trade-offs.md#operations) page lists what that leaves out.
+There are no uptime checks or metrics endpoints.
 
 ## Backups and restore
 

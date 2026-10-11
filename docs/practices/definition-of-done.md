@@ -30,5 +30,5 @@ A change is ready to merge when every line that applies is true.
 
 ## Docs
 
-- [ ] Any page in `docs/` the change makes inaccurate is updated in the same change — including the [API reference](../api/README.md), [data model](../schema/README.md) and [known gaps](../known-gaps/README.md).
+- [ ] Any page in `docs/` the change makes inaccurate is updated in the same change — including the [API reference](../api/README.md), [data model](../schema/README.md) and [project metrics](../metrics.md).
 - [ ] New environment variables are in `.env.example` and the [configuration](../local-development/configuration.md) page.

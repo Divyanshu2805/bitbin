@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="BitBin" width="820" />
+  <a href="https://bitbin.divyanshuagrahari.dev"><img src="docs/assets/screenshots/dashboard.webp" alt="BitBin dashboard" width="820" /></a>
 </p>
 
 <p align="center">
@@ -13,7 +13,10 @@
   <img src="https://img.shields.io/badge/React-19-0a0b0d?logo=react" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Neon-0a0b0d?logo=postgresql" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Stripe-Billing-0a0b0d?logo=stripe" alt="Stripe" />
+  <img src="https://img.shields.io/badge/Electron-Desktop-0a0b0d?logo=electron" alt="Electron" />
 </p>
 
 <p align="center">
@@ -34,10 +37,6 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 | **Upgrading** | Production runs Stripe in **test mode**: use card `4242 4242 4242 4242`, any future date and any CVC. No money moves |
 
 ## Screenshots
-
-<p align="center">
-  <img src="docs/assets/screenshots/dashboard.webp" alt="The dashboard: library stats, usage by type, pinned items and the sidebar with types and collections" width="900" />
-</p>
 
 | | |
 |---|---|
@@ -211,10 +210,6 @@ Live at [bitbin.divyanshuagrahari.dev](https://bitbin.divyanshuagrahari.dev). Ve
 
 See [deployment](docs/deployment/README.md), [operations](docs/deployment/operations.md) and the [smoke test](docs/deployment/smoke-test.md).
 
-## Known limitations
-
-Deliberately not built: end-to-end tests, per-device session lists, email change and OAuth account linking, custom item types, sharing, relevance-ranked or fuzzy search, Stripe live mode, store-published extension builds, and signed, auto-updating desktop builds. The host refuses request bodies over about 4.5 MB, so uploads (web, desktop and ZIP import) over 4 MB go up in 4 MB parts, and downloads and ZIP exports are streamed. The legal pages are generic rather than lawyer-reviewed. The trade-offs the design accepts are in [constraints and trade-offs](docs/known-gaps/constraints-and-trade-offs.md).
-
 ## Documentation
 
 Everything lives in [`docs/`](docs/README.md):
@@ -229,7 +224,6 @@ Everything lives in [`docs/`](docs/README.md):
 | [Browser extension](extension/README.md) · [Desktop app](desktop/README.md) | What they do, installing, running locally, releasing |
 | [Engineering practices](docs/practices/README.md) | Conventions, guardrails, testing and CI, design system, pitfalls, definition of done |
 | [Project metrics](docs/metrics.md) | Measured quality, accessibility, security and scale figures |
-| [Known gaps](docs/known-gaps/README.md) | Trade-offs, behaviour that looks like a bug, remaining work |
 | [Deployment](docs/deployment/README.md) | Vercel, CI, provider callbacks, operations, smoke test |
 | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) | Workflow and checks; reporting a vulnerability |
 

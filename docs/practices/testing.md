@@ -41,7 +41,7 @@ npm run test:watch   # watch mode
 - Assert on the `ActionResult` (`success`, `error`, `data`), not on implementation details.
 - The `@/` alias works in tests.
 
-## Not covered by tests
+## Checked by hand
 
 Check these by hand when a change touches them:
 

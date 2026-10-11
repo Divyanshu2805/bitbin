@@ -37,4 +37,3 @@ GitHub's secret scanning with push protection is on for the repository.
 - [Configuration](../local-development/configuration.md) — every environment variable.
 - [Migrations and seeding](../schema/migrations-and-seeding.md)
 - [Testing](../practices/testing.md#coverage-and-ci) — what CI runs and the coverage floor.
-- [Constraints and trade-offs](../known-gaps/constraints-and-trade-offs.md#operations) — what operating BitBin doesn't do yet.

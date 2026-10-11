@@ -31,7 +31,7 @@ Stripe calls `POST /api/webhooks/stripe`. The handler reads the raw body, verifi
 | `invoice.payment_failed` | Logged only |
 | `customer.subscription.updated` / `.deleted` | Syncs the plan for that customer |
 
-**Syncing the plan** lists the customer's subscriptions from Stripe and sets `isPro` to whether one is `active` or `trialing`, with `stripeSubscriptionId` set to that subscription (or `null`). The event only says whose plan changed, so a retried or out-of-order event can't leave the wrong plan. A handler error returns `500`, so Stripe retries ([trade-offs](../../known-gaps/constraints-and-trade-offs.md#billing)).
+**Syncing the plan** lists the customer's subscriptions from Stripe and sets `isPro` to whether one is `active` or `trialing`, with `stripeSubscriptionId` set to that subscription (or `null`). The event only says whose plan changed, so a retried or out-of-order event can't leave the wrong plan. A handler error returns `500`, so Stripe retries.
 
 ## Sharing a Stripe account with other apps
 

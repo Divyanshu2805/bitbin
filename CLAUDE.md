@@ -22,7 +22,6 @@ These are authoritative and kept current:
 | Tables, item types, migrations | [`docs/schema/`](docs/schema/README.md) |
 | Every route handler and server action, errors, rate limits | [`docs/api/`](docs/api/README.md) |
 | Setup, configuration, troubleshooting | [`docs/local-development/`](docs/local-development/README.md) |
-| Constraints, trade-offs, what isn't built yet | [`docs/known-gaps/`](docs/known-gaps/README.md) |
 | Vercel, provider callbacks, crons, releases | [`docs/deployment/`](docs/deployment/README.md), [`operations.md`](docs/deployment/operations.md) |
 | What the app does, and its numbers | [`docs/features.md`](docs/features.md), [`docs/metrics.md`](docs/metrics.md) |
 
