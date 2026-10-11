@@ -5,7 +5,9 @@ import { strToU8, zipSync } from 'fflate';
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/prisma', () => ({ prisma: {} }));
 
-const { checkRateLimit, importLibrary, restore, deleteFromR2 } = vi.hoisted(() => ({
+const { checkRateLimit, importLibrary, restore, deleteFromR2, getPart, deleteKeys } = vi.hoisted(() => ({
+  getPart: vi.fn(),
+  deleteKeys: vi.fn(),
   checkRateLimit: vi.fn(),
   importLibrary: vi.fn(),
   restore: vi.fn(),
@@ -17,7 +19,7 @@ vi.mock('@/lib/rate-limit', () => ({
 }));
 vi.mock('@/lib/db/import', () => ({ importLibrary }));
 vi.mock('@/lib/zip-restore', () => ({ restoreZipFiles: restore }));
-vi.mock('@/lib/r2', () => ({ deleteFromR2 }));
+vi.mock('@/lib/r2', () => ({ deleteFromR2, getFromR2: getPart, deleteR2Keys: deleteKeys }));
 
 import { POST } from './route';
 import { auth } from '@/auth';
@@ -131,3 +133,60 @@ describe('POST /api/import', () => {
     expect((await res.json()).error).not.toContain('db down');
   });
 });
+
+describe('POST /api/import with a ZIP sent in parts', () => {
+  const UPLOAD_ID = '0f8b7c1e-2d3a-4b5c-8d9e-0a1b2c3d4e5f';
+  const bytes = zipSync({ 'bitbin-export.json': strToU8(JSON.stringify(manifest)) });
+
+  function postParts(mode: string, partCount = '2') {
+    const form = new FormData();
+    form.set('mode', mode);
+    form.set('uploadId', UPLOAD_ID);
+    form.set('partCount', partCount);
+    return POST(new Request('http://localhost/api/import', { method: 'POST', body: form }));
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuth.mockResolvedValue(pro);
+    checkRateLimit.mockResolvedValue({ success: true });
+    restore.mockImplementation(async (_userId: string, data: unknown) => ({ data, uploadedUrls: [], dropped: 0, firstError: null }));
+    importLibrary.mockResolvedValue({ itemsImported: 1, collectionsImported: 1, itemsSkipped: 0, collectionsSkipped: 0 });
+    deleteKeys.mockResolvedValue(2);
+    const half = Math.ceil(bytes.length / 2);
+    getPart.mockImplementation(async (key: string) => ({
+      body: key.endsWith('/0') ? bytes.subarray(0, half) : bytes.subarray(half),
+      contentType: 'application/octet-stream',
+    }));
+  });
+
+  it('previews from the parts in the user folder and keeps them for the import', async () => {
+    const res = await postParts('preview');
+
+    expect(res.status).toBe(200);
+    expect(getPart).toHaveBeenCalledWith(`user-1/parts/${UPLOAD_ID}/0`);
+    expect((await res.json()).data.totalItems).toBe(1);
+    expect(deleteKeys).not.toHaveBeenCalled();
+  });
+
+  it('imports from the parts and deletes them', async () => {
+    const res = await postParts('import');
+
+    expect(res.status).toBe(200);
+    expect(importLibrary).toHaveBeenCalled();
+    expect(deleteKeys).toHaveBeenCalledWith([`user-1/parts/${UPLOAD_ID}/0`, `user-1/parts/${UPLOAD_ID}/1`]);
+  });
+
+  it('refuses an upload with a part missing', async () => {
+    getPart.mockResolvedValueOnce(null);
+
+    expect((await postParts('import')).status).toBe(400);
+    expect(importLibrary).not.toHaveBeenCalled();
+  });
+
+  it('refuses a bad part count without reading storage', async () => {
+    expect((await postParts('preview', '9')).status).toBe(400);
+    expect(getPart).not.toHaveBeenCalled();
+  });
+});
+

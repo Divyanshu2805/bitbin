@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { previewImport, importData } from '@/actions/import';
 import type { ImportPreview, ImportResult } from '@/lib/import-schema';
+import { needsParts, sendInParts } from '@/components/shared/upload-in-parts';
 
 interface ImportDialogProps {
   open: boolean;
@@ -24,10 +25,18 @@ interface ImportDialogProps {
 
 type ZipPreview = ImportPreview & { fileCount: number };
 
+/** A ZIP in one request, or one already sent in parts (over 4 MB) and named by its upload id. */
+type ZipSource = { file: File } | { uploadId: string; partCount: number };
+
 /** POST a ZIP to the import route; the answer is the route's JSON, or an error message. */
-async function sendZip<T>(file: File, mode: 'preview' | 'import', skipDuplicates = true) {
+async function sendZip<T>(source: ZipSource, mode: 'preview' | 'import', skipDuplicates = true) {
   const form = new FormData();
-  form.set('file', file);
+  if ('file' in source) {
+    form.set('file', source.file);
+  } else {
+    form.set('uploadId', source.uploadId);
+    form.set('partCount', String(source.partCount));
+  }
   form.set('mode', mode);
   form.set('skipDuplicates', String(skipDuplicates));
 
@@ -40,7 +49,7 @@ async function sendZip<T>(file: File, mode: 'preview' | 'import', skipDuplicates
 export default function ImportDialog({ open, onOpenChange, isPro }: ImportDialogProps) {
   const router = useRouter();
   const [fileContent, setFileContent] = useState<string | null>(null);
-  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [zipFile, setZipFile] = useState<ZipSource | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [preview, setPreview] = useState<ZipPreview | ImportPreview | null>(null);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
@@ -78,12 +87,14 @@ export default function ImportDialog({ open, onOpenChange, isPro }: ImportDialog
     setLoading(true);
     try {
       if (isZip) {
-        const result = await sendZip<ZipPreview>(file, 'preview');
+        // Sent once: the preview and the import both read the same parts
+        const source: ZipSource = needsParts(file) ? await sendInParts(file) : { file };
+        const result = await sendZip<ZipPreview>(source, 'preview');
         if (!result.ok) {
           toast.error(result.error);
           return;
         }
-        setZipFile(file);
+        setZipFile(source);
         setFileContent(null);
         setFileName(file.name);
         setPreview(result.data);

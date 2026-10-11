@@ -4,24 +4,8 @@ import { ingestFile } from '@/lib/file-ingest';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { getUserPlan } from '@/lib/db/billing';
 import { rejectCrossSite } from '@/lib/same-origin';
-import { FILE_CONSTRAINTS, deleteR2Keys, getFromR2 } from '@/lib/r2';
-import { MAX_UPLOAD_PARTS, isUploadId, uploadPartKey } from '@/lib/upload-parts';
-
-type Assembled = { ok: true; bytes: Buffer } | { ok: false; error: string };
-
-/** Read an upload's parts back from storage, in order, and join them. */
-async function assembleParts(userId: string, uploadId: string, partCount: number, maxSize: number): Promise<Assembled> {
-  const parts: Uint8Array[] = [];
-  let total = 0;
-  for (let index = 0; index < partCount; index++) {
-    const part = await getFromR2(uploadPartKey(userId, uploadId, index));
-    if (!part) return { ok: false, error: 'The upload is incomplete. Please try again.' };
-    total += part.body.length;
-    if (total > maxSize) return { ok: false, error: `File size exceeds ${maxSize / (1024 * 1024)} MB limit` };
-    parts.push(part.body);
-  }
-  return { ok: true, bytes: Buffer.concat(parts) };
-}
+import { FILE_CONSTRAINTS } from '@/lib/r2';
+import { deleteUploadParts, readPartFields, readUploadParts } from '@/lib/upload-assembly';
 
 /**
  * Store a file for a new file or image item. The form carries either the whole `file`, or, for a
@@ -71,27 +55,24 @@ export async function POST(request: Request) {
     let fileName: string;
     let mimeType: string | undefined;
     let bytes: Buffer;
-    let partKeys: string[] = [];
+    const parts = file instanceof File ? null : readPartFields(formData);
 
     if (file instanceof File) {
       fileName = file.name;
       mimeType = file.type;
       bytes = Buffer.from(await file.arrayBuffer());
     } else {
-      const uploadId = formData.get('uploadId');
-      const partCount = Number(formData.get('partCount'));
       const name = formData.get('fileName');
-      if (!isUploadId(uploadId) || !Number.isInteger(partCount) || partCount < 1 || partCount > MAX_UPLOAD_PARTS) {
+      if (!parts) {
         return NextResponse.json({ error: 'No file provided' }, { status: 400 });
       }
       if (typeof name !== 'string' || name.length === 0 || name.length > 255) {
         return NextResponse.json({ error: 'Invalid file name' }, { status: 400 });
       }
 
-      partKeys = Array.from({ length: partCount }, (_, index) => uploadPartKey(session.user.id, uploadId, index));
-      const assembled = await assembleParts(session.user.id, uploadId, partCount, FILE_CONSTRAINTS[itemType].maxSize);
+      const assembled = await readUploadParts(session.user.id, parts.uploadId, parts.partCount, FILE_CONSTRAINTS[itemType].maxSize);
       if (!assembled.ok) {
-        await deleteR2Keys(partKeys).catch((error) => console.error('Upload part cleanup failed:', error));
+        await deleteUploadParts(session.user.id, parts.uploadId, parts.partCount);
         return NextResponse.json({ error: assembled.error }, { status: 400 });
       }
       fileName = name;
@@ -103,10 +84,8 @@ export async function POST(request: Request) {
     // Size, type, content, image re-encoding and the upload itself
     const result = await ingestFile({ userId: session.user.id, itemType, fileName, bytes, mimeType });
 
-    // The parts have served their purpose either way (the weekly sweep catches any this misses)
-    if (partKeys.length > 0) {
-      await deleteR2Keys(partKeys).catch((error) => console.error('Upload part cleanup failed:', error));
-    }
+    // The parts have served their purpose either way
+    if (parts) await deleteUploadParts(session.user.id, parts.uploadId, parts.partCount);
 
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 400 });

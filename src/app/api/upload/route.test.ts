@@ -215,7 +215,7 @@ describe('POST /api/upload, putting a large file together from its parts', () =>
 
   it('refuses a bad upload id, part count or file name without reading storage', async () => {
     expect((await finish({ uploadId: '../user-2/x', partCount: '1', fileName: 'a.pdf' })).status).toBe(400);
-    expect((await finish({ uploadId: UPLOAD_ID, partCount: '4', fileName: 'a.pdf' })).status).toBe(400);
+    expect((await finish({ uploadId: UPLOAD_ID, partCount: '6', fileName: 'a.pdf' })).status).toBe(400);
     expect((await finish({ uploadId: UPLOAD_ID, partCount: '1' })).status).toBe(400);
     expect(getPart).not.toHaveBeenCalled();
   });

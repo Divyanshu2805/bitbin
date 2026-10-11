@@ -12,13 +12,15 @@ import {
 import { MAX_IMPORT_ZIP_BYTES, looksLikeZip, readImportZip } from '@/lib/zip-import';
 import { restoreZipFiles } from '@/lib/zip-restore';
 import { deleteFromR2 } from '@/lib/r2';
+import { deleteUploadParts, readPartFields, readUploadParts } from '@/lib/upload-assembly';
+import { UPLOAD_PART_BYTES } from '@/lib/upload-parts';
 
 // Room for the form fields around the ZIP itself
 const FORM_OVERHEAD_BYTES = 64 * 1024;
 
 const tooLarge = () =>
   NextResponse.json(
-    { error: `ZIP files up to ${MAX_IMPORT_ZIP_BYTES / (1024 * 1024)} MB can be imported. Import the JSON file instead, or split the export.` },
+    { error: `ZIP files up to ${MAX_IMPORT_ZIP_BYTES / (1024 * 1024)} MB can be imported. Export one collection at a time, or import the JSON file instead.` },
     { status: 413 }
   );
 
@@ -26,6 +28,10 @@ const tooLarge = () =>
  * Import from an export ZIP: the manifest plus the files and images inside it. `mode=preview` reads
  * the ZIP and reports what it holds; `mode=import` writes it. A ZIP is bytes, which a server action
  * can't carry, so this is a route handler. Pro only, like ZIP export, because it restores files.
+ *
+ * The form carries the `file` itself (up to 4 MB), or the `uploadId` and `partCount` of a larger
+ * ZIP already sent to PUT /api/upload/part. A preview leaves the parts in place for the import that
+ * follows; the import deletes them.
  */
 export async function POST(request: Request) {
   try {
@@ -46,9 +52,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ZIP import requires a Pro subscription' }, { status: 403 });
     }
 
-    // Refuse an oversized body before reading it
+    // Refuse an oversized body before reading it: a ZIP over one part's size comes in parts
     const declared = Number(request.headers.get('content-length'));
-    if (Number.isFinite(declared) && declared > MAX_IMPORT_ZIP_BYTES + FORM_OVERHEAD_BYTES) {
+    if (Number.isFinite(declared) && declared > UPLOAD_PART_BYTES + FORM_OVERHEAD_BYTES) {
       return tooLarge();
     }
 
@@ -64,12 +70,25 @@ export async function POST(request: Request) {
     }
 
     const file = form.get('file');
-    if (!(file instanceof File)) {
+    const parts = file instanceof File ? null : readPartFields(form);
+    let bytes: Uint8Array;
+    if (file instanceof File) {
+      // One request carries at most one part's worth; a bigger ZIP must come in parts
+      if (file.size > UPLOAD_PART_BYTES) return tooLarge();
+      bytes = new Uint8Array(await file.arrayBuffer());
+    } else if (parts) {
+      const assembled = await readUploadParts(session.user.id, parts.uploadId, parts.partCount, MAX_IMPORT_ZIP_BYTES);
+      if (!assembled.ok) {
+        await deleteUploadParts(session.user.id, parts.uploadId, parts.partCount);
+        return NextResponse.json({ error: assembled.error }, { status: 400 });
+      }
+      bytes = new Uint8Array(assembled.bytes);
+    } else {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
-    if (file.size > MAX_IMPORT_ZIP_BYTES) return tooLarge();
+    // The import consumes the parts (the bytes are in memory now); a preview keeps them for it
+    if (parts && mode === 'import') await deleteUploadParts(session.user.id, parts.uploadId, parts.partCount);
 
-    const bytes = new Uint8Array(await file.arrayBuffer());
     if (!looksLikeZip(bytes)) {
       return NextResponse.json({ error: 'This is not a ZIP file' }, { status: 400 });
     }

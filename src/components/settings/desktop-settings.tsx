@@ -78,7 +78,7 @@ export default function DesktopSettings({ isPro }: DesktopSettingsProps) {
             >
               releases page
             </a>
-            ) to update. Files and images up to 4 MB.
+            ) to update. Files up to 10 MB and images up to 5 MB.
           </p>
         </div>
       )}

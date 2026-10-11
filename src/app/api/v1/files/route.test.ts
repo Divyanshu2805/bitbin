@@ -10,7 +10,9 @@ vi.mock('@/lib/api-auth', async () => {
   };
 });
 
-const { ingest, createItem, checkRateLimit, deleteFromR2 } = vi.hoisted(() => ({
+const { ingest, createItem, checkRateLimit, deleteFromR2, getPart, deleteKeys } = vi.hoisted(() => ({
+  getPart: vi.fn(),
+  deleteKeys: vi.fn(),
   ingest: vi.fn(),
   createItem: vi.fn(),
   checkRateLimit: vi.fn(),
@@ -22,6 +24,8 @@ vi.mock('@/lib/rate-limit', () => ({ checkRateLimit, formatRetryTime: (s: number
 vi.mock('@/lib/r2', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/r2')>()),
   deleteFromR2,
+  getFromR2: getPart,
+  deleteR2Keys: deleteKeys,
 }));
 
 import { POST } from './route';
@@ -143,3 +147,37 @@ describe('POST /api/v1/files', () => {
     expect((await res.json()).error).toBe('An error occurred while saving the file');
   });
 });
+
+describe('POST /api/v1/files with a file sent in parts', () => {
+  const UPLOAD_ID = '0f8b7c1e-2d3a-4b5c-8d9e-0a1b2c3d4e5f';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthenticate.mockResolvedValue({ user: apiUser, tokenId: 'token-1' });
+    checkRateLimit.mockResolvedValue({ success: true });
+    ingest.mockResolvedValue({ ok: true, fileUrl: 'https://r2.example/user-1/1-big.pdf', fileName: 'big.pdf', fileSize: 8 });
+    createItem.mockResolvedValue({ success: true, data: { id: 'item-1', title: 'big.pdf', itemType: { name: 'file' } } });
+    deleteKeys.mockResolvedValue(2);
+    getPart.mockImplementation(async (key: string) => ({
+      body: new TextEncoder().encode(key.endsWith('/0') ? '%PDF' : '-1.7'),
+      contentType: 'application/octet-stream',
+    }));
+  });
+
+  it('joins the token owner’s parts, checks the result like any upload, and deletes the parts', async () => {
+    const res = await post({ itemType: 'file', uploadId: UPLOAD_ID, partCount: '2', fileName: 'big.pdf' });
+
+    expect(res.status).toBe(201);
+    expect(getPart).toHaveBeenCalledWith(`user-1/parts/${UPLOAD_ID}/1`);
+    expect(ingest).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1', fileName: 'big.pdf', bytes: Buffer.from('%PDF-1.7') }));
+    expect(deleteKeys).toHaveBeenCalledWith([`user-1/parts/${UPLOAD_ID}/0`, `user-1/parts/${UPLOAD_ID}/1`]);
+  });
+
+  it('needs a file name, and every part', async () => {
+    expect((await post({ itemType: 'file', uploadId: UPLOAD_ID, partCount: '2' })).status).toBe(400);
+    getPart.mockResolvedValueOnce(null);
+    expect((await post({ itemType: 'file', uploadId: UPLOAD_ID, partCount: '2', fileName: 'big.pdf' })).status).toBe(400);
+    expect(ingest).not.toHaveBeenCalled();
+  });
+});
+

@@ -7,8 +7,8 @@ import { ZIP_FILES_FOLDER, ZIP_MANIFEST } from '@/lib/zip-format';
  * byte count, not trusted to declare its own size.
  */
 
-/** Largest ZIP accepted. Vercel functions refuse a request body above about 4.5 MB, so this stays under it. */
-export const MAX_IMPORT_ZIP_BYTES = 4 * 1024 * 1024;
+/** Largest ZIP accepted. Over 4 MB it is sent in parts (lib/upload-parts.ts), since the host refuses bigger requests. */
+export const MAX_IMPORT_ZIP_BYTES = 20 * 1024 * 1024;
 /** Largest manifest once inflated */
 export const MAX_MANIFEST_BYTES = 8 * 1024 * 1024;
 /** Largest single stored file (the same cap as an upload) */

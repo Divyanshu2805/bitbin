@@ -4,10 +4,12 @@ import { createItemForUser } from '@/lib/item-create'
 import { ingestFile } from '@/lib/file-ingest'
 import { FILE_CONSTRAINTS, deleteFromR2 } from '@/lib/r2'
 import { checkRateLimit, formatRetryTime } from '@/lib/rate-limit'
+import { deleteUploadParts, readPartFields, readUploadParts } from '@/lib/upload-assembly'
+import { UPLOAD_PART_BYTES } from '@/lib/upload-parts'
 
-// Room for the form fields around the file itself
+// One request carries at most one part's worth (the host refuses more); a bigger file comes in parts
 const FORM_OVERHEAD_BYTES = 64 * 1024
-const MAX_BODY_BYTES = FILE_CONSTRAINTS.file.maxSize + FORM_OVERHEAD_BYTES
+const MAX_BODY_BYTES = UPLOAD_PART_BYTES + FORM_OVERHEAD_BYTES
 
 /** The tags field: a comma-separated string, as the desktop app sends it. */
 function readTags(value: FormDataEntryValue | null): string[] {
@@ -19,10 +21,11 @@ function readText(value: FormDataEntryValue | null): string | undefined {
 }
 
 /**
- * Save a file or an image as a new item in one request (multipart form: `file`, `itemType`
- * "file" | "image", and optionally `title`, `description`, `tags`, `collectionId`). The bytes go
- * through the same checks as a web upload (`ingestFile`) and the item through the same creation
- * path as `POST /api/v1/items`. Needs the `files:write` scope.
+ * Save a file or an image as a new item (multipart form: `file`, `itemType` "file" | "image", and
+ * optionally `title`, `description`, `tags`, `collectionId`). A file over 4 MB is sent first to
+ * `PUT /api/v1/files/part`, and this form then carries `uploadId`, `partCount` and `fileName`
+ * instead of `file`. The bytes go through the same checks as a web upload (`ingestFile`) and the
+ * item through the same creation path as `POST /api/v1/items`. Needs the `files:write` scope.
  */
 export async function POST(request: Request) {
   try {
@@ -52,21 +55,36 @@ export async function POST(request: Request) {
       return apiError('Request body must be a multipart form', 400)
     }
 
-    const file = form.get('file')
-    if (!(file instanceof File)) return apiError('No file provided', 400)
-
     const itemType = form.get('itemType')
     if (itemType !== 'file' && itemType !== 'image') {
       return apiError('itemType must be "file" or "image"', 400)
     }
 
-    const stored = await ingestFile({
-      userId: user.id,
-      itemType,
-      fileName: file.name,
-      bytes: Buffer.from(await file.arrayBuffer()),
-      mimeType: file.type || undefined,
-    })
+    const file = form.get('file')
+    const parts = file instanceof File ? null : readPartFields(form)
+    let fileName: string
+    let mimeType: string | undefined
+    let bytes: Buffer
+    if (file instanceof File) {
+      fileName = file.name
+      mimeType = file.type || undefined
+      bytes = Buffer.from(await file.arrayBuffer())
+    } else if (parts) {
+      const name = form.get('fileName')
+      if (typeof name !== 'string' || name.length === 0 || name.length > 255) {
+        return apiError('fileName is required for an upload sent in parts', 400)
+      }
+      const assembled = await readUploadParts(user.id, parts.uploadId, parts.partCount, FILE_CONSTRAINTS[itemType].maxSize)
+      await deleteUploadParts(user.id, parts.uploadId, parts.partCount)
+      if (!assembled.ok) return apiError(assembled.error, 400)
+      fileName = name
+      mimeType = undefined
+      bytes = assembled.bytes
+    } else {
+      return apiError('No file provided', 400)
+    }
+
+    const stored = await ingestFile({ userId: user.id, itemType, fileName, bytes, mimeType })
     if (!stored.ok) return apiError(stored.error, 400)
 
     const collectionId = readText(form.get('collectionId'))

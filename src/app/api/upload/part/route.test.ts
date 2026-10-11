@@ -57,7 +57,7 @@ describe('PUT /api/upload/part', () => {
     ['a path in the upload id', 'uploadId=../user-2&index=0'],
     ['no upload id', 'index=0'],
     ['a negative index', `uploadId=${UPLOAD_ID}&index=-1`],
-    ['an index past the last part', `uploadId=${UPLOAD_ID}&index=3`],
+    ['an index past the last part', `uploadId=${UPLOAD_ID}&index=5`],
     ['a fractional index', `uploadId=${UPLOAD_ID}&index=0.5`],
   ])('rejects %s', async (_name, query) => {
     expect((await putPart(query)).status).toBe(400);
