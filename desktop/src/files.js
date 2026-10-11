@@ -1,5 +1,5 @@
-// Which files the capture window may attach, and the form that carries one to the token API
-// (POST /api/v1/files). Mirrors FILE_CONSTRAINTS in src/lib/r2.ts: the server is the one that decides,
+// Which files the capture window may attach, and the requests that carry one to the token API:
+// POST /api/v1/files, after PUT /api/v1/files/part for a file too large for one request. Mirrors FILE_CONSTRAINTS in src/lib/r2.ts: the server is the one that decides,
 // but checking here first saves a pointless upload and gives a clear message.
 
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
@@ -11,11 +11,14 @@ const PICKER_EXTENSIONS = [...IMAGE_EXTENSIONS, ...FILE_EXTENSIONS].map((ext) =>
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
+/** The largest file that can be attached: the server's limit for files (images stop at 5 MB). */
+const MAX_UPLOAD_BYTES = MAX_FILE_BYTES;
+
 /**
- * Hosting platforms refuse a request body above about 4.5 MB, so a bigger upload fails before
- * it reaches BitBin. Staying under it turns that into a clear message here.
+ * Hosting platforms refuse a request body above about 4.5 MB, so a bigger file is sent in parts of
+ * this size first (the server's UPLOAD_PART_BYTES), and the save request names them.
  */
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const UPLOAD_PART_BYTES = 4 * 1024 * 1024;
 
 const CONTENT_TYPES = {
   '.png': 'image/png',
@@ -55,8 +58,7 @@ function checkFile(name, size) {
   if (!type) {
     return `BitBin stores ${[...FILE_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', ')} files.`;
   }
-  const serverLimit = type === 'image' ? MAX_IMAGE_BYTES : MAX_FILE_BYTES;
-  const limit = Math.min(serverLimit, MAX_UPLOAD_BYTES);
+  const limit = type === 'image' ? MAX_IMAGE_BYTES : MAX_FILE_BYTES;
   if (!Number.isFinite(size) || size <= 0) return 'That file is empty.';
   if (size > limit) return `That file is too large. The limit is ${Math.round(limit / (1024 * 1024))} MB.`;
   return null;
@@ -87,14 +89,31 @@ function clipboardImageName(now = new Date()) {
   return `clipboard-${date}-${time}.png`;
 }
 
+/** The file cut into parts for `PUT /api/v1/files/part`, or an empty list when it fits in one request. */
+function splitParts(bytes) {
+  if (bytes.length <= UPLOAD_PART_BYTES) return [];
+  const parts = [];
+  for (let start = 0; start < bytes.length; start += UPLOAD_PART_BYTES) {
+    parts.push(bytes.subarray(start, start + UPLOAD_PART_BYTES));
+  }
+  return parts;
+}
+
 /**
- * The multipart body for `POST /api/v1/files`. Only known fields are passed on, so a renderer
- * can't send anything else through the main process.
+ * The multipart body for `POST /api/v1/files`: the file itself, or, when it was sent in parts, the
+ * `uploadId` and `partCount` that name them. Only known fields are passed on, so a renderer can't
+ * send anything else through the main process.
  */
-function buildFileForm(attachment, form) {
+function buildFileForm(attachment, form, parts) {
   const text = (value) => (typeof value === 'string' ? value : '');
   const body = new FormData();
-  body.set('file', new Blob([attachment.bytes], { type: contentTypeFor(attachment.name) }), attachment.name);
+  if (parts) {
+    body.set('uploadId', parts.uploadId);
+    body.set('partCount', String(parts.partCount));
+    body.set('fileName', attachment.name);
+  } else {
+    body.set('file', new Blob([attachment.bytes], { type: contentTypeFor(attachment.name) }), attachment.name);
+  }
   body.set('itemType', attachment.type);
   const title = text(form?.title).trim();
   if (title) body.set('title', title);
@@ -108,6 +127,8 @@ function buildFileForm(attachment, form) {
 
 module.exports = {
   MAX_UPLOAD_BYTES,
+  UPLOAD_PART_BYTES,
+  splitParts,
   PICKER_EXTENSIONS,
   buildFileForm,
   baseName,

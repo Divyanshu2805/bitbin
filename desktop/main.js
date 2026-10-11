@@ -29,6 +29,7 @@ const {
   MAX_UPLOAD_BYTES,
   baseName,
   buildFileForm,
+  splitParts,
   checkFile,
   classifyFile,
   clipboardImageName,
@@ -361,7 +362,17 @@ function registerIpc() {
   handle('capture:collections', () => api('/collections'));
   handle('capture:save', async (_event, form) => {
     if (attachment) {
-      const saved = await api('/files', { method: 'POST', form: buildFileForm(attachment, form) });
+      // A file too large for one request goes up in parts first, and the save names them
+      const parts = splitParts(attachment.bytes);
+      let named;
+      if (parts.length > 0) {
+        const uploadId = crypto.randomUUID();
+        for (const [index, part] of parts.entries()) {
+          await api(`/files/part?uploadId=${uploadId}&index=${index}`, { method: 'PUT', raw: part });
+        }
+        named = { uploadId, partCount: parts.length };
+      }
+      const saved = await api('/files', { method: 'POST', form: buildFileForm(attachment, form, named) });
       attachment = null;
       config.save({ lastCollectionId: typeof form?.collectionId === 'string' ? form.collectionId : '' });
       return saved;

@@ -10,7 +10,7 @@ Electron, plain JavaScript (CommonJS), no build step. The folder has its own `pa
 | `preload.js` | The only bridge to the pages: named calls on `window.bitbin`, never `ipcRenderer` or the token |
 | `src/api.js` | The token API client (`Authorization: Bearer`, no cookies, no redirects, 20 s timeout) and the request-body builders that pass on only known fields |
 | `src/config.js` | Settings in `config.json` under the user-data folder. The token is encrypted with Electron `safeStorage` (DPAPI, Keychain, libsecret); with no keychain it lives in memory until quit |
-| `src/files.js` | Which files can be attached (the server's extension and size rules, capped at 4 MB because hosts refuse larger request bodies), the multipart form for `POST /api/v1/files`, and the clipboard-image file name |
+| `src/files.js` | Which files can be attached (the server's extension and size rules: 5 MB images, 10 MB files), cutting a file over 4 MB into parts for `PUT /api/v1/files/part` (hosts refuse larger request bodies), the multipart form for `POST /api/v1/files`, and the clipboard-image file name |
 | `src/guess.js` | Type and title guessing for the clipboard text. Mirrors `extension/lib.js`; keep the two in sync. No language guessing here: the API detects it for snippets and commands |
 | `renderer/` | `capture.html` / `capture.js` (the save window), `settings.html` / `settings.js` (a two-column window that sizes itself to its content), shared `styles.css` (the website's graphite and lime tokens, thin scrollbars), `fonts/` (Geist and JetBrains Mono, copied from `src/app/fonts`; recopy if the website's change) |
 | `assets/` | `icon.png` and the tray icons, rendered from `src/app/icon.svg` |
@@ -55,7 +55,7 @@ Builds are unsigned, so Windows SmartScreen and macOS Gatekeeper warn on first l
 BitBin's **Settings → Desktop app** links to the newest GitHub Release. To publish one, bump `version` in `package.json` (the settings window shows it), commit, then push a tag:
 
 ```bash
-git tag desktop-v0.2.0 && git push origin desktop-v0.2.0
+git tag desktop-v0.3.0 && git push origin desktop-v0.3.0
 ```
 
 `.github/workflows/desktop-release.yml` runs the tests, builds the Windows installer on a Windows runner and attaches `BitBin-Setup.exe` to a new release. Only Windows is built there; macOS and Linux run from source.
@@ -73,5 +73,5 @@ git tag desktop-v0.2.0 && git push origin desktop-v0.2.0
 - Electron 44's clipboard API is promise-based (`await clipboard.readText()`). Calling it as if it returned a string throws in the main process, and an uncaught error there opens a modal dialog that freezes the whole tray. `main.js` awaits it, falls back to an empty form if the read fails, and logs uncaught errors instead of showing that dialog.
 - The classifier is the extension's, so it has its quirks: three lines starting with `export` read as a shell command, not a snippet.
 - Windows may refuse a shortcut another app already holds; the settings window reports it and keeps the old one.
-- Files and images go through `POST /api/v1/files` and stop at 4 MB (the server allows 5 MB for images and 10 MB for files, but hosts refuse request bodies over about 4.5 MB). A copied image is saved as a PNG; only the first dropped file is attached.
+- Files and images go through `POST /api/v1/files`, up to the server's limits (5 MB for images, 10 MB for files); a file over 4 MB is sent in parts first, so a 10 MB file is four requests. A copied image is saved as a PNG; only the first dropped file is attached.
 - No automatic updates, and the builds aren't signed. Only a Windows installer is published.

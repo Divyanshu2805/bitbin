@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   MAX_UPLOAD_BYTES,
+  UPLOAD_PART_BYTES,
+  splitParts,
   baseName,
   buildFileForm,
   checkFile,
@@ -33,9 +35,28 @@ test('checkFile refuses an unsupported type, an empty file and an oversized one'
   assert.match(checkFile('spec.pdf', Number.NaN), /empty/);
 });
 
-test('checkFile applies the smaller image limit and the platform ceiling', () => {
+test('checkFile applies the server limits: 10 MB for files, 5 MB for images', () => {
+  assert.equal(MAX_UPLOAD_BYTES, 10 * 1024 * 1024);
   assert.equal(checkFile('big.pdf', MAX_UPLOAD_BYTES), null);
-  assert.match(checkFile('big.png', MAX_UPLOAD_BYTES + 1), /too large/);
+  assert.equal(checkFile('big.png', 5 * 1024 * 1024), null);
+  assert.match(checkFile('big.png', 5 * 1024 * 1024 + 1), /too large.*5 MB/);
+});
+
+test('splitParts leaves a small file whole and cuts a large one into 4 MB parts', () => {
+  assert.deepEqual(splitParts(Buffer.alloc(UPLOAD_PART_BYTES)), []);
+  const parts = splitParts(Buffer.alloc(UPLOAD_PART_BYTES * 2 + 10));
+  assert.deepEqual(parts.map((p) => p.length), [UPLOAD_PART_BYTES, UPLOAD_PART_BYTES, 10]);
+  assert.ok(UPLOAD_PART_BYTES < 4_500_000, 'a part must stay under the host limit');
+});
+
+test('buildFileForm names the parts instead of carrying the file', () => {
+  const attachment = { name: 'big.pdf', type: 'file', bytes: Buffer.alloc(10) };
+  const form = buildFileForm(attachment, { title: 'Big' }, { uploadId: 'id-1', partCount: 3 });
+  assert.equal(form.get('file'), null);
+  assert.equal(form.get('uploadId'), 'id-1');
+  assert.equal(form.get('partCount'), '3');
+  assert.equal(form.get('fileName'), 'big.pdf');
+  assert.equal(form.get('itemType'), 'file');
 });
 
 test('contentTypeFor goes by extension', () => {

@@ -28,7 +28,7 @@ class ApiError extends Error {
  * message is safe to show (the server's `error` string) and whose `status` is the
  * HTTP status (0 when the request never got an answer).
  */
-async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET', body, form } = {}) {
+async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET', body, form, raw } = {}) {
   if (!token) throw new ApiError('Add your BitBin token in Settings.', 401);
 
   let res;
@@ -39,8 +39,9 @@ async function apiRequest(fetchImpl, { baseUrl, token }, path, { method = 'GET',
         Authorization: `Bearer ${token}`,
         // A multipart form sets its own Content-Type (with the boundary)
         ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(raw ? { 'Content-Type': 'application/octet-stream' } : {}),
       },
-      body: form ?? (body ? JSON.stringify(body) : undefined),
+      body: raw ?? form ?? (body ? JSON.stringify(body) : undefined),
       credentials: 'omit',
       redirect: 'error',
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

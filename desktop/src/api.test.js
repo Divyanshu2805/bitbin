@@ -134,3 +134,16 @@ test('apiRequest turns the host refusing a big body (413, no JSON) into a clear 
     (error) => error instanceof ApiError && error.status === 413 && /too large/.test(error.message)
   );
 });
+
+test('apiRequest sends raw bytes as an octet stream (an upload part)', async () => {
+  let seen;
+  const fetchImpl = async (url, init) => {
+    seen = { url, init };
+    return { ok: true, status: 200, json: async () => ({ data: { stored: true } }) };
+  };
+  const part = Buffer.from([1, 2, 3]);
+  await apiRequest(fetchImpl, settings, '/files/part?uploadId=x&index=0', { method: 'PUT', raw: part });
+  assert.equal(seen.init.method, 'PUT');
+  assert.equal(seen.init.headers['Content-Type'], 'application/octet-stream');
+  assert.equal(seen.init.body, part);
+});
