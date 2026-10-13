@@ -62,7 +62,7 @@ The drawer switches to edit mode in place. `updateItem` checks ownership, filter
 
 - The title is a real button, so Tab, then Enter or Space, opens the drawer; clicking anywhere else on the card opens it too.
 - The copy button copies `content` or `url`, and is always visible on touch screens.
-- Hover lifts the card, and nothing else: it is plain dark brown, its type colour only in the chip and the preview (`card-ink`, see the [design system](../../practices/design-system.md)).
+- Hover lifts the card, and nothing else: it is plain and a shade darker than the page, its type colour only in the chip and the preview (`card-ink`, see the [design system](../../practices/design-system.md)).
 
 ## Editor preferences
 

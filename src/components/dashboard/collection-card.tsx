@@ -72,7 +72,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
       <div
         // Mouse users click anywhere on the card; keyboard and screen-reader users get the name button below
         className="card-ink icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden p-5 outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
-        // A plain dark brown card, like an item's; sage, the collections' colour, is in the folder only
+        // A plain dark card, like an item's; sage, the collections' colour, is in the folder only
         style={{ "--tone": "var(--brand-cyan)" } as React.CSSProperties}
         // Drop an item here to add it to this collection
         {...drop}
