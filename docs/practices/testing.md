@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-914 tests in 78 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+919 tests in 78 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -47,7 +47,7 @@ Check these by hand when a change touches them:
 
 - Route handlers are unit-tested, but not against real services (R2, Stripe, Resend); try those in test mode. The route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/auth` or `@/lib/api-auth`, Prisma and the library underneath.
 - The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
-- The desktop app (`desktop/`): `cd desktop && npm test` runs its 44 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
+- The desktop app (`desktop/`): `cd desktop && npm test` runs its 45 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
 - NextAuth callbacks and `proxy.ts`.
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.

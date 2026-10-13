@@ -6,8 +6,8 @@ Measured figures for BitBin, each with how to re-check it. Nothing here is an es
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 914 across 78 files (Vitest), all passing | `npm run test` |
-| Desktop app tests | 44 (`node:test`), all passing | `cd desktop && npm test` |
+| Unit tests | 919 across 78 files (Vitest), all passing | `npm run test` |
+| Desktop app tests | 45 (`node:test`), all passing | `cd desktop && npm test` |
 | Statement coverage | 85.2% (2,353 of 2,761) | `npm run test:coverage` |
 | Branch coverage | 85.3% (1,501 of 1,760) | same |
 | Line coverage | 85.4% (2,106 of 2,465) | same |

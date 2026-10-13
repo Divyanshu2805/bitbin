@@ -156,7 +156,7 @@ Found a problem? See [SECURITY.md](SECURITY.md).
 
 | | |
 |---|---|
-| Tests | 914 unit tests across 78 files (actions, library code and every route handler), all external services mocked; 44 more for the desktop app |
+| Tests | 919 unit tests across 78 files (actions, library code and every route handler), all external services mocked; 45 more for the desktop app |
 | Coverage | about 85% of statements over `src/actions`, `src/lib` and `src/app/api`, with an 80% floor enforced in CI |
 | CI | audit, lint, tests with the coverage floor and a build on every push and pull request |
 | Lighthouse (production build) | accessibility 100, SEO 100, best practices 96, performance 80–95 across 12 pages |
