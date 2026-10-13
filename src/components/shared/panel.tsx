@@ -36,7 +36,8 @@ export default function Panel({
     <section
       id={id}
       className={cn("card-surface scroll-mt-6 overflow-hidden animate-fade-up", className)}
-      style={danger ? ({ "--tone": "var(--destructive)" } as React.CSSProperties) : undefined}
+      // Red in the edge only: the card's full tint is too loud around a form
+      style={danger ? { borderColor: "color-mix(in srgb, var(--destructive) 30%, var(--border))" } : undefined}
     >
       <header
         data-anim-icons

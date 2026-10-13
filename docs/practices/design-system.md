@@ -230,7 +230,9 @@ little on press. `.term-primary` (default variant) is clay filling with ink, `.t
 secondary) a card filling with a tint of its accent, `.term-danger` fills red, and `.term-bare` (the theme
 toggle, toolbar icons) shows only its icon at rest. Set `--grid-color` to retint an outline button (the
 quick-create chips use the item type's colour); its icon wears that colour. Give a text button an icon and
-write its label in sentence case. `.btn-kbd` inside is a flat keycap in the label's colour. The GitHub
+write its label in sentence case. `.btn-kbd` inside is a flat keycap in the label's colour. An outline toggle that is on
+(`aria-pressed="true"`: the drawer's Favorite and Pin, each in its own `--btn-accent`) keeps its tint. A
+picker's trigger adds `term-field`: no fill, only a neutral step lighter on hover, like a field. The GitHub
 sign-in button keeps its contribution grid (`.gh-button`, `<ContribGrid />`).
 
 **Text fields** are the landing page's search box. `<Input>` and `<Textarea>` render inside a

@@ -70,7 +70,9 @@ export function SegmentedTabs({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group/tab relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "group/tab relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium outline-none",
+              // A neutral focus ring: inside a dialog `--ring` is the accent, which made the chosen tab look like another control
+              "focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--foreground)_35%,var(--border))]",
               selected
                 ? "bg-card text-foreground shadow-[inset_0_0_0_1px_var(--border)]"
                 : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_7%,transparent)] hover:text-foreground"

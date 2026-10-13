@@ -1721,6 +1721,38 @@ html:has(.landing)::-webkit-scrollbar {
   color: var(--btn-accent);
 }
 
+/* A toggle that is on (favorited, pinned) keeps the tint of its accent it fills with on hover */
+.term-outline[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--btn-accent) 45%, var(--border));
+  background: var(--btn-fill);
+}
+
+/*
+ * A picker's trigger (the collection picker): a field, not a button. No fill sweeps over it;
+ * on hover the surface and the edge go one neutral step lighter, and the edge takes the accent while open.
+ */
+.term-btn.term-field {
+  font-weight: 400;
+  background: var(--card);
+}
+.term-btn.term-field::before {
+  content: none;
+}
+.term-btn.term-field:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--foreground) 22%, var(--border));
+  background: color-mix(in srgb, var(--foreground) 4%, var(--card));
+}
+.term-btn.term-field[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--ring) 60%, var(--border));
+}
+.term-btn.term-field:active:not(:disabled) {
+  scale: 1;
+}
+.term-btn.term-field:not(:disabled) .lucide {
+  color: var(--muted-foreground);
+}
+
 /* The way to Pro: an outline button in violet, so it never reads as a create button */
 .term-upgrade {
   --btn-accent: var(--brand-violet);

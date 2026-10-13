@@ -114,7 +114,7 @@ export default function CollectionPicker({
      variant="outline"
      role="combobox"
      aria-expanded={open}
-     className="w-full justify-between h-auto min-h-10"
+     className="term-field w-full justify-between h-auto min-h-10"
      disabled={disabled}
     >
           {selectedCollections.length > 0 ? (
@@ -135,7 +135,7 @@ export default function CollectionPicker({
               Select collections...
             </span>
           )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">

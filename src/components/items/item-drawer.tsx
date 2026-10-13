@@ -39,7 +39,6 @@ import FileViewer from "./file-viewer";
 import CollectionPicker, { createCollectionOption, withCollection, type CollectionOption } from "./collection-picker";
 import SuggestTagsButton from "./suggest-tags-button";
 import GenerateDescriptionButton from "./generate-description-button";
-import { Kbd } from "@/components/shared/kbd";
 import LanguagePicker from "./language-picker";
 import { detectLanguage } from "@/lib/detect-language";
 import { fileDownloadPath, fileViewPath } from "@/lib/file-url";
@@ -167,36 +166,34 @@ function Description({ text }: { text: string }) {
 }
 
 /**
- * A button in the item's action bar. It takes its colour (`color`) on hover,
- * while pressed, and for as long as it's on (`active`: favorited, pinned, just
- * copied), with a tinted fill and border.
+ * A button in the item's action bar: the top bar's outline button in its own
+ * colour (`color`), which tints its icon, the fill on hover, and the button for
+ * as long as it's on (`active`: favorited, pinned). `keys` is its shortcut.
  */
 function ToolButton({
   color,
-  active = false,
-  className,
+  active,
+  keys,
   style,
+  children,
   ...props
-}: React.ComponentProps<"button"> & { color: string; active?: boolean }) {
+}: React.ComponentProps<typeof Button> & { color: string; active?: boolean; keys?: string }) {
   return (
-    <button
+    <Button
       type="button"
-      data-anim-icons
+      variant="outline"
+      size="sm"
       aria-pressed={active}
-      className={cn(
-        "group/tool flex items-center gap-1.5 rounded-[10px] border px-2.5 py-1.5 text-xs font-medium outline-none",
-        "transition-[color,background-color,border-color,scale] duration-150 active:scale-95",
-        "focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--tool)_45%,transparent)]",
-        "hover:border-[color-mix(in_srgb,var(--tool)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--tool)_12%,transparent)] hover:text-(--tool)",
-        "active:bg-[color-mix(in_srgb,var(--tool)_20%,transparent)]",
-        active
-          ? "border-[color-mix(in_srgb,var(--tool)_32%,transparent)] bg-[color-mix(in_srgb,var(--tool)_14%,transparent)] text-(--tool)"
-          : "border-transparent text-muted-foreground",
-        className
-      )}
-      style={{ "--tool": color, ...style } as React.CSSProperties}
+      style={{ "--btn-accent": color, ...style } as React.CSSProperties}
       {...props}
-    />
+    >
+      {children}
+      {keys && (
+        <span aria-hidden className="btn-kbd">
+          {keys}
+        </span>
+      )}
+    </Button>
   );
 }
 
@@ -456,7 +453,7 @@ export default function ItemDrawer() {
   const details = item ? (
     <div>
       <SectionLabel>details</SectionLabel>
-      <dl className="space-y-2 rounded-2xl border border-border bg-card px-4 py-3 font-mono text-xs">
+      <dl className="space-y-2 rounded-xl border border-border bg-background px-4 py-3 font-mono text-xs">
         <div>
           <dt className="text-muted-foreground">created</dt>
           <dd className="mt-0.5 text-foreground">{formatLongDate(item.createdAt)}</dd>
@@ -477,12 +474,12 @@ export default function ItemDrawer() {
       <DialogContent
         showCloseButton={false}
         className={cn(
-          "flex max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 shadow-[var(--shadow-lift)]",
+          "flex max-w-none flex-col gap-0 overflow-hidden p-0",
           "transition-[width,height,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-none",
           "max-sm:h-dvh max-sm:w-screen max-sm:rounded-none max-sm:border-0",
           expanded
             ? "sm:h-[calc(100dvh-1.5rem)] sm:w-[calc(100vw-1.5rem)] sm:rounded-xl"
-            : "sm:h-[min(88dvh,880px)] sm:w-[min(calc(100vw-3rem),960px)] sm:rounded-2xl"
+            : "sm:h-[min(88dvh,880px)] sm:w-[min(calc(100vw-3rem),960px)] sm:rounded-card"
         )}
         style={
           // The app's lime for the panel's accents; only the type icon and label wear the type's colour
@@ -515,12 +512,6 @@ export default function ItemDrawer() {
           <>
             {/* Header */}
             <div className="relative shrink-0 px-6 pt-5 sm:px-8">
-              {/* Lime along the top edge, and a soft wash behind the title */}
-              <span
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-[2px]"
-                style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 75%)" }}
-              />
               <div data-anim-icons className="relative flex items-center gap-3.5 pr-16">
                 <div
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
@@ -588,38 +579,35 @@ export default function ItemDrawer() {
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center gap-1 px-5 py-3 sm:px-7">
-                <ToolButton color="light-dark(#d97706, #eab308)" active={item.isFavorite} onClick={handleToggleFavorite}>
+              <div className="flex flex-wrap items-center gap-2 px-6 py-3 sm:px-8">
+                <ToolButton color="light-dark(#d97706, #eab308)" active={item.isFavorite} keys="F" onClick={handleToggleFavorite}>
                   <Star className="h-4 w-4" fill={item.isFavorite ? "currentColor" : "none"} />
-                  {item.isFavorite ? "favorited" : "favorite"}
-                  <Kbd keys={["F"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                  {item.isFavorite ? "Favorited" : "Favorite"}
                 </ToolButton>
-                <ToolButton color="var(--destructive)" active={item.isPinned} onClick={handleTogglePin}>
+                <ToolButton color="var(--destructive)" active={item.isPinned} keys="P" onClick={handleTogglePin}>
                   <Pin className="h-4 w-4" fill={item.isPinned ? "currentColor" : "none"} />
-                  {item.isPinned ? "pinned" : "pin"}
-                  <Kbd keys={["P"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                  {item.isPinned ? "Pinned" : "Pin"}
                 </ToolButton>
                 {showFileContent && item.fileUrl && (
                   <ToolButton color="var(--brand-cyan)" onClick={handleDownload}>
                     <Download className="h-4 w-4" />
-                    download
+                    Download
                   </ToolButton>
                 )}
-                <ToolButton color="var(--brand-lime)" onClick={handleEdit}>
+                <ToolButton color="var(--brand-lime)" keys="E" onClick={handleEdit}>
                   <Pencil className="h-4 w-4" />
-                  edit
-                  <Kbd keys={["E"]} className="ml-0.5 opacity-60 transition-opacity group-hover/tool:opacity-100" />
+                  Edit
                 </ToolButton>
                 <div className="flex-1" />
-                <ToolButton
-                  color="var(--destructive)"
+                <Button
+                  variant="danger"
+                  size="icon-sm"
                   onClick={() => setShowDeleteDialog(true)}
                   aria-label="Delete item"
                   title="Delete  ⌫"
-                  className="text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
-                </ToolButton>
+                </Button>
               </div>
             )}
 
@@ -866,7 +854,7 @@ export default function ItemDrawer() {
                         {item.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="max-w-full rounded-md border border-border bg-card px-2 py-0.5 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]"
+                            className="max-w-full rounded-md border border-border bg-background px-2 py-0.5 font-mono text-xs text-muted-foreground [overflow-wrap:anywhere]"
                           >
                             <span className="text-faint dark:text-muted-foreground/50">#</span>
                             {tag}
