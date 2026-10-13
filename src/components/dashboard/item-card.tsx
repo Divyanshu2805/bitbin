@@ -203,7 +203,7 @@ export default function ItemCard({ item }: ItemCardProps) {
         className={cn(
           "card-ink icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
         )}
-        // A plain black card; the item type's colour is in the chip and the preview
+        // A plain dark brown card; the item type's colour is in the chip and the preview
         style={{ "--tone": color } as React.CSSProperties}
         // Drag onto a collection (sidebar or collection card) to add it there
         {...itemDragProps(item.id, item.title, item.itemType.name, color)}
