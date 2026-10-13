@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import {
-  createCollection as createCollectionQuery,
   updateCollection as updateCollectionQuery,
   deleteCollection as deleteCollectionQuery,
   getUserCollections as getUserCollectionsQuery,
@@ -12,17 +11,8 @@ import {
   type CollectionForPicker,
 } from '@/lib/db/collections';
 import { parseZodErrors, validateId } from '@/lib/validation';
-import { canCreateCollection, MAX_COLLECTIONS } from '@/lib/usage';
-import { LimitReachedError } from '@/lib/limit-error';
+import { createCollectionForUser, createCollectionSchema } from '@/lib/collection-create';
 import { checkActionRateLimit, getAuthedSession, type ActionResult } from '@/lib/action-utils';
-
-const COLLECTION_LIMIT_MESSAGE =
-  'You have reached the free tier limit of 3 collections. Upgrade to Pro for unlimited collections.';
-
-const createCollectionSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
-  description: z.string().trim().max(500, 'Description must be 500 characters or less').nullable().optional().transform((val) => val || null),
-});
 
 export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
 
@@ -41,24 +31,7 @@ export async function createCollection(
   const limited = await checkActionRateLimit('create', session.user.id, 'new collections');
   if (limited) return limited;
 
-  // Usage limit check
-  const isPro = session.user.isPro ?? false;
-  const allowed = await canCreateCollection(session.user.id, isPro);
-  if (!allowed) {
-    return { success: false, error: COLLECTION_LIMIT_MESSAGE };
-  }
-
-  try {
-    // A Free account's cap is re-checked under a lock, so concurrent creates can't overshoot it
-    const created = await createCollectionQuery(
-      session.user.id,
-      isPro ? parsed.data : { ...parsed.data, maxCollections: MAX_COLLECTIONS }
-    );
-    return { success: true, data: created };
-  } catch (error) {
-    if (error instanceof LimitReachedError) return { success: false, error: COLLECTION_LIMIT_MESSAGE };
-    return { success: false, error: 'Failed to create collection' };
-  }
+  return createCollectionForUser(session.user.id, session.user.isPro ?? false, parsed.data);
 }
 
 export async function getUserCollections(): Promise<ActionResult<CollectionForPicker[]>> {

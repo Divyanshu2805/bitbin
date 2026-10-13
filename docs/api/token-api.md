@@ -17,7 +17,7 @@ Authorization: Bearer bb_…
   | Scope | Label in Settings | Allows |
   |---|---|---|
   | `collections:read` | List collections | `GET /api/v1/collections` |
-  | `items:write` | Save items | `POST /api/v1/items` |
+  | `items:write` | Save items | `POST /api/v1/items`, `POST /api/v1/collections` |
   | `files:write` | Save files and images | `POST /api/v1/files`, `PUT /api/v1/files/part` |
   | `ai` | AI suggestions | `POST /api/v1/ai/tags`, `/ai/description` |
 
@@ -50,6 +50,20 @@ The caller's collections, sorted by name, for the extension's picker.
 ```json
 { "data": [{ "id": "cm…", "name": "Snippets I like" }] }
 ```
+
+## `POST /api/v1/collections`
+
+Creates a collection, so the extension and the desktop app can file a save into a new one. It takes the `items:write` permission (creating the place a save goes is part of saving), which keeps existing tokens working. Validation and the plan check are shared with the [`createCollection` action](server-actions.md#collections) (`createCollectionForUser` in `src/lib/collection-create.ts`).
+
+```json
+{ "name": "Snippets I like" }
+```
+
+| Field | Rules |
+|---|---|
+| `name` | Required, trimmed, 1–100 characters |
+
+`201` with `{ "data": { "id": "cm…", "name": "Snippets I like" } }`; `400` with `fieldErrors` for a bad name; `403` when a Free-limit applies (the 3-collection cap; the token API is Pro-only, so it is a safety net).
 
 ## `POST /api/v1/items`
 

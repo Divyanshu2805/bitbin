@@ -13,7 +13,7 @@ export const API_SCOPE_INFO: Record<ApiScope, { label: string; description: stri
   },
   'items:write': {
     label: 'Save items',
-    description: 'Create text and link items (POST /api/v1/items).',
+    description: 'Create text and link items and new collections (POST /api/v1/items, POST /api/v1/collections).',
   },
   'files:write': {
     label: 'Save files and images',

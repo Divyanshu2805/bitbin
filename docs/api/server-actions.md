@@ -26,7 +26,7 @@ The shared **demo account** may not save links (no `link` items, no new URL on a
 
 | Action | Input | Returns | Checks |
 |---|---|---|---|
-| `createCollection` | `{ name, description? }` | The collection | Name 1–100, description ≤ 500; `create` rate limit; Free cap of 3 (under the same row lock) |
+| `createCollection` | `{ name, description? }` | The collection | Name 1–100, description ≤ 500; `create` rate limit; Free cap of 3 (under the same row lock). Also reachable from the item form's collection picker, and shared with `POST /api/v1/collections` through `lib/collection-create.ts` |
 | `updateCollection` | `{ id, name, description? }` | The collection | Same limits; owned |
 | `deleteCollection` | `{ id }` | `null` | Owned. Items are kept |
 | `toggleCollectionFavorite` | `collectionId` | `{ isFavorite }` | Owned |

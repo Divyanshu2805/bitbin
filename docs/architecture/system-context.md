@@ -41,7 +41,7 @@ flowchart LR
 | Authentication | `src/auth.ts`, `src/auth.config.ts` | NextAuth v5 with the Prisma adapter and JWT sessions |
 | Data access | `src/lib/db/*.ts` | Every Prisma query, always scoped by the caller's user id (the only exceptions are the token lookup and the cron jobs) |
 | Integrations | `src/lib/{stripe,r2,openai,email,resend,rate-limit,monitoring}.ts` | Thin wrappers around each third-party SDK |
-| Shared logic | `src/lib/{item-create,ai-tags,ai-description,file-ingest}.ts` | Item creation, AI helpers and file checks shared by the actions, the upload route and `/api/v1`, so no path skips a check |
+| Shared logic | `src/lib/{item-create,collection-create,ai-tags,ai-description,file-ingest}.ts` | Item and collection creation, AI helpers and file checks shared by the actions, the upload route and `/api/v1`, so no path skips a check |
 | UI | `src/components/**` | Client and server components; shadcn/ui primitives in `components/ui` |
 
 ## External services

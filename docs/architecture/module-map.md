@@ -59,6 +59,7 @@ src/
 │   ├── tokens.ts, credentials.ts        hashed single-use email tokens; the email-and-password sign-in check
 │   ├── api-tokens.ts, api-auth.ts, api-scopes.ts   personal access tokens, the /api/v1 Bearer check, permissions
 │   ├── item-create.ts     item creation shared by the action and /api/v1
+│   ├── collection-create.ts  collection creation (schema, Free cap) shared by the action and /api/v1
 │   ├── ai-tags.ts, ai-description.ts, ai-json.ts, openai.ts   AI helpers shared by actions and /api/v1, the client
 │   ├── file-ingest.ts, image-sanitize.ts, r2.ts, file-url.ts  every upload check, photo re-encoding, storage,
 │   │                                                          view and download paths
@@ -120,7 +121,7 @@ extension / desktop app ─► /api/v1 ─► authenticateApiRequest ─► the 
 - **Queries belong in `lib/db`.** Nothing else imports `lib/prisma.ts`; the NextAuth adapter gets the client through `createAuthAdapter()` (`lib/db/auth-adapter.ts`).
 - **Components never call `lib/db` functions.** They may import its types. Client components call a server action; server pages call `lib/db` directly.
 - **Every `lib/db` function takes the user id as a parameter**, and every query filters by it. The user id comes from the session or the API token, never from request input. The exceptions are deliberate and named: the API token lookup (the token is what identifies the user), and the cron jobs (`resetDemoAccount`, `getAllReferencedFileUrls`).
-- **One path per behaviour.** Item creation (`item-create.ts`), the AI helpers (`ai-tags.ts`, `ai-description.ts`) and file checks (`file-ingest.ts`) are shared by the actions, the upload route, the ZIP import and `/api/v1`, so a new way in can't skip a check.
+- **One path per behaviour.** Item and collection creation (`item-create.ts`, `collection-create.ts`), the AI helpers (`ai-tags.ts`, `ai-description.ts`) and file checks (`file-ingest.ts`) are shared by the actions, the upload route, the ZIP import and `/api/v1`, so a new way in can't skip a check.
 - **Integration wrappers stay thin.** Business rules (who may upload, what's rate limited) live in the action or route handler, not in `lib/r2.ts` or `lib/openai.ts`.
 - **Client state is small React contexts**, not a global store: `ItemDrawerProvider`, `SearchProvider`, `EditorPreferencesProvider`. After a mutation, components call `router.refresh()` so server components re-fetch.
 

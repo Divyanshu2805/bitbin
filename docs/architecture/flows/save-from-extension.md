@@ -41,7 +41,7 @@ Each `/api/v1` request goes through `authenticateApiRequest` (`src/lib/api-auth.
 2. Hash it and look it up (`findApiTokenByHash`), or return `401`.
 3. Return `401` if the token's `expiresAt` has passed.
 4. Check the owner's `isPro` from that same query, or return `403`.
-5. Check the token has the scope the endpoint needs (`collections:read`, `items:write`, `files:write` or `ai`), or return `403`. A token without one still works, just not for the features it lacks (the extension's ✦ Suggest, for example, needs `ai`).
+5. Check the token has the scope the endpoint needs (`collections:read`, `items:write`, `files:write` or `ai`), or return `403`. `POST /api/v1/collections` (creating a collection from the extension's *+ New collection*) takes `items:write`. A token without one still works, just not for the features it lacks (the extension's ✦ Suggest, for example, needs `ai`).
 6. Apply the `api` rate limit (60 a minute per user), or return `429`.
 7. Update `lastUsedAt` if it's more than a minute old (best effort).
 
