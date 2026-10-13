@@ -1,6 +1,6 @@
 # API Reference
 
-Almost every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. The exception is the [token API](token-api.md) under `/api/v1`, which the browser extension and the desktop app call with a personal access token ([ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md)). There are two kinds of endpoint:
+Almost every endpoint here exists for BitBin's own UI and authenticates with the browser session cookie. The exception is the [token API](token-api.md) under `/api/v1`, which AI assistants (over MCP), the browser extension and the desktop app call with a personal access token ([ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md)). There are two kinds of endpoint:
 
 - **Route handlers** under `src/app/api/` — real HTTP endpoints, used where the browser, NextAuth or Stripe needs a URL.
 - **Server actions** under `src/actions/` — async functions called from client components, which Next.js turns into POST requests. Every UI write goes through one ([ADR 0002](../architecture/decisions/0002-server-actions-for-writes.md)).
@@ -31,11 +31,14 @@ Almost every endpoint here exists for BitBin's own UI and authenticates with the
 | `GET` | `/api/cron/sweep-files` | `Bearer CRON_SECRET` | Delete stored files no item points at (weekly) | [Cron endpoints](#cron-endpoints) |
 | `GET` | `/api/v1/me` | Token, Pro | Check an API token | [Token API](token-api.md) |
 | `GET` | `/api/v1/collections` | Token, Pro | The caller's collections, for the extension's picker | [Token API](token-api.md) |
+| `GET` | `/api/v1/items` | Token, Pro | Search the caller's items, or list the most recent | [Token API](token-api.md#get-apiv1items) |
+| `GET` | `/api/v1/items/{id}` | Token, Pro | One item in full | [Token API](token-api.md#get-apiv1itemsid) |
 | `POST` | `/api/v1/items` | Token, Pro | Create a text or link item | [Token API](token-api.md) |
 | `POST` | `/api/v1/files` | Token, Pro | Upload a file or image (whole, or joined from parts) and create its item | [Token API](token-api.md#post-apiv1files) |
 | `PUT` | `/api/v1/files/part` | Token, Pro | Send one 4 MB part of a larger file | [Token API](token-api.md#put-apiv1filespart) |
 | `POST` | `/api/v1/ai/tags` | Token, Pro | AI tag suggestions | [Token API](token-api.md) |
 | `POST` | `/api/v1/ai/description` | Token, Pro | AI-written description | [Token API](token-api.md) |
+| `POST` | `/api/v1/mcp` | Token, Pro | The MCP server: tools for an AI assistant to search, read and save | [Token API](token-api.md#post-apiv1mcp) |
 
 ## Cron endpoints
 

@@ -59,7 +59,7 @@ Actions never throw to the client. They return:
 | `upload` | 10 / hour | IP + user id | `POST /api/upload`, `POST /api/v1/files` |
 | `uploadPart` | 30 / hour | IP + user id | `PUT /api/upload/part`, `PUT /api/v1/files/part` (a 10 MB file is three parts) |
 | `ai` | 20 / hour | IP + user id | All four AI actions, `POST /api/v1/ai/tags` and `/ai/description` |
-| `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check |
+| `api` | 60 / minute | IP + user id | Every `/api/v1` request, after the token check, including each MCP message |
 
 The IP is taken from `x-vercel-forwarded-for`, then `x-real-ip` (both set by Vercel, which overwrites anything the client sends), then the **last** entry of `x-forwarded-for` (the address the nearest proxy saw), then `127.0.0.1`. The first entry of `x-forwarded-for` is what the client claims, so it is never used. A limit keyed by the address alone (`…Email`) ignores the IP.
 

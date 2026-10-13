@@ -2,7 +2,7 @@
 // into a script that only saves items can't also spend the AI quota or read the collection list, and
 // a leaked one can do less. Checked per request in `authenticateApiRequest` (lib/api-auth.ts).
 
-export const API_SCOPES = ['collections:read', 'items:write', 'files:write', 'ai'] as const;
+export const API_SCOPES = ['collections:read', 'items:read', 'items:write', 'files:write', 'ai'] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];
 
@@ -10,6 +10,10 @@ export const API_SCOPE_INFO: Record<ApiScope, { label: string; description: stri
   'collections:read': {
     label: 'List collections',
     description: 'Read your collection names for the picker (GET /api/v1/collections).',
+  },
+  'items:read': {
+    label: 'Search and read items',
+    description: 'Search your bin and read an item in full (GET /api/v1/items). Needed to connect an AI assistant.',
   },
   'items:write': {
     label: 'Save items',

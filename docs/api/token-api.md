@@ -1,6 +1,6 @@
 # Token API (`/api/v1`)
 
-The one API meant for clients other than the BitBin website: today the [browser extension](../../extension/README.md) and the [desktop tray app](../../desktop/README.md), and later possibly a CLI. Why it exists and how it's shaped is in [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md).
+The one API meant for clients other than the BitBin website: the [browser extension](../../extension/README.md), the [desktop tray app](../../desktop/README.md), your own scripts, and AI assistants through the [MCP endpoint](#post-apiv1mcp). Why it exists and how it's shaped is in [ADR 0007](../architecture/decisions/0007-token-api-for-the-browser-extension.md).
 
 ## Authentication
 
@@ -17,11 +17,12 @@ Authorization: Bearer bb_…
   | Scope | Label in Settings | Allows |
   |---|---|---|
   | `collections:read` | List collections | `GET /api/v1/collections` |
+  | `items:read` | Search and read items | `GET /api/v1/items`, `GET /api/v1/items/{id}` |
   | `items:write` | Save items | `POST /api/v1/items`, `POST /api/v1/collections` |
   | `files:write` | Save files and images | `POST /api/v1/files`, `PUT /api/v1/files/part` |
   | `ai` | AI suggestions | `POST /api/v1/ai/tags`, `/ai/description` |
 
-  `GET /api/v1/me` needs none. The extension uses all but `files:write`; the desktop app uses all four. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
+  `GET /api/v1/me` needs none, and `POST /api/v1/mcp` checks the scope of each tool it runs. The extension uses `collections:read`, `items:write` and `ai`; the desktop app adds `files:write`; an assistant needs `items:read`, plus `items:write` and `collections:read` to save. Neither app reads items, so a token made before `items:read` existed keeps working for them. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
 - Cookies are ignored. A request with a session cookie and no token is rejected.
 - The owner's plan is re-read on every request, so a user who stops being Pro gets `403` from then on, even with a valid token.
 
@@ -103,6 +104,56 @@ Creates an item. Validation and the insert are shared with the [`createItem` act
 ```json
 { "error": "Validation failed", "fieldErrors": { "title": ["Title is required"] } }
 ```
+
+## `GET /api/v1/items`
+
+Searches the caller's items. Needs `items:read`. The same search as the ⌘K palette (`searchApiItems` in `src/lib/api-item.ts`).
+
+| Query | Rules |
+|---|---|
+| `q` | Optional. Matched against titles, content, descriptions, URLs and tags; `#react` looks at tags only. Without it, the most recently edited items are listed |
+| `limit` | Optional, 1 to 20, default 10. Anything else becomes the default |
+
+```json
+{ "data": { "items": [{ "id": "cm…", "title": "Tail pod logs", "typeName": "command", "preview": "kubectl logs -f deploy/api", "tags": ["k8s"] }] } }
+```
+
+`preview` is the first 100 characters of the content. `400` when `q` is longer than 400 characters.
+
+## `GET /api/v1/items/{id}`
+
+One item in full. Needs `items:read`.
+
+```json
+{ "data": { "id": "cm…", "title": "Tail pod logs", "typeName": "command", "description": null, "content": "kubectl logs -f deploy/api", "url": null, "language": "bash", "tags": ["k8s"], "collections": [{ "id": "cm…", "name": "Infra" }], "fileName": null, "fileSize": null, "isFavorite": false, "isPinned": false, "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-01-02T00:00:00.000Z" } }
+```
+
+A file or image item reports its `fileName` and `fileSize` only: the bucket is private and the bytes are served to a signed-in browser, not to a token. `404` for an item that doesn't exist or belongs to someone else.
+
+## `POST /api/v1/mcp`
+
+BitBin as a [Model Context Protocol](https://modelcontextprotocol.io) server, so an assistant such as Claude can use the bin. The protocol and the tools are in `src/lib/mcp.ts`.
+
+Connect Claude Code with a token from Settings (Settings → AI assistants shows this command with the site's address filled in):
+
+```bash
+claude mcp add --transport http bitbin https://bitbin.divyanshuagrahari.dev/api/v1/mcp --header "Authorization: Bearer bb_…"
+```
+
+Any other MCP client adds a remote (Streamable HTTP) server at that address with the same header.
+
+| Tool | Scope | Does |
+|---|---|---|
+| `search_items` | `items:read` | `query` (optional) and `limit`: the same search as `GET /api/v1/items` |
+| `get_item` | `items:read` | `id`: the item in full, as `GET /api/v1/items/{id}` |
+| `list_collections` | `collections:read` | Collection names and ids |
+| `save_item` | `items:write` | `type` (snippet, prompt, command, note or link), `title`, and optionally `content`, `url`, `description`, `language`, `tags` and `collection`. `collection` is a name: it is matched without regard to case, and created when there is none |
+
+- The token is checked like any other `/api/v1` request (`401`, `403` for a Free owner, `429` over the `api` limit), with no scope of its own. `tools/list` returns only the tools the token's scopes allow, and calling one it lacks answers with an error result naming the missing permission.
+- Saving goes through `createItemForUser` and `createCollectionForUser`, so validation and plan limits are the ones every other save has.
+- The transport is Streamable HTTP in its simplest form: each `POST` carries one JSON-RPC message (or a batch of up to 20) and gets one JSON answer. There are no sessions and no server-sent stream, so `GET` answers `405`. A notification is acknowledged with `202` and no body; a body that isn't JSON gets `400` with a JSON-RPC parse error.
+- Methods: `initialize` (protocol revisions `2025-06-18`, `2025-03-26` and `2024-11-05`), `ping`, `tools/list` and `tools/call`. Anything else is "method not found".
+- A tool that fails answers with `isError: true` and a sentence for the assistant; the real error is logged on the server.
 
 ## `POST /api/v1/files`
 

@@ -14,6 +14,7 @@ Short records of the decisions that shape BitBin, each with the context that for
 | [0008](0008-public-demo-account-as-a-locked-sandbox.md) | Offer a public demo account that can't change itself, and reset it daily | Accepted |
 | [0009](0009-ci-checks-and-a-coverage-floor.md) | Run CI on every push, with a coverage floor on the server code, without gating the deploy | Accepted |
 | [0010](0010-content-security-policy-without-script-nonces.md) | Send a real Content Security Policy that blocks third parties, without script nonces, and self-host the code editor | Accepted |
+| [0011](0011-mcp-server-on-the-token-api.md) | Serve MCP for AI assistants from the token API, as a stateless HTTP endpoint with its own read permission | Accepted |
 
 ## Writing a new record
 

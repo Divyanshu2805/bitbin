@@ -1,9 +1,33 @@
 import { NextResponse } from 'next/server'
 import { apiError, authenticateApiRequest } from '@/lib/api-auth'
+import { clampSearchLimit, searchApiItems } from '@/lib/api-item'
+import { MAX_SEARCH_LENGTH } from '@/lib/db/search'
 import { createItemForUser } from '@/lib/item-create'
 
 /** Item types the token API can create. Files and images need an upload. */
 const API_ITEM_TYPES = ['snippet', 'prompt', 'command', 'note', 'link']
+
+/**
+ * Search the caller's items: `?q=` is the text ("#tag" for tags only), `?limit=` how many (1–20).
+ * With no `q` it lists the most recently edited. Summaries only; `GET /api/v1/items/{id}` has the rest.
+ */
+export async function GET(request: Request) {
+  try {
+    const { user, response } = await authenticateApiRequest(request, 'items:read')
+    if (response) return response
+
+    const { searchParams } = new URL(request.url)
+    const query = searchParams.get('q') ?? ''
+    if (query.length > MAX_SEARCH_LENGTH * 4) return apiError('Search text is too long', 400)
+
+    const items = await searchApiItems(user.id, query, clampSearchLimit(searchParams.get('limit')))
+
+    return NextResponse.json({ data: { items } })
+  } catch (error) {
+    console.error('API search items error:', error)
+    return apiError('An error occurred while searching', 500)
+  }
+}
 
 /**
  * Create an item from the browser extension. Validation, plan limits and the
