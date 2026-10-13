@@ -35,7 +35,7 @@ The limit is enforced in `authorize()`, so it applies to direct posts to the Nex
 
 ## GitHub
 
-Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/sign-in?via=github' })` on the server. Back from GitHub, the sign-in form sees `via=github` and slides into `/dashboard` (`slideTo` in `lib/view-transition.ts`), holding the sign-in page on screen until the dashboard is ready so its loading screen isn't shown. It stays a server action because a client-side `signIn` raced the session cookie (see [pitfalls](../../practices/gotchas/nextjs-and-auth.md#github-sign-in-must-run-on-the-server)).
+Sign-in runs through the `signInWithGitHub` **server action**, which calls `signIn('github', { redirectTo: '/dashboard' })` on the server, so GitHub's callback lands on the dashboard directly (a full page load; the app's loading screen shows while it renders). It doesn't come back through the sign-in page to slide from there: the slide pictured that page on its first frame, mid-entrance, and held the still image until the dashboard was ready. It stays a server action because a client-side `signIn` raced the session cookie (see [pitfalls](../../practices/gotchas/nextjs-and-auth.md#github-sign-in-must-run-on-the-server)).
 
 The `signIn` callback refuses GitHub for an email that already belongs to a **password account** (or when GitHub's email doesn't match the linked user's): it deletes the account row the adapter just created and redirects to `/sign-in?error=OAuthAccountNotLinked`, where the form explains what happened. BitBin doesn't link the two sign-in methods.
 
@@ -80,7 +80,7 @@ Code reads the caller with `getAuthedSession()` (server actions) or `auth()` (pa
 
 ## The auth pages
 
-The five pages share `src/app/(auth)/layout.tsx`: a brand panel with an animated terminal showcase on the left, the form on the right. On mobile only the form column shows. The register form links to the [Terms](../../../src/app/terms/page.tsx) and [Privacy Policy](../../../src/app/privacy/page.tsx), which are public pages outside the `(auth)` group.
+The five pages share `src/app/(auth)/layout.tsx`: a brand panel on the left (the landing hero in miniature: the logo whose eyes follow the pointer and a serif headline whose first line types out what the bin holds, over a warm light), the form on the right, on a sheet laid over the panel's edge. They share the landing page's fonts, buttons and motion through `src/app/brand.css`. On mobile only the form column shows. The register form links to the [Terms](../../../src/app/terms/page.tsx) and [Privacy Policy](../../../src/app/privacy/page.tsx), which are public pages outside the `(auth)` group.
 
 ## Related
 

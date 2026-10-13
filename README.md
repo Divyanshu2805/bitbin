@@ -57,7 +57,7 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 - Tags with rename, merge and delete, favorites, pins, and a grid or list view remembered per browser
 - Monaco code editor with language auto-detection (31 languages), and a markdown editor with GitHub-flavored preview
 - Server-side search as you type (<kbd>⌘</kbd> / <kbd>Ctrl</kbd> + <kbd>K</kbd>), `#tag` filters, and keyboard shortcuts for everything (<kbd>N</kbd> new item, <kbd>C</kbd> new collection, <kbd>G</kbd> then a letter to navigate, <kbd>1</kbd>–<kbd>7</kbd> for each type, <kbd>?</kbd> for the full list)
-- Dark-first "graphite + lime" interface, a light theme held to WCAG AA contrast, motion that respects `prefers-reduced-motion`
+- A dark interface held to WCAG AA contrast, motion that respects `prefers-reduced-motion`
 
 **AI helpers (Pro)**: tag suggestions, a description generator, "Explain this code" and a prompt optimizer, on OpenAI or any OpenAI-compatible provider, including models without a JSON mode.
 
@@ -156,7 +156,7 @@ Found a problem? See [SECURITY.md](SECURITY.md).
 
 | | |
 |---|---|
-| Tests | 919 unit tests across 78 files (actions, library code and every route handler), all external services mocked; 45 more for the desktop app |
+| Tests | 975 unit tests across 81 files (actions, library code and every route handler), all external services mocked; 45 more for the desktop app |
 | Coverage | about 85% of statements over `src/actions`, `src/lib` and `src/app/api`, with an 80% floor enforced in CI |
 | CI | audit, lint, tests with the coverage floor and a build on every push and pull request |
 | Lighthouse (production build) | accessibility 100, SEO 100, best practices 96, performance 80–95 across 12 pages |

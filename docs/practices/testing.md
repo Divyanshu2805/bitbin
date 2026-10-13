@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-919 tests in 78 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+975 tests in 81 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -20,7 +20,7 @@ npm run test:watch   # watch mode
 | Search | `src/actions/search.test.ts`, `src/lib/db/search.test.ts` | Result shape, `#tag` parsing, escaping of `%` and `_`, previews cut in SQL |
 | Pagination | `src/lib/keyset.test.ts` | Cursor round trips, bad cursors, `after` / `before`, page edges |
 | AI | `src/actions/ai.test.ts`, `src/lib/ai-json.test.ts`, `src/lib/openai.test.ts`, `src/app/api/v1/ai/*/route.test.ts` | Auth and Pro guards, validation, rate limiting, prompts, JSON mode with a fallback, JSON found in fences and sentences, the `AI_API_KEY` / `OPENAI_API_KEY` names, the token endpoints' status codes |
-| API tokens and `/api/v1` | `src/actions/api-tokens.test.ts`, `src/lib/api-tokens.test.ts`, `src/lib/api-auth.test.ts`, `src/app/api/v1/*/route.test.ts` | Pro guard, token limit, hash-only storage, expiry, scopes per endpoint, scoped revoke; Bearer parsing; `401` / `403` / `413` / `429`; `POST /api/v1/files` cleaning up after a failed create |
+| API tokens and `/api/v1` | `src/actions/api-tokens.test.ts`, `src/lib/api-tokens.test.ts`, `src/lib/api-auth.test.ts`, `src/app/api/v1/*/route.test.ts`, `src/lib/mcp.test.ts` | Pro guard, token limit, hash-only storage, expiry, scopes per endpoint, scoped revoke; Bearer parsing; `401` / `403` / `413` / `429`; `POST /api/v1/files` cleaning up after a failed create; searching and reading items without a stored file's address; the MCP server (protocol answers, tools hidden and refused by scope, saving into a collection by name) |
 | Files | `src/lib/r2.test.ts`, `file-ingest.test.ts`, `image-sanitize.test.ts`, `file-url.test.ts`, `upload-parts.test.ts`, `src/app/api/upload/route.test.ts`, `upload/part/route.test.ts`, `v1/files/part/route.test.ts`, `download/[...path]/route.test.ts` | Validation and signatures, EXIF stripped by a real `sharp` round trip, decompression bombs refused, key parsing; uploads in parts (ids, indexes, sizes, joining in order, missing parts, cleanup); ownership (`403` for another user's file), streamed downloads with their length, attachment headers, the sandboxed `?inline=1` preview |
 | Orphan sweep | `src/lib/orphan-sweep.test.ts`, `src/app/api/cron/sweep-files/route.test.ts` | Only old, upload-shaped, unreferenced objects, and abandoned upload parts; the abort when most of the bucket looks orphaned; dry runs; the cron secret |
 | Export | `src/lib/db/export.test.ts`, `export-files.test.ts`, `export-zip.test.ts`, `src/app/api/export/route.test.ts` | Whole-library and per-collection data, the ZIP returned as a stream, its folders, extensions and safe unique names, `zipPath`, never reading another user's object |
@@ -31,7 +31,7 @@ npm run test:watch   # watch mode
 | Security plumbing | `src/lib/csp.test.ts`, `security-headers.test.ts`, `same-origin.test.ts`, `rate-limit.test.ts`, `validation.test.ts` | The policy (no third-party script, no eval, `connect-src 'self'`), which rule applies to which path, the cross-site check, rate-limit fallbacks and client-IP rules, `safeCallbackPath` and `safeUrlSchema` |
 | Operations | `src/lib/monitoring.test.ts`, `monitoring-start.test.ts`, `db-url.test.ts`, `db-safety.test.ts` | What is stripped from an error event, Sentry off without a DSN, `sslmode` rewriting, the guard on destructive scripts |
 | Extension download | `src/lib/extension-package.test.ts`, `src/app/api/extension/download/route.test.ts` | ZIP contents, localhost stripped in production, Pro only |
-| Pages and theme | `src/app/robots.test.ts`, `src/app/theme-contrast.test.ts`, `src/app/api/items/[id]/route.test.ts` | `robots.txt` and the sitemap never overlap; the light theme's tokens meet WCAG AA; the drawer's item fetch |
+| Pages and theme | `src/app/robots.test.ts`, `src/app/theme-contrast.test.ts`, `src/app/api/items/[id]/route.test.ts` | `robots.txt` and the sitemap never overlap; the theme's tokens meet WCAG AA; the drawer's item fetch |
 | Small helpers | `src/lib/detect-language.test.ts`, `explanation-store.test.ts`, `utils/date.test.ts`, `utils/color.test.ts`, `constants/editor.test.ts` | Language detection for each picker language, the browser-side explanation cache, relative dates, readable type colours, editor defaults |
 
 ## Conventions

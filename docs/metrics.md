@@ -6,7 +6,7 @@ Measured figures for BitBin, each with how to re-check it. Nothing here is an es
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 919 across 78 files (Vitest), all passing | `npm run test` |
+| Unit tests | 975 across 81 files (Vitest), all passing | `npm run test` |
 | Desktop app tests | 45 (`node:test`), all passing | `cd desktop && npm test` |
 | Statement coverage | 85.2% (2,353 of 2,761) | `npm run test:coverage` |
 | Branch coverage | 85.3% (1,501 of 1,760) | same |
@@ -14,7 +14,7 @@ Measured figures for BitBin, each with how to re-check it. Nothing here is an es
 | Function coverage | 75.5% (333 of 441) | same |
 | Coverage floor enforced in CI | 80% statements, branches and lines; 70% functions | `vitest.config.ts` |
 | Scope of coverage | `src/actions`, `src/lib`, `src/app/api` (server code); components are checked in the browser | `vitest.config.ts` |
-| Route handlers with tests | 26 of 26 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
+| Route handlers with tests | 28 of 28 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |
 | CI checks per push | 4: production dependency audit, lint, tests with the coverage floor, build | `.github/workflows/ci.yml` |
 | Concurrency-tested behaviours | Free-plan item and collection caps, single-use email links | `plan-limits.test.ts`, `tokens.test.ts` |
 
@@ -36,7 +36,7 @@ Lighthouse on a production build (`npm run build && npm run start`), signed-in p
 | Profile | 83 | 100 | 96 | 100 |
 | Upgrade | 82 | 100 | 96 | 100 |
 
-- Accessibility is 100 on all 12 pages measured, with no horizontal scroll at 375 px on any of them. Lighthouse ran on the dark theme (the default); the light theme's colour tokens are held to WCAG AA contrast by `src/app/theme-contrast.test.ts`.
+- Accessibility is 100 on all 12 pages measured, with no horizontal scroll at 375 px on any of them. The theme's colour tokens are held to WCAG AA contrast by `src/app/theme-contrast.test.ts`.
 - Best practices is 96 only because the Vercel analytics script doesn't exist on localhost; it is not an issue in production.
 - Performance was measured on localhost with simulated throttling; treat it as relative, not as production field data.
 
@@ -102,7 +102,7 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 | Application source (TypeScript and TSX, without tests or generated code) | about 29,700 lines |
 | Test code | about 11,600 lines |
 | Database models / migrations | 10 / 9 |
-| Route handlers / server actions | 27 (including NextAuth's) / 28 |
+| Route handlers / server actions | 29 (including NextAuth's) / 28 |
 | React components | 143 |
 | Item types | 7 (snippet, prompt, command, note, file, image, link) |
 | Clients of the token API | 2 (browser extension, desktop app) |

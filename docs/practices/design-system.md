@@ -1,74 +1,84 @@
 # Design System
 
-BitBin is **dark-first** (with a full light theme) and drawn as **an IDE for your knowledge**: near-black
-editor surfaces, hairline borders, one loud accent (acid lime) for primary
-actions, coral and cyan used sparingly, and mono metadata everywhere. The
-homepage, the auth screens and the app share one vocabulary — `~/path` pills,
-`// section` comment labels, TUI panes, terminal buttons, a status bar. All
-tokens live in `src/app/globals.css`.
+BitBin is **dark only** and drawn on warm paper, the landing page's look on
+every page: charcoal sheets, each layer (page, surface, card,
+popover) a clear step from the one under it, flat rounded cards, serif headings, one accent (clay) for
+primary actions, sage and heather used sparingly, and mono kept for labels and metadata. Nothing is
+see-through, blurred or glowing: every surface is a solid colour. All tokens live in `src/app/globals.css`.
 
 ## Color tokens
 
-| Token | Dark | Light | Used for |
-| --- | --- | --- | --- |
-| `--background` | `#08090a` | `#eff2e9` | Page background |
-| `--surface` | `#0c0d0f` | `#ffffff` | Title bars, panel header strips, nested tiles |
-| `--card` | `#0e1013` | `#ffffff` | Cards, panes, panels |
-| `--popover` | `#121418` | `#ffffff` | Menus, dialogs, the ⌘K palette |
-| `--muted` / `--secondary` | `#17191d` | `#eeeee9` | Chips, kbd, subtle fills |
-| `--border` | `#23262c` | `#dcddd5` | Hairlines |
-| `--foreground` | `#ededee` | `#14161a` | Body text |
-| `--muted-foreground` | `#a3a8b1` | `#545961` | Secondary text, mono metadata |
-| `--faint` | `#a3a8b1` at 55% | `#5e636b` | Decorative text that still has to be read: line numbers, `//` labels, hints. Use `text-faint dark:text-muted-foreground/50`, never a bare `text-muted-foreground/50` (about 2:1 in the light theme) |
-| `--primary` / `--brand-lime` | `#c2f24b` | `#406200` | Primary buttons, active nav, focus ring, prompts (`$`, `>`) |
-| `--brand-coral` | `#ff7a4d` | `#9d350a` | Upgrade, `PRO` tags, nearly-full limits, the logo's falling bit |
-| `--brand-cyan` | `#5ee6d8` | `#08635d` | Collections, gradient partner to lime |
-| `--destructive` | `#ff5a4a` | `#a42919` | Delete actions, errors |
+| Token | Value | Used for |
+| --- | --- | --- |
+| `--background` | `#151514` | Page background |
+| `--surface` | `#1c1b19` | Title bars, panel header strips, nested tiles, every second sheet of the landing page |
+| `--card` | `#222120` | Cards, panes, panels |
+| `--popover` | `#2b2927` | Menus, dialogs, the ⌘K palette |
+| `--muted` / `--secondary` | `#2f2d2a` | Chips, kbd, subtle fills |
+| `--border` | `#4b453b` | Hairlines |
+| `--foreground` | `#fbfaf6` | Body text |
+| `--muted-foreground` | `#d3cec4` | Secondary text, mono metadata |
+| `--faint` | `#b8b1a4` | Decorative text that still has to be read: line numbers, `//` labels, hints. Use `text-faint` |
+| `--primary` / `--brand-lime` | `#e3a184` | Primary buttons, active nav, focus ring, prompts (`$`, `>`). Clay; the token and its `lime` utilities keep their first name |
+| `--brand-coral` | `#e3a184` | Upgrade, `PRO` tags, nearly-full limits. The same clay as the primary |
+| `--logo-light` / `--logo-deep` / `--logo-bit` | `#f4bfa5` / `#d98863` / `#ffc857` | The logo only: the bin and the `Bin` of the wordmark (`.logo-word`) run from the light clay down to the deep one, and the falling bit is amber. `icon.svg`, `apple-icon.tsx` and `opengraph-image.tsx` repeat the three values |
+| `--brand-cyan` | `#afc6b1` | Collections. Sage |
+| `--brand-violet` | `#c9a4c1` | The AI helpers. Heather |
+| `--brand-green` | `#7fd196` | The homepage's data and privacy section and its navbar link. Green |
+| `--destructive` | `#ff8679` | Delete actions, errors |
 | `--tok-*` | | | Syntax colours for code previews and terminal output |
 
-The light brand hues are deepened versions of the dark ones, chosen so each
-clears 4.5:1 as text on the page, on cards, on the green sidebar and on an 8%
-wash of itself (badges and chips). `--input` is darker in the light theme
-(3:1) because a field's edge is its only outline. `src/app/theme-contrast.test.ts`
-reads the tokens from `globals.css` and fails when a pairing drops below AA, so
-change a colour there and the test tells you what it breaks.
+Each accent clears 4.5:1 as text on the page, on cards, on muted fills, on the sidebar and on an 8%
+wash of itself (badges and chips). `src/app/theme-contrast.test.ts` reads the tokens from `globals.css`
+and fails when a pairing drops below AA, so change a colour there and the test tells you what it breaks.
 
 Tailwind exposes them as `bg-lime`, `text-coral`, `border-cyan`,
 `bg-surface`, `text-tok-path`, etc. (see `@theme inline`).
 
-## Themes
+## Theme
 
-The light palette lives under `:root`, the dark one under `.dark`. next-themes
-(`components/theme-provider.tsx`) puts `.dark` on `<html>` before paint and
-remembers the choice; dark is the default, and `ThemeToggle` in the top bar
-flips between light and dark in one click. Each palette also sets `color-scheme`, which is
-what makes `light-dark()` pick the right half.
+There is one theme, and it is dark. The palette lives under `:root` with `color-scheme: dark`, and the
+root layout puts `class="dark"` on `<html>`, so `dark:` utilities and `light-dark()` pairs written
+before the light theme was removed keep resolving to their dark half. There is no theme toggle and no
+theme provider. New code uses the tokens directly and needs neither a `dark:` variant nor a
+`light-dark()` pair.
 
-- **Never hardcode a dark-only colour** (`#1e1e1e`, `mix(…, white)`, a
-  near-black keycap) in the app. Use a token, or one of the theme variables:
-  `--tint` (what accent text mixes towards to stay readable),
-  `--btn-drop`, `--editor-bg`, `--editor-chrome`, `--scroll-thumb`.
-- For a one-off pair, `light-dark(#lightValue, #darkValue)` in a style works.
-- Tailwind palette colours used as text need a light shade too:
-  `text-amber-500 dark:text-amber-400`.
-- Monaco's themes are all dark; in light mode the code editor uses
-  `github-light` whatever the editor preference says.
-- **The homepage follows the app theme**, with a `ThemeToggle` in its navbar.
+- **The homepage uses the same palette.**
+  The navbar is a flat bar across the top: the logo and the sections on the left,
+  Sign in on the right; a hairline and a light blur come in once the page scrolls. One card highlights its
+  links (`.nav-pill`): the section you are in is a solid card popped up out of the bar in the section's
+  colour, not an underline, and it glides to the next link as you scroll; the link under the pointer or focus
+  gets the same card, lighter, sliding from link to link. Hovering Features opens a panel under the bar laid
+  out like Claude's menus: a column per group, a small heading over plain links, the one you are in in its colour.
+  Once the page is inside one of the five feature sections, "Features" unfolds in place into a link for
+  each (Types, MCP, AI, Capture, Shortcuts) with the card on the current one, and folds back on leaving.
   Its demo windows use the theme's surfaces like the app does (`bg-card`,
   `bg-background` for terminals), pass type colours through `readableColor()` /
   `readableTint()`, and write theme-dependent shadows or keycaps as
-  `light-dark()` pairs. The bit rain reads its colours from the theme. The auth
-  brand panel follows the theme the same way. In light mode both sit on a
-  deeper green-grey page with darker secondary text (`BRAND_SURFACE` in
-  `components/homepage/brand-surface.ts`).
-- The app backdrop behind every page is `AppBackdrop` (DashboardLayout, rendered once by `src/app/(app)/layout.tsx`), a
-  layer behind the whole window that doesn't scroll. The sidebar (`--sidebar`
-  at 25% in dark, 60% in light) and the status bar are see-through over it, and the top bar and
-  `<main>` are transparent, so the glows run on under all of them:
-  a lime (top left) and a lime-cyan (top right) glow drifting slowly (still under
-  `prefers-reduced-motion`), a faint diagonal beam of light, a vignette and a
-  tiled grain, all from the `--backdrop-*` tokens. Nothing at the bottom
-  right. No grid or dot pattern.
+  `light-dark()` pairs. The landing page uses the app palette (`src/app/landing.css`
+  holds its layout and motion, not colours); its footer is the last sheet and
+  uses `--surface` like every second sheet.
+  Landing headings are set in a serif (Georgia) at regular weight, never italic; Geist is the
+  body face and JetBrains Mono is kept for code and metadata.
+  The hero is centred: the headline (its last line in clay, with a pen stroke that
+  draws under it) and the two actions in the middle of a ring of cards, with the bin they are
+  sorted into below (`HeroSort`). Behind it plays a muted, looping clip of someone at work at a computer, at 1.5× speed
+  (`HeroVideo`, `public/hero/desk.mp4`), darkened and faded at the edges; it pauses while the tab is hidden,
+  holds still for reduced motion and fades out as the scroll begins. It is the first sheet, with rounded shoulders under the navbar. The sheet after it
+  is "how it works" (`HowItWorks`): three stacked cards, each playing
+  its idea on a loop with rows in their item type's colour. How the page moves is under [Landing motion](#landing-motion).
+  The navbar pause control sets `data-motion-paused`, stopping CSS loops and demo
+  clocks through `usePagePaused`; scroll-linked motion keeps following the page.
+  Reduced-motion preferences disable CSS animation.
+  The sign-in pages and the Privacy and Terms pages share the landing page's look through
+  `src/app/brand.css` (imported by the homepage, the `(auth)` layout and `LegalPage`): `.brand` on a page's
+  root turns on the landing buttons, and headings use
+  a `.brand-serif` title that rises in (`.hero-line`) with a pen stroke under its accent
+  word. The auth brand panel is the landing hero in miniature (`HeroLogo`, `HeroVideo`, `.hero-backdrop`), its headline typing what the bin holds (`TypedWord`);
+  auth fields are plain boxes that take the accent on focus (`.auth-input`).
+- The app has no backdrop. The shell (sidebar, top bar, status bar) sits on `--sidebar`, and the page is a
+  sheet in `--background` laid over it with the landing sheets' rounded shoulder at its top left
+  (`DashboardLayout`).
 
 **Item type colors** (blue snippets, purple prompts, orange commands…) are
 data, not theme. They come from the `item_types` table and stay the same in
@@ -87,13 +97,14 @@ Self-hosted from `src/app/fonts/` with `next/font/local` in `src/app/layout.tsx`
 
 | Role | Font | Tailwind |
 | --- | --- | --- |
-| Body / UI | Geist | `font-sans` (default) |
-| Description text | IBM Plex Sans | `text-desc` (font + 80% foreground): page, panel, card and empty-state descriptions, landing and auth intros |
-| Headings | JetBrains Mono | `font-display` (applied to `h1`–`h4` automatically) |
+| Body / UI, buttons, card titles, numbers | Geist | `font-sans` (default) |
+| Description text | Geist, in `--muted-foreground` | `text-desc`: page, panel, card and empty-state descriptions, landing and auth intros |
+| Headings | Fraunces, upright, regular weight | `font-display` (applied to `h1`–`h4` automatically, with the "soft" axis set); `.brand-serif` for anything else |
 | Code, labels, counters, metadata | JetBrains Mono | `font-mono` |
 
-Labels are written like code: `~/items/snippets` pills over page titles,
-`// recent [10]` over sections, `[4]` for counts, `#tag` for tags.
+A page or dialog title has no label above it, and
+it rises out of its own line on load (`.hero-line`). Counts are `[4]`, tags `#tag`.
+Small titles inside cards and rows stay in Geist.
 
 ## The app shell
 
@@ -101,9 +112,9 @@ Labels are written like code: `~/items/snippets` pills over page titles,
 
 | Part | Component | Notes |
 | --- | --- | --- |
-| Title bar | `top-bar.tsx` | Sits over the content, beside the full-height sidebar, with no background or border (the backdrop runs through it). A three-column grid with the `>` search prompt (opens ⌘K) centred: example searches type themselves out with an always-blinking caret (`useTypewriter`). `upgrade` and the create buttons (their key on them) on the right; phones get the menu button and logo on the left |
-| Explorer | `sidebar.tsx`, `sidebar-nav.tsx` | Runs the full height, headed by the logo, the name and a collapse button (the button fades with the labels; on the rail, hovering the logo turns it into the expand button, with a tooltip and `[`). Each type's digit shortcut sits under its icon as a subscript. Collapses to an icon rail (`<html data-sidebar>`, restored before paint): the width animates, icons stay on the rail's centre line, labels fade, and `.sidebar-fold` blocks fold their height. One pill follows the pointer (a faint lime tint) and another glides to the current page (a stronger lime) (`.sidebar-pill`); a band of lime light sweeps across a row on hover (one way, like the buttons). Rows swap their count for their shortcut on hover; on the rail a tooltip shows name + key. Free users get the usage grid (`sidebar-usage.tsx`) |
-| Page | `main` | A faint grid and lime wash behind the header; content enters with `animate-page-in` |
+| Title bar | `top-bar.tsx` | Sits over the page sheet, beside the full-height sidebar, on the shell's surface. A three-column grid with the `>` search prompt (opens ⌘K) centred: example searches type themselves out with an always-blinking caret (`useTypewriter`). `upgrade` and the create buttons (their key on them) on the right; phones get the menu button and logo on the left |
+| Explorer | `sidebar.tsx`, `sidebar-nav.tsx` | Runs the full height, headed by the logo, the name and a collapse button (the button fades with the labels; on the rail, hovering the logo turns it into the expand button, with a tooltip and `[`). Each type's digit shortcut sits under its icon as a subscript. Collapses to an icon rail (`<html data-sidebar>`, restored before paint): the width animates, icons stay on the rail's centre line, labels fade, and `.sidebar-fold` blocks fold their height. A row under the pointer gets a light clay tint and the current page's row a stronger one, popped up a step (`.sidebar-row`); nothing slides between rows. Rows swap their count for their shortcut on hover; on the rail a tooltip shows name + key. Free users get the usage grid (`sidebar-usage.tsx`) |
+| Page | `main` | A sheet in `--background` with a rounded top-left corner; content enters with `animate-page-in` |
 | Status bar | `status-bar.tsx` | `~/bin/<path>`, items per type, key hints, plan. `md` and up |
 
 ### Keyboard shortcuts
@@ -137,62 +148,119 @@ Keyframes and utilities are defined once in `globals.css`:
 | `animate-page-in` | App pages rise out of a soft blur |
 | `animate-fade-up` | 14px rise + fade. Uses the `translate` property so it composes with hover transforms |
 | `stagger` | Put on a grid/list. Children fade up one after another |
-| `card-lift` | Hover lift + border/glow tinted by `--accent-color` (defaults to lime) |
-| `card-glow` | A gradient border in `--accent-color` on hover/focus |
+| `card-surface` | The one card: see [Cards](#cards) |
+| `card-lift` | On a card that opens something: a 2px rise, a deeper drop shadow and more of the card's `--tone` in its edge. No glow |
 | Animated icons | Icons inside any button, link, `role="button"`/`radio`/`option`, menu item, sidebar row or `[data-anim-icons]` move on hover, each its own way, keyed off lucide's `lucide-*` classes (plus turns, trash wiggles, download bobs, star spins…) |
 | `animate-shimmer` | Skeleton loading sweep (used by `<Skeleton />`) |
 | `animate-led` | A breathing status LED (status bar) |
-| `.logo-mark` | The logo loops: the lid swings open, the bit drops in, the lid shuts (`LogoMark`, on by default) |
+| `.logo-mark` | The logo loops every 4.8s: the bit hops, the lid swings open, the bit tumbles in, the bin squashes and squints, the lid snaps shut, a new bit pops in, and it blinks while it waits (`LogoMark`, on by default). Four transform animations a mark; the hero's large mark (`.landing-hero-logo`) also moves its mouth and changes the bit's colour each loop. A mark under about 20px takes `animated={false}`: each running mark repaints its SVG every frame. `BinningLoader` is the same bin, large |
 | `.panel-anim` | The sidebar toggle's divider and arrow slide the way the panel will go on hover |
-| `animate-spin-slow` | The light running round the Pro card's border |
 | `shimmer-text` | A light sweeping across text (the agent spinner's verb) |
 
+### Landing motion
+
+The landing page's motion lives in `src/app/landing.css`. Two kinds, kept apart:
+
+**Loops**, which the navbar's pause control stops: the demos in the sheets below the hero, and the turning of the hero's ring.
+
+**The hero's story** (`HeroSort`) is told by the scroll. The hero is four screens tall and pins its
+contents under the navbar (`.hero-pin`); how far through it the page is (0 to 1) is the clock.
+At the top, twelve cards, each led by the large logo of the app it is stuck in with a short name under it, ride a ring
+around the headline. The ring is wider than the screen, so cards come and go at its edges; it turns by itself, quicker
+under the pointer, the scroll carries it along, and a wheel-up at the very top spins it backwards. One card at a time
+goes dashed and wears a `?`. The bin waits at the foot of the screen. Scrolling lifts the words away, raises the bin to
+the middle of the ring, and brings the cards in one after another, each into the panel for its type (six
+panels, two cards each: three to a row on a wide screen, two on a phone), whose count goes up as it lands. A card spins
+a full turn on the way and shrinks into its slot while the app's face melts into a BitBin item card with its type
+(`data-kept` says it is past half way). The loop writes each value on the element it moves, never as a custom property on the section or the bin, which would restyle everything inside on every frame. Nothing about a card is see-through, faded or glowing. With
+everything in, `debounce` is typed into the bin's search and the match lifts out of its row, with the footer's caption
+changing from what you'd be muttering ("which tab was that in?") to what you have. Scrolling back plays it in reverse.
+The switch in the bin's footer (its knob carries the logo, Without BitBin / With BitBin) shows which state is on screen
+and is a real control: a click scrolls to the other end of the story. One frame loop writes every card's place straight
+to the DOM, so React re-renders only when a card lands or leaves. The bin is a container sized in `cqw`, so it scales
+as one piece; its title bar and footer are scaled by `--k`, so they keep their size when the bin is wider. Under reduced motion nothing is pinned: the words, then the bin, sorted and still.
+
+**Scroll-linked motion**, written with CSS scroll timelines
+(`animation-timeline: view()` / `scroll()`), so it runs off the main thread, plays
+backwards on the way up and needs no JavaScript. Nothing travels against the
+scroll as it enters; blocks hinge, tilt and widen in place.
+
+| What | How |
+| --- | --- |
+| Sheets | Every `main > section` is opaque, alternates `--surface` / `--background` (the hero is the first, starting under the navbar), has rounded shoulders and overlaps the end of the one before. While it is covered, the outgoing section's inner block sinks, shrinks and dims (`sheet-recede`). The section itself never moves, so in-page links and the scroll spy measure the real layout |
+| `data-scroll="unfold"` | Hinged at its top edge, the block swings up to face you |
+| `data-scroll="tilt"` | Lies back like a screen and stands up (the hero demo, the shortcuts demo) |
+| `data-scroll="book-left"` / `"book-right"` | A pair opens like two pages (pricing cards, the data and privacy panels). `unfold` below 768px |
+| `data-scroll="widen"` | Grows outward from its middle |
+| `data-scroll="cascade"` / `"stack"` | On a parent: its children open one after another across a row, or each as it arrives down a column (the FAQ) |
+| `.ink` | A section heading is inked in reading order as it climbs the screen (`SectionHeading` wraps the title) |
+| `.flow-stack` | The "how it works" cards are `position: sticky` and stack; each shrinks a step while the next covers it |
+
+Use `data-scroll` for a large block (a window, a card, a panel) and keep
+`data-reveal` for text and small controls. Don't put both on one element, and don't
+put `data-scroll` on a `position: sticky` element. Browsers without scroll timelines
+fall back to the timed `data-reveal` fade (`useReveal` marks both attributes).
+
+Landing buttons (`.landing .btn-primary`, `.btn-secondary`) don't lift. The arrow
+sits in a round badge, which is a circle clipped out of a full-size layer
+(`::before`); on hover the circle grows until its colour is the whole button, the
+label takes the contrasting colour, and the arrow rides out on the right as a
+second comes in from the left. A button with no arrow fills from where the pointer
+came in (`--mx` / `--my`, written by `usePointerEffects`). "See it in action" draws
+its underline, and its ringed arrow fills with clay and drops through.
+
 Other helpers: `bg-grid`, `bg-dots`, `mask-radial`, `noise`,
-`text-brand-gradient`, `thin-scrollbar`, `.tui` / `.tui-title` (a pane whose
-title sits in its top border).
+`text-brand-gradient` (the accent word of a heading, solid clay), `thin-scrollbar`.
 
 `prefers-reduced-motion: reduce` disables all animations and transitions
-globally; `<AnimatedNumber />` jumps straight to its final value and `<TypeText />` shows its text at once.
+globally; `<AnimatedNumber />` jumps straight to its final value.
 
 ## Buttons
 
-`.btn` (globals.css) is the site's button: a lit top edge, a lift on hover and a
-real press. Variants: `.btn-primary` (lime), `.btn-secondary`, `.btn-terminal`
-(dark glass, mono, `$` prompt and caret). The shadcn `<Button />` is still used
-for icon/outline controls inside menus and forms.
+`.btn` (globals.css) is the landing and sign-in pages' button, with the fill described under
+[Landing motion](#landing-motion). Variants: `.btn-primary` (clay), `.btn-secondary`, `.btn-terminal`
+(mono, `$` prompt and caret, in the landing demos).
 
-Every app button is a **terminal button**:
-`<Button>` (all variants but `ghost` and `link`) is `.term-btn` — glass with a
-hairline edge and a mono label. Where the homepage's terminal button has its
-`$` prompt, an app button has **its own icon**, in the accent; every text button carries one
-(Cancel → `X`, Delete → `Trash2`, Save → `Save`…), so give new buttons one too.
-There's no text animation (no `ScrambleLabel`, no caret) in the app — that
-stays on the homepage. The auth submit (`AuthSubmit`) is a primary `<Button>` too,
-with the BitBin logo as its prompt and a blinking caret. On hover the icon is constructed
-stroke by stroke and holds (`gh-construct`, for every `[data-slot="button"]`,
-ghost included), a band of light in the accent sweeps across once, one way
-only, and resets unseen on leave (`.term-btn::after`), the edge lights in the accent and `.btn-kbd` keycaps
-press. Crosses (`lucide-x`) never turn: they shrink and fade. Icons that swap by
-`scale` (the theme toggle's sun and moon) carry `.theme-icon` so hover rules
-leave their scale alone.
-`.term-primary` (default variant) adds the accent glow along the bottom edge,
-`.term-outline` (outline / secondary) a softer version of it, so every button
-reads as lit at rest in its own accent, `.term-danger` is destructive. Set `--grid-color` to retint one (type chips use the item
-type's colour, Collection cyan, Upgrade coral). The GitHub sign-in button keeps
-its contribution grid (`.gh-button`, `<ContribGrid />`); the landing page's own
-`.btn` buttons are unchanged.
+Every app button is **the landing page's button** (`.term-btn`, on every `<Button>` variant but `ghost`
+and `link`): a flat block with a Geist label and a 10px corner. On hover a second colour (`--btn-fill`)
+grows out as a circle from where the pointer came in (`--mx` / `--my`, written by `useButtonFill`, one
+document listener mounted by `DashboardLayout`; from the bottom edge without it) until it is the whole
+button, and the label takes the contrasting colour (`--btn-ink`). No lift, no sheen, no glow; it shrinks a
+little on press. `.term-primary` (default variant) is clay filling with ink, `.term-outline` (outline /
+secondary) a card filling with a tint of its accent, `.term-danger` fills red, and `.term-bare` (the theme
+toggle, toolbar icons) shows only its icon at rest. Set `--grid-color` to retint an outline button (the
+quick-create chips use the item type's colour); its icon wears that colour. Give a text button an icon and
+write its label in sentence case. `.btn-kbd` inside is a flat keycap in the label's colour. The GitHub
+sign-in button keeps its contribution grid (`.gh-button`, `<ContribGrid />`).
 
-**Text fields** use the sign-in page's viewfinder. `<Input>` and `<Textarea>`
-render inside a `.field-frame`, whose four corner brackets snap in on focus;
-the field's border and its label take the accent too. The accent is `--ring`:
-lime, or the item type's colour in the item dialog and drawer. The tag box uses
-the same frame. The code and markdown editors don't: they're windows
-(`.editor-window`), so an editable one idles with grey traffic lights, and on
-focus the lights come on, an accent line draws along its top edge like an
-active editor tab, and the border, language label and a soft glow take the
-accent. For a new custom text
-box, put `field-frame` on its container (it must not clip with
-`overflow-hidden`; wrap it if it does).
+**Text fields** are the landing page's search box. `<Input>` and `<Textarea>` render inside a
+`.field-frame`: a plain box in the card colour with a 10px corner whose edge takes the accent on focus,
+with a soft ring round it; the field's label takes the accent too. The accent is `--ring`: clay, or
+whatever a dialog sets. The tag box uses the same frame (put `field-frame` on a custom box's container).
+The code and markdown editors are windows (`.editor-window`): an editable one idles with grey traffic
+lights, and on focus the lights come on, an accent line draws along its top edge like an active editor
+tab, and the border and language label take the accent.
+
+## Cards
+
+There is one card, `card-surface` (a utility in `globals.css`), taken from the landing page's workflow and
+pricing cards: opaque, a hairline edge, a 22px corner (`--card-radius`, 18px on a phone; `rounded-card` for
+anything that only needs the corner) and a soft drop shadow. No blur, no transparency, no gradient wash and
+no glowing or animated border. Set `--tone` on it and that colour is mixed into the surface and the edge
+as a solid colour:
+
+| Card | `--tone` |
+| --- | --- |
+| Item cards, image cards | The item type's colour, through `readableColor()` |
+| Collection cards | `--brand-cyan` (sage) |
+| The Pro plan card | Clay at the landing pricing card's strength (34% into `--plan-ink`); the Free card sits on `--plan-ink` |
+| A danger `Panel` | `--destructive` |
+| Panels, the dashboard overview, lists, the Free plan card, `<Card>` | None: plain `--card` |
+
+Dialogs and the item drawer are the same shape (`rounded-card`, `bg-card`, `--shadow-lift`) over a plain
+dimmed overlay. Tiles nested in a card (a code preview, a stat, a usage meter) are `rounded-xl` boxes in
+`--background` with a hairline. A new card uses `card-surface`; never write `bg-card/80`,
+`backdrop-blur` or a coloured `box-shadow`.
 
 > `.btn` and `.btn-kbd` are unlayered CSS, so they beat Tailwind utilities such
 > as `hidden` or `sm:inline-flex`. Put responsive visibility on a wrapper
@@ -202,18 +270,17 @@ box, put `field-frame` on its container (it must not clip with
 
 | Component | Path | Use |
 | --- | --- | --- |
-| `PageHeader` | `components/shared/page-header.tsx` | `~/path` pill, title (types itself in behind a lime caret), `[count]`, description, actions |
-| `SectionHeader` | `components/dashboard/section-header.tsx` | `// title [n] ─── view all →` rule over a section |
-| `Panel` / `ProTag` | `components/shared/panel.tsx` | Settings/profile pane with a header strip; `tone="danger"` |
+| `PageHeader` | `components/shared/page-header.tsx` | Kicker, serif title that rises in, `[count]`, description, actions |
+| `SectionHeader` | `components/dashboard/section-header.tsx` | Serif title, `[n]`, a hairline and a `View all →` link over a section |
+| `Panel` / `ProTag` | `components/shared/panel.tsx` | Settings/profile card with a header (icon, serif title, description); `tone="danger"` |
 | `EmptyState` | `components/shared/empty-state.tsx` | The bin, a title and what to do next |
 | `Kbd` | `components/shared/kbd.tsx` | Key caps for a shortcut hint |
 | `UsageMeter` | `components/shared/usage-meter.tsx` | `items 18 / 50` over a bar that turns coral at 90% |
 | `ItemCard` | `components/dashboard/item-card.tsx` | Grid card: type chip, title, code/URL preview with "+N more", tag chips; hover toolbar (copy, favorite, pin, ⋯ menu with delete) |
 | `ItemRow` | `components/items/item-row.tsx` | One item per line, for the list view (`ItemsView`) and favorites |
-| `BinOverview` | `components/dashboard/bin-overview.tsx` | The dashboard's `bin --stats` pane: counters and the per-type bar |
-| `QuickCreate` | `components/dashboard/quick-create.tsx` | `+ new snippet prompt command …` chips |
+| `BinOverview` | `components/dashboard/bin-overview.tsx` | The dashboard's overview card: counters and the per-type bar |
+| `QuickCreate` | `components/dashboard/quick-create.tsx` | `New` and a chip per type, each in the type's colour |
 | `AgentSpinner`, `ToolLine`, `ResultLine` | `components/shared/agent-spinner.tsx` | `✻ Indexing…` loading states; `⏺ Load(…)` / `⎿ result` lines |
-| `TypeText` | `components/shared/type-text.tsx` | Content that types itself in, one character per step, behind a caret |
 | `AnimatedNumber` | `components/shared/animated-number.tsx` | Count-up numbers |
 | `ItemTypeIcon` | `components/shared/item-type-icon.tsx` | Renders an item type's Lucide icon by name |
 | `Section`, `CtaLink`, `ScrambleLabel`, `Window` | `components/homepage/ui.tsx` | Homepage building blocks |

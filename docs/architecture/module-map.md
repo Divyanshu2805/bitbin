@@ -8,8 +8,8 @@ What lives where, and the rules for which layer may call which.
 src/
 ├── app/
 │   ├── (auth)/            sign-in, register, verify-email, forgot-password, reset-password: one split-screen layout
-│   ├── (app)/             every signed-in page; layout.tsx renders the shell (sidebar, top bar, status bar,
-│   │                      backdrop) once and keeps it mounted, loading.tsx fills only the content area
+│   ├── (app)/             every signed-in page; layout.tsx renders the shell (sidebar, top bar, status
+│   │                      bar) once and keeps it mounted, loading.tsx fills only the content area
 │   │   ├── dashboard/     stats, collections, pinned and recent items (+ error.tsx)
 │   │   ├── items/[type]/  items of one type: /items/snippets, /items/prompts, …
 │   │   ├── collections/   paginated list and /collections/[id]
@@ -28,9 +28,9 @@ src/
 │   ├── page.tsx           marketing homepage
 │   ├── privacy/, terms/   public Privacy Policy and Terms of Service (shared `LegalPage` frame)
 │   ├── robots.ts, sitemap.ts, opengraph-image.tsx, twitter-image.tsx, apple-icon.tsx, favicon.ico, icon.svg
-│   ├── layout.tsx         fonts, ThemeProvider (next-themes, dark default), Toaster, Vercel Analytics
+│   ├── layout.tsx         fonts, the `dark` class on <html> (the one theme), Toaster, Vercel Analytics
 │   ├── globals.css        design tokens and motion utilities
-│   └── theme-contrast.test.ts   holds the light theme's colour tokens to WCAG AA
+│   └── theme-contrast.test.ts   holds the theme's colour tokens to WCAG AA
 ├── actions/               server actions: items, collections, tags, ai, api-tokens, search, settings, import, auth
 ├── auth.ts, auth.config.ts   NextAuth: the full config, and the edge-safe subset used by proxy.ts
 ├── proxy.ts               guards /dashboard/*
@@ -59,6 +59,8 @@ src/
 │   ├── tokens.ts, credentials.ts        hashed single-use email tokens; the email-and-password sign-in check
 │   ├── api-tokens.ts, api-auth.ts, api-scopes.ts   personal access tokens, the /api/v1 Bearer check, permissions
 │   ├── item-create.ts     item creation shared by the action and /api/v1
+│   ├── api-item.ts        how /api/v1 and the MCP tools search items and hand one to a client
+│   ├── mcp.ts             the MCP server behind POST /api/v1/mcp: JSON-RPC and the four tools
 │   ├── collection-create.ts  collection creation (schema, Free cap) shared by the action and /api/v1
 │   ├── ai-tags.ts, ai-description.ts, ai-json.ts, openai.ts   AI helpers shared by actions and /api/v1, the client
 │   ├── file-ingest.ts, image-sanitize.ts, r2.ts, file-url.ts  every upload check, photo re-encoding, storage,

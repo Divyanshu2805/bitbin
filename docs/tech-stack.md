@@ -15,7 +15,7 @@ The languages, frameworks and services BitBin is built on, and what each one is 
 | Search UI | `cmdk` | The ⌘K command palette |
 | Icons, toasts | Lucide, Sonner | |
 | Motion | Lenis (smooth scrolling on the homepage), CSS View Transitions, CSS animations | Page slides, scroll reveals, card and button effects; all off under `prefers-reduced-motion` |
-| Theming | `next-themes` | Dark by default, light available |
+| Theming | CSS variables | One dark theme; `next-themes` is no longer used by the app |
 
 ## Data
 

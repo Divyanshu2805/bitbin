@@ -11,7 +11,7 @@ Everything BitBin does for the person using it, by area, with the limits that ap
 | Snippets, prompts, commands, notes, links | ✓ | ✓ |
 | Files (10 MB) and images (5 MB) | | ✓ |
 | AI helpers (20 requests an hour) | | ✓ |
-| API tokens, browser extension, desktop app | | ✓ |
+| API tokens, browser extension, desktop app, MCP server for AI assistants | | ✓ |
 | ⌘K search, tags, favorites, pins, tag management | ✓ | ✓ |
 | JSON export and import | ✓ | ✓ |
 | ZIP export and import (with files) | | ✓ |
@@ -82,7 +82,16 @@ Two companion apps save into BitBin without opening it, through the [token API](
 | Extras | Collection picker (create one on the spot), tags, language picker, ✦ Suggest | Collection picker (create one on the spot), tags, ✦ Suggest, start at login, a changeable shortcut |
 | Install | Download from **Settings → Browser extension**, load unpacked | Download from **Settings → Desktop app**, or run from [`desktop/`](../desktop/README.md) |
 
-**API tokens** (Settings → Browser extension) connect them: `bb_…` tokens shown once, stored hashed, expiring after 30, 90 or 365 days, revocable, at most 10 per account, and limited to the permissions chosen when they are made: *List collections*, *Save items*, *Save files and images* and *AI suggestions*.
+**API tokens** (Settings → Browser extension) connect them: `bb_…` tokens shown once, stored hashed, expiring after 30, 90 or 365 days, revocable, at most 10 per account, and limited to the permissions chosen when they are made: *List collections*, *Search and read items*, *Save items*, *Save files and images* and *AI suggestions*.
+
+## AI assistants (Pro)
+
+BitBin is a Model Context Protocol (MCP) server, so Claude or any other MCP client can work with the bin directly.
+
+- **Connect** with one command from **Settings → AI assistants** and an API token: `claude mcp add --transport http bitbin …/api/v1/mcp --header "Authorization: Bearer bb_…"`.
+- **Tools**: search the bin (the ⌘K search, `#tag` included), read an item in full, list collections, and save a snippet, prompt, command, note or link, filed into a collection by name (made if it doesn't exist).
+- **Permissions** are the token's: one with only *Search and read items* gives a read-only assistant, and revoking the token disconnects it. Files and images can be found and described, but their contents aren't sent.
+- The same search and read are plain endpoints too (`GET /api/v1/items`), for scripts.
 
 ## Import and export
 
@@ -103,7 +112,7 @@ An import shows a preview first (counts by type, collections, tags), can skip it
 - **Sign out everywhere** ends every session on every device. Sessions otherwise last 14 days.
 - **Profile** shows usage by type and lets you rename yourself in place.
 - **Delete account** cancels the subscription, deletes every uploaded file, then the account and everything in it.
-- **Editor preferences**: font size, tab size, word wrap, minimap and theme (`vs-dark`, `monokai`, `github-dark`; the light app theme uses `github-light`).
+- **Editor preferences**: font size, tab size, word wrap, minimap and theme (`vs-dark`, `monokai`, `github-dark`).
 
 ## The demo account
 
@@ -111,7 +120,7 @@ An import shows a preview first (counts by type, collections, tags), can skip it
 
 ## Interface
 
-- Dark "graphite and lime" theme by default, light theme available. Light-theme contrast is checked against WCAG AA by a test.
+- One dark theme. Its contrast is checked against WCAG AA by a test.
 - A collapsible sidebar (`[`) with the seven types, favorite and recent collections, and a usage meter for Free accounts; a sheet on phones.
 - Page slides between routes, scroll reveals on the homepage, and motion that turns off under `prefers-reduced-motion`.
 - Works at phone width with no horizontal scroll; every control is reachable by keyboard.
