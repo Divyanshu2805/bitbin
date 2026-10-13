@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { HistorySlides } from "@/components/shared/transition-link";
 import { VIEW_SCRIPT } from "@/lib/view-mode-script";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // The fonts are self-hosted (latin variable files from Google Fonts, in
@@ -37,7 +37,7 @@ const jetbrainsMono = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    default: SITE_NAME,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -46,14 +46,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: "/",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
 };
