@@ -3,16 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, ExternalLink, MoreHorizontal, PanelRightOpen, Pin, Star, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, MoreHorizontal, Pin, Star, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useItemDrawer } from "@/components/items/item-drawer-provider";
 import DeleteItemDialog from "@/components/items/delete-item-dialog";
 import { AddToCollectionMenu } from "@/components/items/add-to-collection-menu";
 import { RemoveFromCollectionItem } from "@/components/collections/current-collection";
@@ -22,14 +20,13 @@ import { cn } from "@/lib/utils";
 import type { ItemWithType } from "@/lib/db/items";
 
 /**
- * An item's ⋯ menu on its own, for list rows: open, visit, copy, favorite,
+ * An item's ⋯ menu on its own, for list rows: visit, copy, favorite,
  * pin, add to (or, on a collection's page, remove from) a collection and delete. (Cards build theirs into the hover
  * toolbar, sharing its optimistic favorite / pin state.) Clicks and keys stop
  * here, so they never also open the row.
  */
 export function ItemActionsMenu({ item, className }: { item: ItemWithType; className?: string }) {
   const router = useRouter();
-  const { openDrawer } = useItemDrawer();
   const { copy } = useClipboard();
   const [open, setOpen] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -88,11 +85,6 @@ export function ItemActionsMenu({ item, className }: { item: ItemWithType; class
         </DropdownMenuTrigger>
         {/* The menu is portalled, but React events still bubble to the row */}
         <DropdownMenuContent align="end" className="w-48" onClick={stop}>
-          <DropdownMenuItem onSelect={() => openDrawer(item.id)}>
-            <PanelRightOpen />
-            Open
-            <DropdownMenuShortcut>↵</DropdownMenuShortcut>
-          </DropdownMenuItem>
           {item.url && (
             <DropdownMenuItem asChild>
               <a href={item.url} target="_blank" rel="noopener noreferrer">
@@ -107,7 +99,7 @@ export function ItemActionsMenu({ item, className }: { item: ItemWithType; class
               Copy {item.url && !item.content ? "URL" : "content"}
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
+          {(item.url || copyable) && <DropdownMenuSeparator />}
           <DropdownMenuItem onSelect={toggleFavorite}>
             <Star />
             {item.isFavorite ? "Unfavorite" : "Favorite"}

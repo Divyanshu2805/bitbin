@@ -3,7 +3,7 @@
 import { useState, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Star, Pin, Copy, Check, MoreHorizontal, PanelRightOpen, ExternalLink, Trash2 } from "lucide-react";
+import { Star, Pin, Copy, Check, MoreHorizontal, ExternalLink, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { readableColor } from "@/lib/utils/color";
 import { ItemTypeIcon } from "@/components/shared/item-type-icon";
@@ -17,7 +17,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ItemWithType } from "@/lib/db/items";
@@ -288,11 +287,6 @@ export default function ItemCard({ item }: ItemCardProps) {
                 </DropdownMenuTrigger>
                 {/* The menu is portalled, but React events still bubble to the card */}
                 <DropdownMenuContent align="end" className="w-48" onClick={stop}>
-                  <DropdownMenuItem onSelect={() => openDrawer(item.id)}>
-                    <PanelRightOpen />
-                    Open
-                    <DropdownMenuShortcut>↵</DropdownMenuShortcut>
-                  </DropdownMenuItem>
                   {item.url && (
                     <DropdownMenuItem asChild>
                       <a href={item.url} target="_blank" rel="noopener noreferrer">
@@ -307,7 +301,7 @@ export default function ItemCard({ item }: ItemCardProps) {
                       Copy {item.url && !item.content ? "URL" : "content"}
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
+                  {(item.url || copyable) && <DropdownMenuSeparator />}
                   <DropdownMenuItem onSelect={handleToggleFavorite}>
                     <Star />
                     {state.isFavorite ? "Unfavorite" : "Favorite"}
