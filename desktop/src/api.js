@@ -86,6 +86,12 @@ function buildItemBody(form, itemTypes) {
   return body;
 }
 
+/** The body for `POST /api/v1/collections`: a trimmed name, or null when it is empty or too long. */
+function buildCollectionBody(name) {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  return trimmed && trimmed.length <= 100 ? { name: trimmed } : null;
+}
+
 /** The body the two AI endpoints share. */
 function buildSuggestBody(form, itemTypes) {
   const item = buildItemBody(form, itemTypes);
@@ -105,6 +111,7 @@ module.exports = {
   ApiError,
   apiRequest,
   baseUrls,
+  buildCollectionBody,
   buildItemBody,
   buildSuggestBody,
 };

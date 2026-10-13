@@ -22,7 +22,7 @@ const {
   shell,
 } = require('electron');
 
-const { ApiError, apiRequest, baseUrls, buildItemBody, buildSuggestBody, PRODUCTION_URL } = require('./src/api');
+const { ApiError, apiRequest, baseUrls, buildCollectionBody, buildItemBody, buildSuggestBody, PRODUCTION_URL } = require('./src/api');
 const { createConfigStore } = require('./src/config');
 const { ITEM_TYPES, parseTags, prefillFrom } = require('./src/guess');
 const {
@@ -360,6 +360,11 @@ function registerIpc() {
     attachment = null;
   });
   handle('capture:collections', () => api('/collections'));
+  handle('capture:create-collection', (_event, name) => {
+    const body = buildCollectionBody(name);
+    if (!body) throw new ApiError('Give the collection a name of 100 characters or less.', 400);
+    return api('/collections', { method: 'POST', body });
+  });
   handle('capture:save', async (_event, form) => {
     if (attachment) {
       // A file too large for one request goes up in parts first, and the save names them

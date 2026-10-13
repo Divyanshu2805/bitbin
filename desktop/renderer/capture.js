@@ -4,6 +4,7 @@ const desktop = window.bitbin;
 let itemTypes = [];
 let lastCollectionId = '';
 let collectionsLoaded = false;
+let tags = [];
 /** The file or image waiting to be saved, as the main process describes it (never its bytes) */
 let attached = null;
 
@@ -73,6 +74,76 @@ async function removeAttachment() {
   applyAttachment(null);
 }
 
+/** The chips plus whatever is still being typed, so nothing is lost on save. */
+function currentTags() {
+  return [...new Set([...tags, ...parseTags($('tags').value)])];
+}
+
+function parseTags(value) {
+  return value.split(',').map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+}
+
+function renderTags() {
+  for (const chip of $('tag-box').querySelectorAll('.tag-chip')) chip.remove();
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.append('#' + tag);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', 'Remove ' + tag);
+    remove.addEventListener('click', () => {
+      tags = tags.filter((t) => t !== tag);
+      renderTags();
+      $('tags').focus();
+    });
+    chip.append(remove);
+    $('tag-box').insertBefore(chip, $('tags'));
+  }
+  $('tags').placeholder = tags.length ? '' : 'Type a tag, press Enter';
+}
+
+/** Move what's typed into chips. */
+function commitTagDraft() {
+  const added = parseTags($('tags').value);
+  $('tags').value = '';
+  if (!added.length) return;
+  tags = [...new Set([...tags, ...added])];
+  renderTags();
+}
+
+function showNewCollection(visible) {
+  $('new-collection').hidden = !visible;
+  $('show-new-collection').hidden = visible;
+  if (visible) $('new-collection-name').focus();
+  else $('new-collection-name').value = '';
+}
+
+/** Create a collection from the inline row and pick it, so the save goes into it. */
+async function createCollection() {
+  const name = $('new-collection-name').value.trim();
+  if (!name) {
+    $('new-collection-name').focus();
+    return;
+  }
+  $('create-collection').disabled = true;
+  setStatus('Creating collection…');
+  const result = await desktop.capture.createCollection(name);
+  if (result.ok) {
+    const option = document.createElement('option');
+    option.value = result.data.id;
+    option.textContent = result.data.name;
+    $('collection').append(option);
+    $('collection').value = result.data.id;
+    showNewCollection(false);
+    setStatus('');
+  } else {
+    setStatus(result.error, 'error');
+  }
+  $('create-collection').disabled = false;
+}
+
 function applyType(type) {
   const isLink = type === 'link' && !attached;
   $('url-field').hidden = !isLink;
@@ -110,7 +181,7 @@ function formValues() {
     title: $('title').value,
     content: $('content').value,
     url: $('url').value,
-    tags: $('tags').value,
+    tags: currentTags().join(', '),
     description: $('description').value,
   };
 }
@@ -126,7 +197,9 @@ async function suggest() {
 
   const result = await desktop.capture.suggest(formValues());
   if (result.ok) {
-    $('tags').value = result.data.tags.join(', ');
+    tags = result.data.tags;
+    $('tags').value = '';
+    renderTags();
     if (result.data.description && !$('description').value.trim()) {
       $('description').value = result.data.description;
     }
@@ -184,7 +257,10 @@ async function open() {
   $('title').value = prefill.title;
   $('content').value = prefill.content;
   $('url').value = prefill.url;
+  tags = [];
   $('tags').value = '';
+  renderTags();
+  showNewCollection(false);
   $('description').value = '';
   $('save').disabled = false;
   setStatus('');
@@ -221,6 +297,32 @@ document.addEventListener('drop', (event) => {
   if (file && !$('form').hidden) attachDropped(file);
 });
 $('suggest').addEventListener('click', suggest);
+$('tags').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && $('tags').value.trim()) {
+    event.preventDefault();
+    commitTagDraft();
+  } else if (event.key === 'Backspace' && !$('tags').value && tags.length) {
+    tags = tags.slice(0, -1);
+    renderTags();
+  }
+});
+$('tags').addEventListener('input', () => {
+  if ($('tags').value.includes(',')) commitTagDraft();
+});
+$('tags').addEventListener('blur', commitTagDraft);
+$('show-new-collection').addEventListener('click', () => showNewCollection(true));
+$('cancel-collection').addEventListener('click', () => showNewCollection(false));
+$('create-collection').addEventListener('click', createCollection);
+$('new-collection-name').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    createCollection();
+  } else if (event.key === 'Escape') {
+    // Closes the row, not the whole window
+    event.stopPropagation();
+    showNewCollection(false);
+  }
+});
 $('form').addEventListener('submit', save);
 $('close').addEventListener('click', () => desktop.closeWindow());
 $('open-settings').addEventListener('click', () => {

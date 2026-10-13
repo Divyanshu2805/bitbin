@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ApiError, apiRequest, baseUrls, buildItemBody, buildSuggestBody } = require('./api');
+const { ApiError, apiRequest, baseUrls, buildCollectionBody, buildItemBody, buildSuggestBody } = require('./api');
 const { ITEM_TYPES } = require('./guess');
 
 const settings = { baseUrl: 'https://bitbin.example', token: 'bb_secret' };
@@ -146,4 +146,13 @@ test('apiRequest sends raw bytes as an octet stream (an upload part)', async () 
   assert.equal(seen.init.method, 'PUT');
   assert.equal(seen.init.headers['Content-Type'], 'application/octet-stream');
   assert.equal(seen.init.body, part);
+});
+
+test('buildCollectionBody trims the name and refuses an empty or oversized one', () => {
+  assert.deepEqual(buildCollectionBody('  DevOps  '), { name: 'DevOps' });
+  assert.equal(buildCollectionBody('   '), null);
+  assert.equal(buildCollectionBody(undefined), null);
+  assert.equal(buildCollectionBody({ name: 'x' }), null);
+  assert.equal(buildCollectionBody('x'.repeat(101)), null);
+  assert.deepEqual(buildCollectionBody('x'.repeat(100)), { name: 'x'.repeat(100) });
 });

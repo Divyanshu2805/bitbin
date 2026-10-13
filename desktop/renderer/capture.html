@@ -41,6 +41,15 @@
           </label>
         </div>
 
+        <div class="field">
+          <button id="show-new-collection" class="link" type="button">+ New collection</button>
+          <div id="new-collection" class="new-collection" hidden>
+            <input id="new-collection-name" maxlength="100" placeholder="Collection name" aria-label="New collection name">
+            <button id="create-collection" class="primary" type="button">Create</button>
+            <button id="cancel-collection" type="button" aria-label="Cancel">×</button>
+          </div>
+        </div>
+
         <div id="attachment" class="attachment" hidden>
           <span class="clip" aria-hidden="true">▤</span>
           <span id="attachment-name" class="name"></span>
@@ -62,12 +71,15 @@
 
         <button id="attach" class="link attach" type="button">+ Attach a file or image <span class="sub">or drop one here</span></button>
 
-        <label>Tags
+        <div class="field">
+          <label for="tags">Tags</label>
           <div class="tags-row">
-            <input id="tags" placeholder="comma, separated">
+            <div id="tag-box" class="tag-box">
+              <input id="tags" placeholder="Type a tag, press Enter" autocomplete="off">
+            </div>
             <button id="suggest" type="button" title="Suggest tags and a description with AI">✦ Suggest</button>
           </div>
-        </label>
+        </div>
 
         <label>Description
           <textarea id="description" class="description" maxlength="1000" placeholder="Optional. ✦ Suggest writes one for you."></textarea>
