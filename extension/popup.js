@@ -17,6 +17,7 @@ const $ = (id) => document.getElementById(id);
 const isWindow = new URLSearchParams(location.search).has('window');
 
 let settings;
+let tags = [];
 let page = { selection: '', title: '', url: '', heading: '' };
 
 function show(panel) {
@@ -80,6 +81,41 @@ async function readActiveTab() {
   }
 }
 
+/** The chips plus whatever is still being typed, so nothing is lost on save. */
+function currentTags() {
+  return [...new Set([...tags, ...parseTags($('tags').value)])];
+}
+
+function renderTags() {
+  for (const chip of $('tag-box').querySelectorAll('.tag-chip')) chip.remove();
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.append(`#${tag}`);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', `Remove ${tag}`);
+    remove.addEventListener('click', () => {
+      tags = tags.filter((t) => t !== tag);
+      renderTags();
+      $('tags').focus();
+    });
+    chip.append(remove);
+    $('tag-box').insertBefore(chip, $('tags'));
+  }
+  $('tags').placeholder = tags.length ? '' : 'Type a tag, press Enter';
+}
+
+/** Move what's typed into chips. */
+function commitTagDraft() {
+  const added = parseTags($('tags').value);
+  $('tags').value = '';
+  if (!added.length) return;
+  tags = [...new Set([...tags, ...added])];
+  renderTags();
+}
+
 function applyType(type) {
   const isLink = type === 'link';
   $('url-field').hidden = !isLink;
@@ -135,6 +171,37 @@ async function loadCollections() {
   }
 }
 
+function showNewCollection(visible) {
+  $('new-collection').hidden = !visible;
+  $('show-new-collection').hidden = visible;
+  if (visible) $('new-collection-name').focus();
+  else $('new-collection-name').value = '';
+}
+
+/** Create a collection from the inline row and pick it, so the save goes into it. */
+async function createCollection() {
+  const name = $('new-collection-name').value.trim();
+  if (!name) {
+    $('new-collection-name').focus();
+    return;
+  }
+  $('create-collection').disabled = true;
+  setStatus('Creating collection…');
+  try {
+    const created = await api('/collections', { method: 'POST', settings, body: { name } });
+    const option = document.createElement('option');
+    option.value = created.id;
+    option.textContent = created.name;
+    $('collection').append(option);
+    $('collection').value = created.id;
+    showNewCollection(false);
+    setStatus('');
+  } catch (error) {
+    setStatus(error.message, 'error');
+  }
+  $('create-collection').disabled = false;
+}
+
 // One click, two AI calls side by side: tags are merged into what's typed, and a
 // description fills the field unless one has been written already. Either can
 // fail without losing the other.
@@ -165,8 +232,9 @@ async function suggestWithAi() {
   ]);
 
   if (tagsResult.status === 'fulfilled') {
-    const merged = [...new Set([...parseTags($('tags').value), ...tagsResult.value.tags])];
-    $('tags').value = merged.join(', ');
+    tags = [...new Set([...currentTags(), ...tagsResult.value.tags.map((t) => t.toLowerCase())])];
+    $('tags').value = '';
+    renderTags();
   }
   if (descriptionResult.status === 'fulfilled' && !$('description').value.trim()) {
     $('description').value = descriptionResult.value.description;
@@ -188,7 +256,7 @@ async function save(event) {
   const body = {
     typeName: type,
     title: $('title').value.trim(),
-    tags: parseTags($('tags').value),
+    tags: currentTags(),
     collectionIds: collectionId ? [collectionId] : [],
   };
   if (written) body.description = written;
@@ -241,6 +309,31 @@ async function init() {
   $('open-bitbin').addEventListener('click', () => chrome.tabs.create({ url: `${settings.baseUrl}/dashboard` }));
   $('type').addEventListener('change', () => applyType($('type').value));
   $('suggest').addEventListener('click', suggestWithAi);
+  $('tags').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && $('tags').value.trim()) {
+      event.preventDefault();
+      commitTagDraft();
+    } else if (event.key === 'Backspace' && !$('tags').value && tags.length) {
+      tags = tags.slice(0, -1);
+      renderTags();
+    }
+  });
+  $('tags').addEventListener('input', () => {
+    if ($('tags').value.includes(',')) commitTagDraft();
+  });
+  $('tags').addEventListener('blur', commitTagDraft);
+  $('show-new-collection').addEventListener('click', () => showNewCollection(true));
+  $('cancel-collection').addEventListener('click', () => showNewCollection(false));
+  $('create-collection').addEventListener('click', createCollection);
+  $('new-collection-name').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      createCollection();
+    } else if (event.key === 'Escape') {
+      event.stopPropagation();
+      showNewCollection(false);
+    }
+  });
   $('form').addEventListener('submit', save);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !$('form').hidden) save(event);

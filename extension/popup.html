@@ -38,6 +38,15 @@
         </label>
       </div>
 
+      <div class="field">
+        <button id="show-new-collection" class="link" type="button">+ New collection</button>
+        <div id="new-collection" class="new-collection" hidden>
+          <input id="new-collection-name" maxlength="100" placeholder="Collection name" aria-label="New collection name">
+          <button id="create-collection" class="primary" type="button">Create</button>
+          <button id="cancel-collection" type="button" aria-label="Cancel">×</button>
+        </div>
+      </div>
+
       <label>Title
         <input id="title" required maxlength="200">
       </label>
@@ -54,12 +63,15 @@
         <input id="url" type="url" placeholder="https://">
       </label>
 
-      <label>Tags
+      <div class="field">
+        <label for="tags">Tags</label>
         <div class="tags-row">
-          <input id="tags" placeholder="comma, separated">
+          <div id="tag-box" class="tag-box">
+            <input id="tags" placeholder="Type a tag, press Enter" autocomplete="off">
+          </div>
           <button id="suggest" type="button" title="Suggest tags and a description with AI">✦ Suggest</button>
         </div>
-      </label>
+      </div>
 
       <label>Description
         <textarea id="description" class="description" maxlength="900" placeholder="Optional. ✦ Suggest writes one for you."></textarea>

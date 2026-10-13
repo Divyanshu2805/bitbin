@@ -7,7 +7,7 @@ Plain JavaScript with no build step. The folder is excluded from the Next app's 
 | File | Does |
 |---|---|
 | `manifest.json` | Permissions, the `Ctrl+Shift+B` / `⌘+Shift+B` shortcut (`_execute_action`), host permissions for the live site and `localhost:3000` |
-| `popup.html` / `popup.js` | Reads the selection and the heading above it, guesses the type (and the language for snippets), collection picker, tags, AI tag suggestions, save |
+| `popup.html` / `popup.js` | Reads the selection and the heading above it, guesses the type (and the language for snippets), collection picker with inline *+ New collection*, tags as chips (Enter or comma adds, × or Backspace removes), AI tag suggestions, save |
 | `options.html` / `options.js` | Site (production or local) and API token; checks the token with `/api/v1/me` |
 | `background.js` | The "Save selection to BitBin" context-menu entry |
 | `lib.js` | Settings storage, the API client, type, language and title guessing. `LANGUAGES` mirrors `src/lib/constants/editor.ts`, so keep the two in sync |
@@ -23,7 +23,7 @@ Pro users download it from **Settings → Browser extension → Download extensi
 
 1. Open `chrome://extensions` (or `edge://extensions`) and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this `extension/` folder. The options page opens.
-3. In BitBin (as a Pro user), go to **Settings → Browser extension**, create a token and copy it. It needs three of the four permissions: *List collections* (the picker), *Save items* (saving) and *AI suggestions* (✦ Suggest); *Save files and images* is only for the desktop app. A token without one of the three still works, but the matching feature answers with a permission error.
+3. In BitBin (as a Pro user), go to **Settings → Browser extension**, create a token and copy it. It needs three of the four permissions: *List collections* (the picker), *Save items* (saving and creating a collection) and *AI suggestions* (✦ Suggest); *Save files and images* is only for the desktop app. A token without one of the three still works, but the matching feature answers with a permission error.
 4. In the options page, pick the site (use **Local development** with `npm run dev`), paste the token and click **Save and test**.
 5. Select text on any page and press **Ctrl+Shift+B**, or right-click it and choose **Save selection to BitBin**.
 

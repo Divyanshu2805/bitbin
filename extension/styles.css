@@ -106,4 +106,27 @@ button.link {
 
 .source { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Tags as chips, and the inline "new collection" row */
+.field { display: grid; gap: 5px; font-size: 12px; color: var(--muted); }
+.tag-box {
+  flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--input); border-radius: var(--radius); padding: 5px 7px;
+}
+.tag-box:focus-within { border-color: var(--lime); box-shadow: 0 0 0 2px rgba(194, 242, 75, 0.2); }
+.tag-box input { flex: 1; min-width: 7ch; width: auto; border: none; background: none; box-shadow: none; padding: 2px; }
+.tag-box input:focus { box-shadow: none; }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 4px 1px 7px;
+  border: 1px solid var(--input); border-radius: 4px; background: var(--card);
+  font: 12px var(--mono); color: var(--fg);
+}
+.tag-chip button {
+  border: none; background: none; padding: 0 3px; font-size: 14px; line-height: 1; color: var(--muted);
+}
+.tag-chip button:hover:not(:disabled) { color: var(--destructive); }
+.new-collection { display: flex; gap: 6px; }
+.new-collection input { flex: 1; min-width: 0; }
+.new-collection button { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+.field > button.link { justify-self: start; }
+
 [hidden] { display: none !important; }
