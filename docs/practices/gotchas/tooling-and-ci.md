@@ -24,6 +24,10 @@ The workflow gives `npm run build` dummy values (`DATABASE_URL`, `AUTH_SECRET`, 
 
 `package-lock.json` is committed with CRLF line endings. npm rewrites it with the platform's endings, so `npm install` on a machine that disagrees shows thousands of changed lines in `git diff` for a one-line change. Check `git diff --stat` after installing a package; if the whole file changed, convert it back to the repository's endings before committing.
 
+## Production builds don't use Turbopack's cache
+
+Next 16 caches Turbopack's build work in `.next/cache/turbopack` by default, and Vercel restores `.next/cache` before every build. A restored cache once shipped the previous `globals.css` alongside new components: the deploy succeeded, the JavaScript was current, and the cards had no styles. `next.config.ts` sets `experimental.turbopackFileSystemCacheForBuild: false`, so every build compiles from scratch. Leave it off. If a deploy ever looks half-old, compare a rule you just added with the live CSS (`/_next/static/immutable/chunks/*.css`).
+
 ## CI doesn't gate the deploy
 
 Vercel builds every push to `main` on its own. A red CI run doesn't stop that deploy, so treat a failure as something to fix at once, not something that was prevented. See [ADR 0009](../../architecture/decisions/0009-ci-checks-and-a-coverage-floor.md).

@@ -18,6 +18,11 @@ const pagePolicy = buildContentSecurityPolicy({ dev: process.env.NODE_ENV !== 'p
 const nextConfig: NextConfig = {
   reactCompiler: true,
   devIndicators: false,
+  experimental: {
+    // Vercel restores .next/cache between builds, and a restored Turbopack cache once shipped the
+    // previous globals.css with new components (cards without their styles). Build cold every time.
+    turbopackFileSystemCacheForBuild: false,
+  },
   // The extension download route zips extension/ at runtime; ship those files with it
   outputFileTracingIncludes: {
     '/api/extension/download': ['./extension/**/*'],
