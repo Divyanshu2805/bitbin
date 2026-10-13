@@ -62,14 +62,14 @@ export default function GenerateDescriptionButton({
 
   return (
     <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onClick={handleGenerate}
-      disabled={disabled || isLoading}
-      className="ai-action h-7 px-2 text-xs"
-      title="Generate description with AI"
-    >
+   type="button"
+   variant="ghost"
+   size="sm"
+   onClick={handleGenerate}
+   disabled={disabled || isLoading}
+   className="ai-action h-7 px-2 text-xs"
+   title="Generate description with AI"
+  >
       {isLoading ? (
         <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
       ) : (

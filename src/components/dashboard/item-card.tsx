@@ -51,7 +51,7 @@ function ContentPreview({ item }: { item: ItemWithType }) {
 
   if (type === "link" && item.url) {
     return (
-      <p className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 font-mono text-[12px] text-tok-path">
+      <p className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 font-mono text-[12px] text-tok-path">
         <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
         <span className="truncate">{item.url.replace(/^https?:\/\//, "")}</span>
       </p>
@@ -62,7 +62,7 @@ function ContentPreview({ item }: { item: ItemWithType }) {
     const { shown, hidden } = previewLines(item.content);
     if (shown.length === 0) return null;
     return (
-      <div className="relative overflow-hidden rounded-lg border border-border bg-background font-mono text-[12.5px] leading-[1.7] shadow-[inset_0_1px_0_0_rgb(255_255_255/0.03)]">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-background font-mono text-[12.5px] leading-[1.7]">
         {/* A thin gutter rule in the type's colour, like an active editor pane */}
         <span
           aria-hidden
@@ -94,7 +94,7 @@ function ContentPreview({ item }: { item: ItemWithType }) {
   if ((type === "prompt" || type === "note") && item.content) {
     return (
       <div
-        className="rounded-lg border border-border bg-background px-3 py-2.5"
+        className="rounded-xl border border-border bg-background px-3 py-2.5"
         style={{ boxShadow: "inset 2px 0 0 0 var(--accent-color)" }}
       >
         {/* Clamped inside the padding, so no half line peeks out under the "…" */}
@@ -207,28 +207,14 @@ export default function ItemCard({ item }: ItemCardProps) {
       <div
         // Mouse users click anywhere on the card; keyboard and screen-reader users get the title button below
         className={cn(
-          "card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)] outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
-          "border-[color-mix(in_srgb,var(--accent-color)_22%,var(--border))]",
-          menuOpen && "card-glow-active"
+          "card-surface card-lift icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
         )}
-        // The app's lime for the card itself; only the type chip wears the type's colour
-        style={{ "--accent-color": "var(--brand-lime)" } as React.CSSProperties}
+        // A solid block in the item type's colour, like the cards on the landing page
+        style={{ "--tone": color } as React.CSSProperties}
         // Drag onto a collection (sidebar or collection card) to add it there
         {...itemDragProps(item.id, item.title, item.itemType.name, color)}
         onClick={() => openDrawer(item.id)}
       >
-        {/* Lime: a rule along the top edge and a soft wash behind the header */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 85%)" }}
-        />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-28 opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--brand-lime) 10%, transparent), transparent 70%)" }}
-        />
-
         {/* Header: type chip on the left; date, or the toolbar on hover, on the right */}
         <div className="relative flex h-11 items-center gap-2 px-4 pt-1">
           <span

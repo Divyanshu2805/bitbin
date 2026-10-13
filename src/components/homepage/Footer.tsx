@@ -2,20 +2,22 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 import { TransitionLink } from "@/components/shared/transition-link";
 import FooterWordmark from "./FooterWordmark";
+import { CtaLink } from "./ui";
 
 const COLUMNS = [
   {
     title: "Product",
     links: [
       { href: "#types", label: "Features" },
-      { href: "#ai", label: "AI" },
+      { href: "#ai", label: "AI helpers" },
+      { href: "#agents", label: "MCP for AI assistants" },
       { href: "#pricing", label: "Pricing" },
     ],
   },
   {
     title: "Developers",
     links: [
-      { href: "#extension", label: "Browser extension" },
+      { href: "#extension", label: "Extension and desktop app" },
       { href: "#keys", label: "Shortcuts" },
       { href: "#faq", label: "FAQ" },
     ],
@@ -25,7 +27,11 @@ const COLUMNS = [
 export default function Footer() {
   return (
     <footer>
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+      <div className="landing-closing mx-auto max-w-(--landing-max) px-5 sm:px-8">
+        <div><h2>Make room for your next idea.</h2><p>Build a library that gets more useful with everything you save.</p></div>
+        <div data-scroll="unfold"><CtaLink href="/register">Start your knowledge hub</CtaLink></div>
+      </div>
+      <div className="mx-auto grid max-w-(--landing-max) gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -50,26 +56,17 @@ export default function Footer() {
           <TransitionLink href="/register" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
             Create account
           </TransitionLink>
+          <Link href="/privacy" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
+            Privacy
+          </Link>
+          <Link href="/terms" className="w-fit py-1 text-sm text-muted-foreground transition-colors hover:text-lime">
+            Terms
+          </Link>
         </nav>
       </div>
 
       {/* The wordmark, huge and outlined; lights up once you reach the bottom */}
       <FooterWordmark />
-
-      <div>
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 px-5 py-5 font-mono text-xs text-muted-foreground sm:px-8">
-          <span>© {new Date().getFullYear()} BitBin</span>
-          <nav aria-label="Legal" className="flex gap-5">
-            <Link href="/privacy" className="transition-colors hover:text-lime">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition-colors hover:text-lime">
-              Terms
-            </Link>
-          </nav>
-          <span>{"// made for developers who hoard snippets"}</span>
-        </div>
-      </div>
     </footer>
   );
 }

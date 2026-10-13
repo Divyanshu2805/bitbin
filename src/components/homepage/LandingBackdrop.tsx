@@ -77,19 +77,31 @@ export default function LandingBackdrop({
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const count = Math.min(MAX_BITS, Math.round(width * height * DENSITY));
-      bits = Array.from({ length: count }, () => spawn(width, height, true));
+      // Sorted by size, so the font is set five times a frame and not once per bit
+      bits = Array.from({ length: count }, () => spawn(width, height, true)).sort((a, b) => a.size - b.size);
+    };
+
+    // The theme's colours, read when it changes and not on every frame: asking
+    // for computed style 60 times a second forces a style pass each time
+    let colors: string[] = [];
+    let strength = 1;
+    const readTheme = () => {
+      const styles = getComputedStyle(root);
+      colors = COLOR_VARS.map((name) => styles.getPropertyValue(name).trim());
+      strength = parseFloat(styles.getPropertyValue("--rain-strength")) || 1;
     };
 
     const draw = () => {
       ctx.globalAlpha = 1;
       ctx.clearRect(0, 0, width, height);
-      const styles = getComputedStyle(root);
-      const colors = COLOR_VARS.map((name) => styles.getPropertyValue(name).trim());
-      const strength = parseFloat(styles.getPropertyValue("--rain-strength")) || 1;
+      let size = 0;
       for (const bit of bits) {
         const dist = Math.hypot(bit.x - pointer.x, bit.y - pointer.y);
         const boost = dist < GLOW_RADIUS ? (1 - dist / GLOW_RADIUS) * 0.45 : 0;
-        ctx.font = `${bit.size}px ${font}`;
+        if (bit.size !== size) {
+          size = bit.size;
+          ctx.font = `${size}px ${font}`;
+        }
         ctx.fillStyle = colors[bit.color];
         ctx.globalAlpha = Math.min(1, bit.alpha * strength + boost);
         ctx.fillText(bit.glyph, bit.x, bit.y);
@@ -100,6 +112,10 @@ export default function LandingBackdrop({
     // one, and on 60 Hz and 120 Hz screens alike
     let last = 0;
     const tick = (now: number) => {
+      frame = requestAnimationFrame(tick);
+      // The rain drifts slowly, so 30 frames a second is plenty; the other half of
+      // the frames are left to the scroll
+      if (last && now - last < 30) return;
       const step = last ? Math.min(now - last, 50) / (1000 / 60) : 1;
       last = now;
       for (let i = 0; i < bits.length; i++) {
@@ -108,7 +124,6 @@ export default function LandingBackdrop({
         if (bit.y > height + 20) bits[i] = spawn(width, height, false);
       }
       draw();
-      frame = requestAnimationFrame(tick);
     };
 
     const light = lightRef.current;
@@ -136,11 +151,15 @@ export default function LandingBackdrop({
 
     const observer = new ResizeObserver(() => {
       resize();
+      readTheme();
       draw();
     });
     observer.observe(root);
     // Recolour at once when the theme flips (the still rain under reduced motion never redraws otherwise)
-    const themeObserver = new MutationObserver(() => draw());
+    const themeObserver = new MutationObserver(() => {
+      readTheme();
+      draw();
+    });
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     const menuObserver = new MutationObserver(onVisibility);
     if (!prefersReducedMotion()) {

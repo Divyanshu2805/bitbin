@@ -3,17 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The light theme's colour tokens, read straight from globals.css, against the surfaces they are
+ * The theme's colour tokens, read straight from globals.css, against the surfaces they are
  * used on. WCAG AA: 4.5:1 for text, 3:1 for the edge of a control. A token that drifts below fails here,
  * not in someone's browser.
  */
 
 const css = readFileSync(join(__dirname, 'globals.css'), 'utf-8');
-const light = css.slice(css.indexOf(':root {'), css.indexOf('.dark {'));
+const theme = css.slice(css.indexOf(':root {'), css.indexOf('@media', css.indexOf(':root {')));
 
 function token(name: string): string {
-  const match = new RegExp(String.raw`--${name}:\s*(#[0-9a-fA-F]{6})`).exec(light);
-  if (!match) throw new Error(`--${name} is not a hex colour in the light theme`);
+  const match = new RegExp(String.raw`--${name}:\s*(#[0-9a-fA-F]{6})`).exec(theme);
+  if (!match) throw new Error(`--${name} is not a hex colour in the theme`);
   return match[1];
 }
 
@@ -40,9 +40,9 @@ function over(fg: string, bg: string, alpha: number): string {
 }
 
 const pageSurfaces = ['background', 'card', 'muted', 'accent'];
-const accents = ['brand-lime', 'brand-coral', 'brand-cyan', 'brand-violet', 'destructive', 'chart-4'];
+const accents = ['brand-lime', 'brand-coral', 'brand-cyan', 'brand-violet', 'brand-green', 'destructive', 'chart-4'];
 
-describe('light theme contrast', () => {
+describe('theme contrast', () => {
   it.each(pageSurfaces)('body text reads on %s', (surface) => {
     expect(contrast(token('foreground'), token(surface))).toBeGreaterThanOrEqual(4.5);
     expect(contrast(token('muted-foreground'), token(surface))).toBeGreaterThanOrEqual(4.5);
@@ -69,8 +69,9 @@ describe('light theme contrast', () => {
 
   it('button labels read on their fill', () => {
     expect(contrast(token('primary-foreground'), token('primary'))).toBeGreaterThanOrEqual(4.5);
-    expect(contrast('#ffffff', token('destructive'))).toBeGreaterThanOrEqual(4.5);
-    expect(contrast('#ffffff', token('brand-coral'))).toBeGreaterThanOrEqual(4.5);
+    // A danger button fills with the destructive colour and its label takes the page colour
+    expect(contrast(token('background'), token('destructive'))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token('primary-foreground'), token('brand-coral'))).toBeGreaterThanOrEqual(4.5);
   });
 
   it.each(['kw', 'fn', 'str', 'num', 'type', 'path'])('syntax colour tok-%s reads in the editor', (name) => {

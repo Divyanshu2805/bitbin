@@ -1,4 +1,4 @@
-import { readableColor } from "@/lib/utils/color";
+import { readableColor, typeChipBackground } from "@/lib/utils/color";
 import { ViewToggle } from "@/components/shared/view-toggle";
 import { ITEM_TYPE_COLORS } from "@/lib/constants/item-types";
 import { ItemTypeIcon } from "@/components/shared/item-type-icon";
@@ -40,19 +40,13 @@ export default function ItemsPageHeader({ typeName, displayName, itemCount }: It
 
   return (
     <PageHeader
-      path={`items/${typeName}s`}
       title={displayName}
       count={itemCount}
       description={TYPE_DESCRIPTIONS[typeName]}
       icon={
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
-          style={{
-            color,
-            backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
-            borderColor: `color-mix(in srgb, ${color} 30%, transparent)`,
-            boxShadow: `0 10px 30px -12px ${color}`,
-          }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+          style={{ color, backgroundColor: typeChipBackground(ITEM_TYPE_COLORS[typeName as keyof typeof ITEM_TYPE_COLORS] ?? "#6b7280") }}
         >
           <ItemTypeIcon icon={TYPE_ICON_NAMES[typeName] ?? "Code"} className="h-5 w-5" />
         </span>

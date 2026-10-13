@@ -14,7 +14,7 @@ import type { CollectionWithTypes } from "@/lib/db/collections";
 // view mode (lib/view-mode). `data-view-content` lets globals.css hide the
 // layout that doesn't match the saved choice until React renders it.
 
-const LIST_FRAME = "divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/80";
+const LIST_FRAME = "card-surface divide-y divide-border overflow-hidden";
 
 /** Items as cards (images as thumbnails) or as rows: name, tags, last edited. */
 export function ItemsView({ items, className }: { items: ItemWithType[]; className?: string }) {

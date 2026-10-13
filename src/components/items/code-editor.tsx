@@ -11,7 +11,6 @@ import { useEditorPreferences } from "@/components/settings/editor-preferences-p
 import type { EditorTheme } from "@/lib/constants/editor";
 import { explainCode } from "@/actions/ai";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
 import ProAiButton from "@/components/shared/pro-ai-button";
 import { AgentSpinner, ResultLine, ToolLine } from "@/components/shared/agent-spinner";
 import { explanationKey, getExplanation, getPendingExplanation, trackExplanation } from "@/lib/explanation-store";
@@ -28,6 +27,35 @@ loader.config({
 
 // Define custom themes
 function defineCustomThemes(monaco: Monaco) {
+  // The app's own dark theme: the editor surface and the syntax palette of the rest of the UI
+  monaco.editor.defineTheme("bitbin-dark", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "8f8777", fontStyle: "italic" },
+      { token: "keyword", foreground: "c792ea" },
+      { token: "string", foreground: "c3e88d" },
+      { token: "number", foreground: "f78c6c" },
+      { token: "type", foreground: "ffcb6b" },
+      { token: "function", foreground: "82aaff" },
+      { token: "variable", foreground: "ece6da" },
+    ],
+    colors: {
+      "editor.background": "#141412",
+      "editor.foreground": "#ece6da",
+      "editorLineNumber.foreground": "#6f685b",
+      "editorLineNumber.activeForeground": "#e3a184",
+      "editor.lineHighlightBackground": "#24221e",
+      "editorCursor.foreground": "#e3a184",
+      "editor.selectionBackground": "#7a4f3a",
+      "editor.inactiveSelectionBackground": "#5a3f31",
+      "editor.selectionHighlightBackground": "#5a3f3199",
+      "editor.wordHighlightBackground": "#5a3f3180",
+      "editorIndentGuide.background1": "#2e2b26",
+      "editorWidget.background": "#222120",
+    },
+  });
+
   // Monokai theme
   monaco.editor.defineTheme("monokai", {
     base: "vs-dark",
@@ -71,37 +99,12 @@ function defineCustomThemes(monaco: Monaco) {
       "editor.selectionBackground": "#264f78",
     },
   });
-
-  // GitHub Light, used for every preference while the app is in light mode
-  monaco.editor.defineTheme("github-light", {
-    base: "vs",
-    inherit: true,
-    rules: [
-      { token: "comment", foreground: "6e7781" },
-      { token: "keyword", foreground: "cf222e" },
-      { token: "string", foreground: "0a3069" },
-      { token: "number", foreground: "0550ae" },
-      { token: "type", foreground: "953800" },
-      { token: "function", foreground: "8250df" },
-      { token: "variable", foreground: "24292f" },
-    ],
-    colors: {
-      "editor.background": "#ffffff",
-      "editor.foreground": "#24292f",
-      "editor.lineHighlightBackground": "#f6f8fa",
-      "editorLineNumber.foreground": "#8c959f",
-      "editorCursor.foreground": "#24292f",
-      "editor.selectionBackground": "#b6e3ff",
-    },
-  });
 }
 
-// Map theme names to Monaco theme names. The editor themes are all dark, so
-// the light app theme overrides them with GitHub Light.
-function getMonacoTheme(theme: EditorTheme, appTheme: string | undefined): string {
-  if (appTheme === "light") return "github-light";
+// Map theme names to Monaco theme names
+function getMonacoTheme(theme: EditorTheme): string {
   const themeMap: Record<EditorTheme, string> = {
-    "vs-dark": "vs-dark",
+    "vs-dark": "bitbin-dark",
     monokai: "monokai",
     "github-dark": "github-dark",
   };
@@ -157,7 +160,6 @@ export default function CodeEditor({
   }, [onPaste]);
   const { copied, copy } = useClipboard();
   const { preferences } = useEditorPreferences();
-  const { resolvedTheme } = useTheme();
 
   // Explain: the explanation opens in its own window beside the code and stays
   // (for this item, this session) until Explain is pressed again
@@ -206,7 +208,7 @@ export default function CodeEditor({
     // Define custom themes when Monaco mounts
     defineCustomThemes(monaco);
     // Apply the selected theme
-    monaco.editor.setTheme(getMonacoTheme(preferences.theme, resolvedTheme));
+    monaco.editor.setTheme(getMonacoTheme(preferences.theme));
   };
 
   const handleCopy = () => copy(value);
@@ -362,7 +364,7 @@ export default function CodeEditor({
           value={value}
           onChange={(val) => onChange?.(val ?? "")}
           onMount={handleEditorMount}
-          theme={getMonacoTheme(preferences.theme, resolvedTheme)}
+          theme={getMonacoTheme(preferences.theme)}
           options={{
             readOnly,
             minimap: { enabled: preferences.minimap },

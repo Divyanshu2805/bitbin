@@ -115,12 +115,12 @@ export default function TagSettings({ tags }: TagSettingsProps) {
                           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                         </Button>
                         <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          aria-label="Cancel"
-                          onClick={() => setEditing(null)}
+             type="button"
+             size="icon"
+             variant="ghost"
+             className="h-8 w-8"
+             aria-label="Cancel"
+             onClick={() => setEditing(null)}
                           disabled={saving}
                         >
                           <X className="h-4 w-4" />
@@ -133,22 +133,22 @@ export default function TagSettings({ tags }: TagSettingsProps) {
                           {tag.count} item{tag.count !== 1 ? 's' : ''}
                         </span>
                         <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          aria-label={`Rename ${tag.name}`}
-                          onClick={() => startEdit(tag)}
+             type="button"
+             size="icon"
+             variant="ghost"
+             className="h-8 w-8"
+             aria-label={`Rename ${tag.name}`}
+             onClick={() => startEdit(tag)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          aria-label={`Remove ${tag.name}`}
-                          onClick={() => setDeleting(tag)}
+             type="button"
+             size="icon"
+             variant="ghost"
+             className="h-8 w-8 text-destructive hover:text-destructive"
+             aria-label={`Remove ${tag.name}`}
+             onClick={() => setDeleting(tag)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

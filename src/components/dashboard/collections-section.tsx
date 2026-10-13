@@ -17,7 +17,7 @@ export default function CollectionsSection({
         icon={<FolderOpen className="h-4 w-4" />}
         title="Collections"
         href="/collections"
-        linkLabel="show all"
+        linkLabel="Show all"
       />
       {collections.length === 0 ? (
         <EmptyState

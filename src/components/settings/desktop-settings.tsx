@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { Download, Monitor, Sparkles } from 'lucide-react';
+import { Download, Monitor } from 'lucide-react';
 import Panel, { ProTag } from '@/components/shared/panel';
 import { Button } from '@/components/ui/button';
+import ProLocked from './pro-locked';
 import {
   DESKTOP_RELEASES_URL,
   DESKTOP_SOURCE_URL,
@@ -23,21 +23,13 @@ export default function DesktopSettings({ isPro }: DesktopSettingsProps) {
       description="Save the clipboard, a screenshot or a file from the system tray with one shortcut, without opening the browser."
     >
       {!isPro ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-desc text-sm">The desktop app is part of BitBin Pro.</p>
-          <Button asChild size="sm">
-            <Link href="/upgrade">
-              <Sparkles className="h-4 w-4" />
-              Upgrade to Pro
-            </Link>
-          </Button>
-        </div>
+        <ProLocked>The desktop app is part of BitBin Pro.</ProLocked>
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline">
               <a href={DESKTOP_WINDOWS_DOWNLOAD_URL} rel="noopener noreferrer">
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="h-4 w-4" />
                 Download for Windows
               </a>
             </Button>

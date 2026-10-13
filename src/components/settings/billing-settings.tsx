@@ -69,7 +69,7 @@ export default function BillingSettings({ isPro, itemCount, collectionCount }: B
       <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-3">
           {isPro ? (
-            <span className="rounded-md border border-lime/35 bg-lime/10 px-2 py-0.5 font-mono text-xs text-lime">● pro</span>
+            <span className="rounded-md border border-[color-mix(in_srgb,var(--brand-lime)_35%,var(--card))] bg-[color-mix(in_srgb,var(--brand-lime)_14%,var(--card))] px-2 py-0.5 font-mono text-xs text-lime">● pro</span>
           ) : (
             <span className="rounded-md border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">free</span>
           )}
@@ -82,21 +82,22 @@ export default function BillingSettings({ isPro, itemCount, collectionCount }: B
 
         {!isPro && (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <UsageMeter label="items" used={itemCount} limit={MAX_ITEMS} />
-              <UsageMeter label="collections" used={collectionCount} limit={MAX_COLLECTIONS} />
+            <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              <UsageMeter label="Items" used={itemCount} limit={MAX_ITEMS} />
+              <UsageMeter label="Collections" used={collectionCount} limit={MAX_COLLECTIONS} />
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={() => handleUpgrade('monthly')} disabled={loading !== null}>
+            {/* Both ways to Pro, ruled off along the card's foot */}
+            <div className="-mx-6 !-mb-6 flex flex-wrap items-center gap-3 border-t border-border px-6 py-4">
+              <Button variant="upgrade" onClick={() => handleUpgrade('monthly')} disabled={loading !== null}>
                 {loading !== 'monthly' && <Sparkles className="h-4 w-4" />}
                 {loading === 'monthly' && <Loader2 className="h-4 w-4 animate-spin" />}
                 Go Pro · $8/mo
               </Button>
-              <Button variant="outline" onClick={() => handleUpgrade('yearly')} disabled={loading !== null}>
+              <Button variant="upgrade" onClick={() => handleUpgrade('yearly')} disabled={loading !== null}>
                 {loading === 'yearly' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />}
                 $72/yr
-                <span className="rounded bg-lime/15 px-1.5 font-mono text-[10.5px] font-bold text-lime">-25%</span>
+                <span className="rounded bg-[color-mix(in_srgb,var(--brand-violet)_20%,var(--card))] px-1.5 font-mono text-[10.5px] font-bold text-[var(--brand-violet)]">-25%</span>
               </Button>
             </div>
           </>

@@ -33,7 +33,7 @@ export function goKeys(href: string): string[] | undefined {
 /** What the `?` sheet lists. `hint` is a short grey line under the label. */
 export const SHORTCUT_GROUPS: { title: string; items: { keys: string[]; label: string; hint?: string }[] }[] = [
   {
-    title: 'general',
+    title: 'General',
     items: [
       { keys: ['⌘', 'K'], label: 'Search everything' },
       { keys: ['/'], label: 'Search' },
@@ -44,14 +44,14 @@ export const SHORTCUT_GROUPS: { title: string; items: { keys: string[]; label: s
     ],
   },
   {
-    title: 'go to',
+    title: 'Go to',
     items: [
       ...GO_SHORTCUTS.map((s) => ({ keys: ['G', s.key.toUpperCase()], label: s.label })),
       { keys: ['1', '–', '7'], label: 'A type’s page', hint: 'snippets, prompts, commands, notes, files, images, links' },
     ],
   },
   {
-    title: 'open item',
+    title: 'Open item',
     items: [
       { keys: ['E'], label: 'Edit' },
       { keys: ['F'], label: 'Favorite' },
@@ -62,7 +62,7 @@ export const SHORTCUT_GROUPS: { title: string; items: { keys: string[]; label: s
     ],
   },
   {
-    title: 'collection page',
+    title: 'Collection page',
     items: [
       { keys: ['E'], label: 'Edit the collection' },
     ],

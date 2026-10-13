@@ -58,7 +58,7 @@ export default function CommandPalette() {
       showCloseButton={false}
       // The server filters and ranks; cmdk only lists what it is given
       shouldFilter={false}
-      className="gap-0 border-border bg-popover shadow-[var(--shadow-lift)] sm:max-w-xl [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-normal [&_[cmdk-item][data-selected=true]]:bg-lime/[0.07] [&_[cmdk-item]]:rounded-md"
+      className="gap-0 border-border bg-popover shadow-[var(--shadow-lift)] sm:max-w-xl [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-normal [&_[cmdk-item][data-selected=true]]:bg-accent [&_[cmdk-item]]:rounded-[10px]"
     >
       {/* Mounted only while the palette is open, so each opening starts with an empty box and fresh results */}
       <PaletteBody onSelectItem={handleItemSelect} onSelectCollection={handleCollectionSelect} />
@@ -113,13 +113,8 @@ function PaletteBody({
       <CommandInput
         value={query}
         onValueChange={setQuery}
-        placeholder="search items, #tags and collections"
+        placeholder="Search items, #tags and collections"
         className="font-mono text-base lg:text-[13px]"
-        icon={
-          <span aria-hidden className="font-mono text-sm font-semibold text-lime">
-            &gt;
-          </span>
-        }
       />
       <CommandList className="thin-scrollbar max-h-[min(420px,60vh)] py-1">
         {result === null ? (
@@ -134,16 +129,16 @@ function PaletteBody({
               <p className="py-6 text-center font-mono text-xs text-muted-foreground">
                 {typed ? (
                   <>
-                    no matches <span>· try fewer letters</span>
+                    No matches <span>· try fewer letters</span>
                   </>
                 ) : (
-                  "nothing saved yet · press N to add the first item"
+                  "Nothing saved yet · press N to add the first item"
                 )}
               </p>
             )}
 
             {data && data.items.length > 0 && (
-              <CommandGroup heading={typed ? "// items" : "// recent items"}>
+              <CommandGroup heading={typed ? "Items" : "Recent items"}>
                 {data.items.map((item) => (
                   <CommandItem
                     key={item.id}
@@ -177,7 +172,7 @@ function PaletteBody({
             )}
 
             {data && data.collections.length > 0 && (
-              <CommandGroup heading={typed ? "// collections" : "// recent collections"}>
+              <CommandGroup heading={typed ? "Collections" : "Recent collections"}>
                 {data.collections.map((collection) => (
                   <CommandItem
                     key={collection.id}
@@ -201,16 +196,16 @@ function PaletteBody({
       </CommandList>
 
       {/* Key hints, like a TUI's footer */}
-      <div className="flex items-center gap-4 border-t border-border bg-surface/60 px-3 py-2 font-mono text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-4 border-t border-border bg-surface px-3 py-2 font-mono text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
           <span className="kbd">↑</span>
-          <span className="kbd">↓</span> move
+          <span className="kbd">↓</span> Move
         </span>
         <span className="flex items-center gap-1">
-          <span className="kbd">⏎</span> open
+          <span className="kbd">⏎</span> Open
         </span>
         <span className="ml-auto flex items-center gap-1">
-          <span className="kbd">esc</span> close
+          <span className="kbd">esc</span> Close
         </span>
       </div>
     </>

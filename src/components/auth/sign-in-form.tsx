@@ -18,7 +18,6 @@ export function SignInForm() {
   const callbackUrl = safeCallbackPath(searchParams.get("callbackUrl"));
   const error = searchParams.get("error");
   const registered = searchParams.get("registered");
-  const viaGitHub = searchParams.get("via") === "github";
 
   const [email, setEmail] = useState("");
   const toastShown = useRef(false);
@@ -31,14 +30,6 @@ export function SignInForm() {
     }
   }, [registered, router]);
 
-  // Back from GitHub, signed in: slide on into the dashboard. The sign-in page
-  // stays pictured until the dashboard is ready, so its loading screen never shows.
-  const slid = useRef(false);
-  useEffect(() => {
-    if (!viaGitHub || slid.current) return;
-    slid.current = true;
-    slideTo(() => router.replace("/dashboard"), "/dashboard");
-  }, [viaGitHub, router]);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -101,7 +92,6 @@ export function SignInForm() {
   return (
     <div className="w-full space-y-7">
       <AuthHeader
-        path="sign-in"
         title={<>Welcome <AuthAccent>back.</AuthAccent></>}
         description="Your snippets, prompts and commands are right where you left them."
       />
@@ -122,7 +112,7 @@ export function SignInForm() {
               type="button"
               onClick={handleResendVerification}
               disabled={isResending}
-              className="mt-2 text-primary hover:underline disabled:opacity-50"
+              className="brand-link mt-2 disabled:opacity-50"
             >
               {isResending ? "Sending..." : "Resend verification email"}
             </button>
@@ -154,10 +144,7 @@ export function SignInForm() {
             required
             disabled={isLoading}
             aside={
-              <Link
-                href="/forgot-password"
-                className="text-xs text-muted-foreground transition-colors hover:text-lime"
-              >
+              <Link href="/forgot-password" className="brand-link brand-link-quiet text-xs">
                 Forgot password?
               </Link>
             }
@@ -172,7 +159,7 @@ export function SignInForm() {
 
       <AuthSwitch>
         New to BitBin?{" "}
-        <Link href="/register" className="font-medium text-lime hover:underline">
+        <Link href="/register" className="brand-link">
           Create an account
         </Link>
       </AuthSwitch>

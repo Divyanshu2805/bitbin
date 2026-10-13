@@ -1,21 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Mail } from "lucide-react";
-import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
+import { Mail } from "lucide-react";
+import { AuthAccent, AuthBackLink, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 import FormError from "@/components/shared/form-error";
 
 function BackToSignIn() {
   return (
     <AuthSwitch>
-      <Link
-        href="/sign-in"
-        className="inline-flex items-center gap-1.5 transition-colors hover:text-lime"
-      >
-        <ArrowLeft className="size-4" />
-        Back to sign in
-      </Link>
+      <AuthBackLink href="/sign-in">Back to sign in</AuthBackLink>
     </AuthSwitch>
   );
 }
@@ -58,7 +51,6 @@ export function ForgotPasswordForm() {
     return (
       <div className="w-full space-y-7">
         <AuthHeader
-          path="forgot-password"
           title={<>Check your <AuthAccent>inbox.</AuthAccent></>}
           description={
             <>
@@ -75,7 +67,7 @@ export function ForgotPasswordForm() {
             setIsSubmitted(false);
             setEmail("");
           }}
-          className="btn btn-secondary h-12 w-full rounded-md text-sm"
+          className="btn btn-secondary auth-button"
         >
           Try a different email
         </button>
@@ -87,7 +79,6 @@ export function ForgotPasswordForm() {
   return (
     <div className="w-full space-y-7">
       <AuthHeader
-        path="forgot-password"
         title={<>Forgot your <AuthAccent>password?</AuthAccent></>}
         description="Enter your email and we'll send you a link to set a new one."
       />

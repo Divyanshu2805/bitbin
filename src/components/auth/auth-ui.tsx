@@ -1,51 +1,104 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { LogoMark } from "@/components/shared/logo";
+import { prefersReducedMotion, usePointerEffects } from "@/hooks/use-motion";
+import Link from "next/link";
 
-// Building blocks for the auth forms, in the homepage's language: a mono path
-// pill over a display heading, fields whose label sits inside the box, and the
-// app's primary button.
+// Building blocks for the auth forms, in the landing page's language (brand.css): a mono
+// kicker over a serif heading, plain fields that take the accent on focus, and the hero's button.
 
-/** `~/sign-in` pill, a big heading with a lime accent, and one line under it. */
-export function AuthHeader({
-  path,
-  title,
-  description,
-}: {
-  path: string;
-  title: React.ReactNode;
-  description: React.ReactNode;
-}) {
+/**
+ * The root of the auth pages. `.brand` turns on the landing buttons, and the pointer
+ * position is written to each button so its hover fill spreads from where the pointer came in.
+ */
+export function AuthRoot({ children, className }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  usePointerEffects(ref);
   return (
-    <div className="space-y-4">
-      <p className="inline-flex items-center gap-2 rounded-full border border-lime/35 bg-lime/[0.08] px-3 py-1 font-mono text-xs text-lime">
-        <span className="size-1.5 rounded-full bg-lime" aria-hidden />~/{path}
-      </p>
-      <h1 className="font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.04em]">
-        {title}
-      </h1>
-      <p className="text-desc leading-relaxed">{description}</p>
+    <div ref={ref} className={cn("auth-page brand", className)}>
+      {children}
     </div>
   );
 }
 
-/** A lime word inside an auth heading. */
-export function AuthAccent({ children }: { children: React.ReactNode }) {
-  return <span className="text-brand-gradient">{children}</span>;
+/**
+ * A word that types itself, holds, deletes and types the next, with a caret at its edge.
+ * An invisible copy of the longest word sets the slot's width, so the centred line never
+ * shifts as the words change. Screen readers get the line from the parent's label;
+ * reduced motion shows the first word and stops.
+ */
+export function TypedWord({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+  const [length, setLength] = useState(words[0].length);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    const word = words[index];
+    let delay = deleting ? 45 : 85 + Math.random() * 50;
+    if (!deleting && length === word.length) delay = 1900; // hold the finished word
+    const id = window.setTimeout(() => {
+      if (!deleting && length === word.length) setDeleting(true);
+      else if (deleting && length === 0) {
+        setDeleting(false);
+        setIndex((i) => (i + 1) % words.length);
+      } else setLength((n) => n + (deleting ? -1 : 1));
+    }, delay);
+    return () => window.clearTimeout(id);
+  }, [words, index, length, deleting]);
+
+  const longest = words.reduce((a, b) => (b.length > a.length ? b : a));
+  return (
+    <span aria-hidden className="typed-word">
+      <span className="invisible">{longest},</span>
+      <span>
+        {words[index].slice(0, length)}
+        <span className="typed-caret" />
+        {length === words[index].length ? "," : null}
+      </span>
+    </span>
+  );
 }
 
-const CORNERS = ["tl", "tr", "bl", "br"] as const;
+/** A serif title that rises into place, and one line under it, centred over the form. */
+export function AuthHeader({
+  title,
+  description,
+}: {
+  title: React.ReactNode;
+  description: React.ReactNode;
+}) {
+  return (
+    <div className="text-center">
+      <h1 className="auth-title brand-serif">
+        <span className="hero-line">
+          <span>{title}</span>
+        </span>
+      </h1>
+      <p className="auth-lede">{description}</p>
+    </div>
+  );
+}
+
+/** The accent word in an auth heading, with a pen stroke that draws under it, as on the landing hero. */
+export function AuthAccent({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="auth-accent">
+      {children}
+      <svg aria-hidden className="hero-underline" viewBox="0 0 300 18" preserveAspectRatio="none" fill="none">
+        <path pathLength={100} d="M3 12 C 60 3, 120 3, 170 9 S 262 15, 297 6" />
+      </svg>
+    </span>
+  );
+}
 
 /**
- * A squared-off field with an icon and a label inside the box. The label rests
- * where the placeholder would be and lifts into a small mono caption on focus or
- * once there's a value; on focus, four corner brackets snap in around the box
- * like a viewfinder locking on (`.auth-field` in globals.css). Password fields
- * get a show/hide toggle. `aside` renders under the box, right-aligned.
+ * A field with an icon and a label inside the box. The label rests where the
+ * placeholder would be and lifts into a small mono caption on focus or once
+ * there's a value; on focus the box takes the accent (`.auth-input` in brand.css).
+ * Password fields get a show/hide toggle. `aside` renders under the box, right-aligned.
  */
 export function AuthField({
   id,
@@ -66,9 +119,6 @@ export function AuthField({
   return (
     <div className="space-y-1.5">
       <div className="auth-field group relative">
-        {CORNERS.map((corner) => (
-          <span key={corner} aria-hidden className="auth-corner" data-corner={corner} />
-        ))}
         <Icon
           aria-hidden
           className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within:text-lime"
@@ -77,11 +127,8 @@ export function AuthField({
           id={id}
           type={isPassword && revealed ? "text" : type}
           placeholder=" "
-          className={cn(
-            "peer h-14 w-full rounded-md border border-border bg-background/60 pb-1.5 pl-10 pt-5 text-base text-foreground lg:text-sm outline-none transition-colors",
-            "hover:border-foreground/20 focus:border-lime/40 focus:bg-background/80 disabled:opacity-50",
-            isPassword ? "pr-11" : "pr-3.5"
-          )}
+          data-password={isPassword || undefined}
+          className="auth-input peer text-base lg:text-sm"
           {...props}
         />
         <label
@@ -103,7 +150,7 @@ export function AuthField({
             onClick={() => setRevealed((r) => !r)}
             aria-label={revealed ? "Hide password" : "Show password"}
             aria-pressed={revealed}
-            className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
           >
             {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -114,10 +161,17 @@ export function AuthField({
   );
 }
 
-/**
- * The submit, as the app's primary `<Button>`: the BitBin logo as the prompt,
- * the label, and a blinking caret. While loading it shows a spinner instead.
- */
+/** The landing button's arrow badge: one arrow rides out as the next comes in. */
+export function ArrowBadge() {
+  return (
+    <span aria-hidden className="btn-arrow">
+      <ArrowRight />
+      <ArrowRight />
+    </span>
+  );
+}
+
+/** The submit, as the landing hero's button: the label and the arrow badge, or a spinner while loading. */
 export function AuthSubmit({
   loading,
   children,
@@ -128,7 +182,7 @@ export function AuthSubmit({
   loadingText: string;
 }) {
   return (
-    <Button type="submit" disabled={loading} className="h-12 w-full gap-2.5 text-[15px]">
+    <button type="submit" disabled={loading} className="btn btn-primary auth-button">
       {loading ? (
         <>
           <Loader2 className="size-4 animate-spin" />
@@ -136,16 +190,46 @@ export function AuthSubmit({
         </>
       ) : (
         <>
-          <LogoMark className="size-5" />
-          {children}
-          <span aria-hidden className="btn-caret ml-0 block shrink-0" />
+          <span className="auth-button-label">{children}</span>
+          <ArrowBadge />
         </>
       )}
-    </Button>
+    </button>
+  );
+}
+
+/** A full-width link styled as the landing button, for the pages that end in one next step. */
+export function AuthAction({
+  href,
+  children,
+  variant = "primary",
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: "primary" | "secondary";
+}) {
+  return (
+    <Link href={href} className={cn("btn auth-button", variant === "primary" ? "btn-primary" : "btn-secondary")}>
+      <span className="auth-button-label">{children}</span>
+      <ArrowBadge />
+    </Link>
+  );
+}
+
+/** "Back to sign in": the landing's quiet link, its arrow in a ring. */
+export function AuthBackLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="landing-tour-link text-muted-foreground">
+      <span aria-hidden className="tour-arrow tour-arrow-back">
+        <ArrowLeft />
+        <ArrowLeft />
+      </span>
+      <span>{children}</span>
+    </Link>
   );
 }
 
 /** "don't have an account? register" under the form. */
 export function AuthSwitch({ children }: { children: React.ReactNode }) {
-  return <p className="text-center text-sm text-muted-foreground">{children}</p>;
+  return <div className="text-center text-sm text-muted-foreground">{children}</div>;
 }

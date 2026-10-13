@@ -37,7 +37,7 @@ export default function LanguagePicker({ value, onChange, disabled, className, d
           aria-label="Language"
           disabled={disabled}
           className={cn(
-            "inline-flex h-7 min-w-36 items-center justify-between gap-2 rounded-md border border-input bg-background/60 px-2.5 font-mono text-xs text-foreground/90 outline-none transition-colors",
+            "inline-flex h-7 min-w-36 items-center justify-between gap-2 rounded-md border border-input bg-background px-2.5 font-sans text-[13px] font-medium text-foreground/90 outline-none transition-colors",
             "hover:border-foreground/25 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:opacity-50",
             open && "border-ring",
             className
@@ -63,9 +63,9 @@ export default function LanguagePicker({ value, onChange, disabled, className, d
           filter={(itemValue, search) => (itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
           className="bg-popover"
         >
-          <CommandInput placeholder="search language" className="h-9 font-mono text-base lg:text-xs" />
+          <CommandInput placeholder="Search language" className="h-9 font-sans text-base lg:text-sm" />
           <CommandList className="thin-scrollbar max-h-64 p-1">
-            <CommandEmpty className="py-4 text-center font-mono text-xs text-muted-foreground">no match</CommandEmpty>
+            <CommandEmpty className="py-4 text-center font-sans text-sm text-muted-foreground">No match</CommandEmpty>
             {LANGUAGES.map((lang) => {
               const selected = lang.value === current.value;
               return (
@@ -76,7 +76,7 @@ export default function LanguagePicker({ value, onChange, disabled, className, d
                     onChange(lang.value);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-between rounded-md px-2 py-1.5 font-mono text-xs data-[selected=true]:bg-[color-mix(in_srgb,var(--ring)_14%,transparent)]"
+                  className="flex items-center justify-between rounded-md px-2 py-1.5 font-sans text-sm data-[selected=true]:bg-[color-mix(in_srgb,var(--ring)_14%,transparent)]"
                 >
                   {lang.label}
                   {selected && <Check className="h-3.5 w-3.5 text-[var(--ring)]" />}

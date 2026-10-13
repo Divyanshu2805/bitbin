@@ -70,11 +70,11 @@ describe("readableColor", () => {
 });
 
 describe("readableTint", () => {
-  it("mixes the readable pair with transparent at the given percent", () => {
-    expect(readableTint("#60a5fa", 12)).toBe(`color-mix(in srgb, ${readableColor("#60a5fa")} 12%, transparent)`);
+  it("mixes the readable pair over the card surface at the given percent", () => {
+    expect(readableTint("#60a5fa", 12)).toBe(`color-mix(in srgb, ${readableColor("#60a5fa")} 12%, var(--card))`);
   });
 
   it("passes non-hex colours through the mix", () => {
-    expect(readableTint("var(--brand-lime)", 20)).toBe("color-mix(in srgb, var(--brand-lime) 20%, transparent)");
+    expect(readableTint("var(--brand-lime)", 20)).toBe("color-mix(in srgb, var(--brand-lime) 20%, var(--card))");
   });
 });

@@ -5,7 +5,6 @@ import { Command, Compass, FileText, Folder } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Kbd } from "@/components/shared/kbd";
-import { PathPill } from "@/components/shared/page-header";
 import { toggleSidebar } from "@/hooks/use-sidebar-collapsed";
 import { isTyping, overlayOpen, useHotkey } from "@/hooks/use-hotkey";
 import { GO_SHORTCUTS, SHORTCUT_GROUPS, TYPE_SHORTCUTS } from "@/lib/constants/shortcuts";
@@ -17,10 +16,10 @@ export const SHORTCUTS_EVENT = "bitbin:shortcuts";
 const SEQUENCE_MS = 1200;
 
 const GROUP_ICONS: Record<string, React.ReactNode> = {
-  general: <Command />,
-  "go to": <Compass />,
-  "open item": <FileText />,
-  "collection page": <Folder />,
+  General: <Command />,
+  "Go to": <Compass />,
+  "Open item": <FileText />,
+  "Collection page": <Folder />,
 };
 
 /**
@@ -84,8 +83,7 @@ export default function AppShortcuts() {
         className="thin-scrollbar max-h-[85dvh] gap-5 overflow-y-auto sm:max-w-2xl"
       >
         <DialogHeader className="items-start space-y-2.5">
-          <PathPill path="shortcuts" />
-          <DialogTitle className="font-display text-xl tracking-[-0.03em]">Keyboard shortcuts</DialogTitle>
+          <DialogTitle className="font-display text-2xl font-normal tracking-[-0.03em]">Keyboard shortcuts</DialogTitle>
           <DialogDescription className="text-desc">
             BitBin is built to be driven from the keyboard. Single keys work anywhere you&apos;re not typing.
           </DialogDescription>
@@ -97,12 +95,11 @@ export default function AppShortcuts() {
               <h3 className="mb-2 flex items-center gap-2 font-mono text-[11px] font-normal text-muted-foreground [&_svg]:h-3.5 [&_svg]:w-3.5 [&_svg]:text-lime">
                 {GROUP_ICONS[group.title]}
                 <span>
-                  <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
                   {group.title}
                 </span>
                 <span className="ml-auto tabular-nums text-faint dark:text-muted-foreground/60">[{group.items.length}]</span>
               </h3>
-              <ul className="overflow-hidden rounded-lg border border-border bg-card/60">
+              <ul className="overflow-hidden rounded-2xl border border-border bg-background">
                 {group.items.map((item) => (
                   <li
                     key={item.label}

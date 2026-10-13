@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Panel, { ProTag } from '@/components/shared/panel';
 import { Button } from '@/components/ui/button';
+import ProLocked from './pro-locked';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ConfirmDeleteDialog from '@/components/shared/confirm-delete-dialog';
-import { Check, Copy, Download, KeyRound, Loader2, Plus, Puzzle, Trash2, Sparkles } from 'lucide-react';
+import { Check, Copy, Download, KeyRound, Loader2, Plus, Puzzle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createApiToken, revokeApiToken } from '@/actions/api-tokens';
 import { formatExpiry, formatRelativeDate } from '@/lib/utils/date';
@@ -102,29 +102,19 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
         description={
           <>
             Save selected text from any page with a shortcut. Create a token here and paste it into the
-            extension&apos;s options.
+            extension&apos;s options. The desktop app and AI assistants use these tokens too.
           </>
         }
       >
         <div className="space-y-6">
           {!isPro ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-desc text-sm">
-                The browser extension is part of BitBin Pro.
-              </p>
-              <Button asChild size="sm">
-                <Link href="/upgrade">
-                  <Sparkles className="h-4 w-4" />
-                  Upgrade to Pro
-                </Link>
-              </Button>
-            </div>
+            <ProLocked>The browser extension is part of BitBin Pro.</ProLocked>
           ) : (
             <>
             <div className="space-y-3">
               <Button asChild variant="outline">
                 <a href="/api/extension/download" download>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   Download extension
                 </a>
               </Button>
@@ -170,7 +160,7 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={creating || name.trim().length === 0 || scopes.length === 0}>
+              <Button type="submit" variant="outline" disabled={creating || name.trim().length === 0 || scopes.length === 0}>
                 {creating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -207,7 +197,7 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
           )}
 
           {newToken && (
-            <div className="space-y-2 rounded-md border border-lime/40 bg-lime/5 p-3">
+            <div className="space-y-2 rounded-md border border-[color-mix(in_srgb,var(--brand-lime)_40%,var(--card))] bg-[color-mix(in_srgb,var(--brand-lime)_8%,var(--card))] p-3">
               <p className="text-sm font-medium text-foreground">
                 Your new token. Copy it now; it won&apos;t be shown again.
               </p>
@@ -250,12 +240,12 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                       </div>
                     </div>
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setRevoking(token)}
+           type="button"
+           variant="ghost"
+           size="icon"
+           onClick={() => setRevoking(token)}
                       aria-label={`Revoke ${token.name}`}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/15"
+                      className="text-destructive hover:bg-[color-mix(in_srgb,var(--destructive)_12%,var(--card))] hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

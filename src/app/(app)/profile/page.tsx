@@ -23,7 +23,7 @@ export default async function ProfilePage() {
   return (
     <>
       <div className="mx-auto max-w-5xl space-y-10">
-        <PageHeader path="profile" title="Profile" description="Your account, and what you've put in the bin." />
+        <PageHeader title="Profile" description="Your account, and what you've put in the bin." />
 
         <div className="space-y-6">
           <ProfileInfo

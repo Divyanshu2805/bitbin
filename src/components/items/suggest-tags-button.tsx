@@ -83,13 +83,13 @@ export default function SuggestTagsButton({
   return (
     <div className="space-y-2">
       <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={handleSuggest}
-        disabled={disabled || isLoading}
-        className="ai-action h-7 px-2 text-xs"
-      >
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={handleSuggest}
+    disabled={disabled || isLoading}
+    className="ai-action h-7 px-2 text-xs"
+   >
         {isLoading ? (
           <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
         ) : (

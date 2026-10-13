@@ -26,7 +26,7 @@ export default function EditorSettings() {
     >
       <div className="-my-3">
         {/* Font Size */}
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
+        <div className="flex items-center justify-between gap-4 border-b border-[color-mix(in_srgb,var(--border)_60%,var(--card))] py-3.5">
           <div>
             <Label htmlFor="font-size">Font Size</Label>
             <p className="text-desc text-sm">
@@ -54,7 +54,7 @@ export default function EditorSettings() {
         </div>
 
         {/* Tab Size */}
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
+        <div className="flex items-center justify-between gap-4 border-b border-[color-mix(in_srgb,var(--border)_60%,var(--card))] py-3.5">
           <div>
             <Label htmlFor="tab-size">Tab Size</Label>
             <p className="text-desc text-sm">
@@ -82,7 +82,7 @@ export default function EditorSettings() {
         </div>
 
         {/* Theme */}
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
+        <div className="flex items-center justify-between gap-4 border-b border-[color-mix(in_srgb,var(--border)_60%,var(--card))] py-3.5">
           <div>
             <Label htmlFor="theme">Theme</Label>
             <p className="text-desc text-sm">
@@ -110,7 +110,7 @@ export default function EditorSettings() {
         </div>
 
         {/* Word Wrap */}
-        <div className="flex items-center justify-between gap-4 border-b border-border/60 py-3.5">
+        <div className="flex items-center justify-between gap-4 border-b border-[color-mix(in_srgb,var(--border)_60%,var(--card))] py-3.5">
           <div>
             <Label htmlFor="word-wrap">Word Wrap</Label>
             <p className="text-desc text-sm">

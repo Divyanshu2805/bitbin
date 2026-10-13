@@ -17,7 +17,6 @@ import NewCollectionDialog from "@/components/collections/new-collection-dialog"
 import { useSearch } from "@/components/search/search-provider";
 import { Logo } from "@/components/shared/logo";
 import { KeyLabel } from "@/components/shared/kbd";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { useTypewriter } from "@/hooks/use-typewriter";
 
@@ -69,12 +68,12 @@ export default function TopBar({ onMenuClick, isPro }: TopBarProps) {
       <div className="flex min-w-0 shrink-0 items-center gap-2">
         {/* Mobile menu button */}
         <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 lg:hidden"
-          onClick={onMenuClick}
-          aria-label="Open navigation"
-        >
+     variant="ghost"
+     size="icon"
+     className="shrink-0 lg:hidden"
+     onClick={onMenuClick}
+     aria-label="Open navigation"
+    >
           <Menu className="h-5 w-5" />
         </Button>
 
@@ -88,7 +87,7 @@ export default function TopBar({ onMenuClick, isPro }: TopBarProps) {
         type="button"
         onClick={openSearch}
         aria-label="Search your bin"
-        className="search-prompt group relative hidden h-9 w-full min-w-0 items-center gap-2.5 rounded-md bg-card/70 px-3 font-mono text-[13px] text-muted-foreground sm:flex"
+        className="search-prompt group relative hidden h-9 w-full min-w-0 items-center gap-2.5 px-3 font-mono text-[13px] text-muted-foreground sm:flex"
       >
         <span aria-hidden className="font-semibold text-lime">
           &gt;
@@ -113,28 +112,6 @@ export default function TopBar({ onMenuClick, isPro }: TopBarProps) {
 
       {/* Actions */}
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:justify-self-end sm:gap-2">
-        <ThemeToggle />
-        {!isPro && (
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="hidden font-mono text-xs md:inline-flex"
-            style={
-              {
-                "--grid-color": "var(--brand-coral)",
-                color: "var(--brand-coral)",
-                borderColor: "color-mix(in srgb, var(--brand-coral) 40%, var(--border))",
-              } as React.CSSProperties
-            }
-          >
-            <Link href="/upgrade">
-              <Sparkles className="h-3.5 w-3.5" />
-              upgrade
-            </Link>
-          </Button>
-        )}
-
         {/* Phones: one + menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -164,10 +141,23 @@ export default function TopBar({ onMenuClick, isPro }: TopBarProps) {
 
         {/* sm and up: GitHub-style buttons with their shortcut on the key */}
         <div className="hidden items-center gap-2 sm:flex">
+          {/* Free plan only: the way to Pro, in violet so it stands apart from the create buttons */}
+          {!isPro && (
+            <Button
+              asChild
+              variant="upgrade"
+              size="sm"
+            >
+              <Link href="/upgrade" aria-label="Upgrade to Pro">
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden lg:inline">Upgrade</span>
+              </Link>
+            </Button>
+          )}
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setNewCollectionOpen(true)}
+      variant="outline"
+      size="sm"
+      onClick={() => setNewCollectionOpen(true)}
             aria-label="New collection"
             // BitBin's coral for collections, its lime for items (below)
             style={{ "--grid-color": "var(--brand-coral)", "--btn-accent": "var(--brand-coral)" } as React.CSSProperties}
@@ -181,8 +171,8 @@ export default function TopBar({ onMenuClick, isPro }: TopBarProps) {
             </span>
           </Button>
           <Button
-            size="sm"
-            onClick={() => setNewItemOpen(true)}
+      size="sm"
+      onClick={() => setNewItemOpen(true)}
             style={{ "--grid-color": "var(--brand-lime)", "--btn-accent": "var(--brand-lime)" } as React.CSSProperties}
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />

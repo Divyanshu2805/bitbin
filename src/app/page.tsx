@@ -1,11 +1,14 @@
 import Navbar from "@/components/homepage/Navbar";
+import "./brand.css";
+import "./landing.css";
 import Hero from "@/components/homepage/Hero";
-import OrganizeSection from "@/components/homepage/OrganizeSection";
+import HowItWorks from "@/components/homepage/HowItWorks";
 import TypesGrid from "@/components/homepage/TypesGrid";
 import AgentSection from "@/components/homepage/AgentSection";
 import AiSection from "@/components/homepage/AiSection";
 import ExtensionSection from "@/components/homepage/ExtensionSection";
 import ShortcutsSection from "@/components/homepage/ShortcutsSection";
+import PrivacySection from "@/components/homepage/PrivacySection";
 import PricingSection from "@/components/homepage/PricingSection";
 import FaqSection from "@/components/homepage/FaqSection";
 import BackToTop from "@/components/homepage/BackToTop";
@@ -48,12 +51,13 @@ export default function Home() {
       <Navbar />
       <main id="main">
         <Hero />
-        <OrganizeSection />
+        <HowItWorks />
         <TypesGrid />
         <AgentSection />
         <AiSection />
         <ExtensionSection />
         <ShortcutsSection />
+        <PrivacySection />
         <PricingSection />
         <FaqSection />
       </main>

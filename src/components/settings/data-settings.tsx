@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Panel, { ProTag } from '@/components/shared/panel';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Database, Download, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { downloadFrom } from '@/components/shared/download-file';
 import ImportDialog from './import-dialog';
+import { SettingRow, SettingRows } from './setting-row';
 
 interface DataSettingsProps {
   isPro: boolean;
@@ -37,51 +37,35 @@ export default function DataSettings({ isPro }: DataSettingsProps) {
         id="data"
         icon={<Database />}
         title="Data"
-        description="Export your bin, or import from a previous export (a full export, or a single collection's)."
+        description="Take your bin with you, or bring one back."
       >
-        <div className="space-y-5">
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              onClick={() => handleExport('json')}
-              disabled={exportingJson || exportingZip}
-            >
-              {exportingJson ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
+        <SettingRows>
+          <SettingRow
+            title="Export"
+            description="JSON holds your items and collections. ZIP adds your files and images."
+          >
+            <Button variant="outline" onClick={() => handleExport('json')} disabled={exportingJson || exportingZip}>
+              {exportingJson ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Export JSON
             </Button>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleExport('zip')}
-                disabled={exportingJson || exportingZip || !isPro}
-              >
-                {exportingZip ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="mr-2 h-4 w-4" />
-                )}
-                Export ZIP
-              </Button>
-              {!isPro && (
-                <ProTag />
-              )}
-            </div>
-          </div>
+            <Button
+              variant="outline"
+              onClick={() => handleExport('zip')}
+              disabled={exportingJson || exportingZip || !isPro}
+            >
+              {exportingZip ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export ZIP
+              {!isPro && <ProTag />}
+            </Button>
+          </SettingRow>
 
-          <Separator />
-
-          <Button
-            variant="outline"
-            onClick={() => setImportOpen(true)}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Import from JSON or ZIP
-          </Button>
-        </div>
+          <SettingRow title="Import" description="Bring back a full export, or a single collection's.">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4" />
+              Import JSON or ZIP
+            </Button>
+          </SettingRow>
+        </SettingRows>
       </Panel>
 
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} isPro={isPro} />

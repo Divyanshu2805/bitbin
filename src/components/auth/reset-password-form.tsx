@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, KeyRound, Lock } from "lucide-react";
-import { CtaLink } from "@/components/homepage/ui";
-import { AuthAccent, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
+import { KeyRound, Lock } from "lucide-react";
+import { AuthAccent, AuthAction, AuthBackLink, AuthField, AuthHeader, AuthSubmit, AuthSwitch } from "@/components/auth/auth-ui";
 
 type ResetStatus = "form" | "loading" | "success" | "error" | "no-token";
 
@@ -61,13 +60,10 @@ export function ResetPasswordForm() {
     return (
       <div className="w-full space-y-7">
         <AuthHeader
-          path="reset-password"
           title={<>This link <AuthAccent>expired.</AuthAccent></>}
           description="This password reset link is invalid or has already been used."
         />
-        <CtaLink href="/forgot-password" variant="terminal" prompt className="h-12 w-full rounded-md">
-          request a new link
-        </CtaLink>
+        <AuthAction href="/forgot-password">Request a new link</AuthAction>
       </div>
     );
   }
@@ -76,13 +72,10 @@ export function ResetPasswordForm() {
     return (
       <div className="w-full space-y-7">
         <AuthHeader
-          path="reset-password"
           title={<>Password <AuthAccent>updated.</AuthAccent></>}
           description={message}
         />
-        <CtaLink href="/sign-in" variant="terminal" prompt className="h-12 w-full rounded-md">
-          sign in
-        </CtaLink>
+        <AuthAction href="/sign-in">Sign in</AuthAction>
       </div>
     );
   }
@@ -92,20 +85,16 @@ export function ResetPasswordForm() {
   return (
     <div className="w-full space-y-7">
       <AuthHeader
-        path="reset-password"
         title={<>Set a new <AuthAccent>password.</AuthAccent></>}
         description="At least 8 characters. You'll use it to sign in from now on."
       />
 
       <div className="space-y-5">
         {status === "error" && message && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <div role="alert" className="rounded-[10px] border border-destructive/20 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive">
             {message}
             {message.includes("expired") && (
-              <Link
-                href="/forgot-password"
-                className="mt-2 block text-primary hover:underline"
-              >
+              <Link href="/forgot-password" className="brand-link mt-2 inline-block">
                 Request a new reset link
               </Link>
             )}
@@ -146,13 +135,7 @@ export function ResetPasswordForm() {
       </div>
 
       <AuthSwitch>
-        <Link
-          href="/sign-in"
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-lime"
-        >
-          <ArrowLeft className="size-4" />
-          Back to sign in
-        </Link>
+        <AuthBackLink href="/sign-in">Back to sign in</AuthBackLink>
       </AuthSwitch>
     </div>
   );

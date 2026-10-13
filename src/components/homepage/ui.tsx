@@ -3,26 +3,26 @@
 import { cn } from "@/lib/utils";
 import { TransitionLink } from "@/components/shared/transition-link";
 import { LogoMark } from "@/components/shared/logo";
-import LandingBackdrop from "./LandingBackdrop";
-import { BRAND_SURFACE } from "./brand-surface";
 import { useEffect, useRef } from "react";
+import { ArrowRight } from "lucide-react";
 import { prefersReducedMotion, usePointerEffects, useReveal } from "@/hooks/use-motion";
-import { startSmoothScroll } from "@/lib/smooth-scroll";
+import { startAtTopOnReload, startSmoothScroll } from "@/lib/smooth-scroll";
 
 // Building blocks shared by the homepage sections.
 
 /**
  * Root of the homepage: the page-wide backdrop, plus scroll reveals and pointer
- * effects for everything inside. Follows the app theme, and so do the app-window
+ * effects for everything inside. Blocks marked `data-scroll` open with the scroll
+ * position instead (landing.css). Follows the app theme, and so do the app-window
  * mockups inside, drawn from the shared pieces in mock-app.tsx.
  */
-export function LandingRoot({ children }: { children: React.ReactNode }) {
+export function LandingRoot({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref = useReveal<HTMLDivElement>();
   usePointerEffects(ref);
+  useEffect(() => startAtTopOnReload(), []);
   useEffect(() => startSmoothScroll(), []);
   return (
-    <div ref={ref} className={cn("landing relative isolate min-h-dvh overflow-x-clip bg-background text-foreground", BRAND_SURFACE)}>
-      <LandingBackdrop />
+    <div ref={ref} className={cn("landing brand relative isolate min-h-dvh overflow-x-clip bg-background text-foreground", className)}>
       {children}
     </div>
   );
@@ -58,10 +58,10 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn("relative scroll-mt-24 py-24 sm:py-32", className)}
+      className={cn("landing-section relative scroll-mt-24 py-24 sm:py-28", className)}
       style={{ "--accent": accent } as React.CSSProperties}
     >
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="mx-auto max-w-(--landing-max) px-5 sm:px-8">
         <SectionHeading index={index} label={label} title={title} description={description} centered={centered} />
         {children ? <div className="mt-14 sm:mt-16">{children}</div> : null}
       </div>
@@ -83,7 +83,7 @@ export function SectionHeading({
   centered?: boolean;
 }) {
   return (
-    <div className={cn("max-w-2xl", centered && "mx-auto text-center")}>
+    <div className={cn("landing-section-heading max-w-2xl", centered && "mx-auto text-center")}>
       <p
         data-reveal
         className={cn(
@@ -100,7 +100,7 @@ export function SectionHeading({
         style={{ "--d": "80ms" } as React.CSSProperties}
         className="mt-6 text-balance font-display text-[clamp(1.9rem,4vw,3rem)] font-bold leading-[1.08] tracking-[-0.04em]"
       >
-        {title}
+        <span className="ink">{title}</span>
       </h2>
       {description ? (
         <p
@@ -124,8 +124,9 @@ export function Accent({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * The homepage button, built on `.btn` (globals.css): a lit top edge, a lift and
- * glow on hover, a sheen that crosses it, and a real press when clicked.
+ * The homepage button, built on `.btn` (globals.css). Its arrow sits in a round badge;
+ * on hover the badge grows until its colour fills the button, and the arrow is swapped
+ * for a fresh one. A real press when clicked.
  * `terminal` is the dark, developer-flavoured one: a mono label that decodes on
  * hover, and an optional `$` prompt and blinking caret. It slides to the next page.
  */
@@ -161,7 +162,7 @@ export function CtaLink({
     >
       {terminal && prompt ? (
         <span aria-hidden className="btn-prompt">
-          <LogoMark className="size-[1.2em]" />
+          <LogoMark animated={false} className="size-[1.2em]" />
         </span>
       ) : null}
       {terminal && typeof children === "string" ? (
@@ -185,8 +186,10 @@ export function CtaLink({
           {kbd}
         </span>
       ) : terminal ? null : (
+        // Two arrows in a round badge: one leaves on the right as the next comes in (landing.css)
         <span aria-hidden className="btn-arrow">
-          →
+          <ArrowRight />
+          <ArrowRight />
         </span>
       )}
     </TransitionLink>

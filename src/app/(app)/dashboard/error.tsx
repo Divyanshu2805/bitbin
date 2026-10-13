@@ -18,7 +18,7 @@ export default function DashboardError({ error, reset }: ErrorProps) {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-lift)] animate-fade-up">
+      <div className="w-full max-w-lg card-surface overflow-hidden animate-fade-up">
         <div className="flex h-10 items-center gap-2 border-b border-border bg-surface px-4">
           <span className="size-3 rounded-full bg-[#ff5f57]" />
           <span className="size-3 rounded-full bg-[#febc2e]" />
@@ -35,7 +35,7 @@ export default function DashboardError({ error, reset }: ErrorProps) {
           </ResultLine>
           {error.digest && <ResultLine>ref {error.digest}</ResultLine>}
           <div className="pt-4">
-            <Button onClick={reset} className="font-mono">
+            <Button onClick={reset} className="">
               <RefreshCw className="h-4 w-4" />
               retry
             </Button>

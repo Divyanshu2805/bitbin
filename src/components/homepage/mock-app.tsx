@@ -4,7 +4,7 @@ import { readableColor } from "@/lib/utils/color";
 import { KeyLabel } from "@/components/shared/kbd";
 
 // Pieces of the real app shell, drawn small for the homepage demos, so every
-// mock window looks like the app does now and follows the theme: `// label`
+// mock window looks like the app does now and follows the theme: lowercase mono
 // section headings, the current row on a lime pill with a glowing bar, folders
 // in each collection's colour, the `> search your bin` prompt with / and ⌘K,
 // and buttons with the app's tinted glass (.term-btn). Keep them in step with
@@ -13,19 +13,18 @@ import { KeyLabel } from "@/components/shared/kbd";
 /** The sidebar's surface: see-through over the window, like the app's over its backdrop. */
 export const MOCK_SIDEBAR = "bg-[color-mix(in_srgb,var(--sidebar)_70%,transparent)]";
 
-/** `// types`, as the sidebar writes its section headings. */
+/** `types`, as the sidebar writes its section headings. */
 export function MockSectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={cn("px-2 pb-1 font-mono text-[10.5px] whitespace-nowrap text-muted-foreground", className)}>
-      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
+    <p className={cn("px-2 pb-1 font-mono text-[10.5px] whitespace-nowrap text-muted-foreground first-letter:uppercase", className)}>
       {children}
     </p>
   );
 }
 
 /**
- * A sidebar row. The current one sits on the app's lime pill (`.sidebar-pill`
- * active: a lime wash, a lime hairline and a glowing bar at the left edge) and
+ * A sidebar row. The current one sits on the app's lime highlight (`.sidebar-row`
+ * when current: a lime wash, a lime hairline and a glowing bar at the left edge) and
  * its count turns lime.
  */
 export function MockNavRow({

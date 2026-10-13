@@ -2,9 +2,9 @@
 
 import { signIn } from "@/auth";
 
-// GitHub brings the user back to the sign-in page (`?via=github`), which then
-// slides into the dashboard like an email sign-in does, instead of a full page
-// load that shows the dashboard's loading screen.
+// GitHub brings the user straight back to the dashboard. Coming back through the
+// sign-in page to slide from there froze it: the slide pictures the page on its
+// first frame, mid-entrance, and holds that still image until the dashboard loads.
 export async function signInWithGitHub() {
-  await signIn("github", { redirectTo: "/sign-in?via=github" });
+  await signIn("github", { redirectTo: "/dashboard" });
 }

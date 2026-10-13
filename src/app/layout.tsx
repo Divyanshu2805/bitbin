@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
 import { HistorySlides } from "@/components/shared/transition-link";
 import { VIEW_SCRIPT } from "@/lib/view-mode-script";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
@@ -13,18 +12,18 @@ import "./globals.css";
 // build time, and Turbopack intermittently fails the build on Google's reply
 // ("next/font/google queries have exactly one entry").
 
-// Geist for reading, JetBrains Mono for headings, labels and code.
+// Geist for reading, Fraunces for headings, JetBrains Mono for labels and code.
 const geist = localFont({
   src: "./fonts/geist-latin.woff2",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
 
-// IBM Plex Sans for description text (the `text-desc` utility).
-const plexSans = localFont({
-  src: "./fonts/ibm-plex-sans-latin.woff2",
-  variable: "--font-plex-sans",
-  weight: "400 500",
+// Fraunces for headings: upright only; the variable file carries its optical size and "soft" axes.
+const fraunces = localFont({
+  src: "./fonts/fraunces-latin.woff2",
+  variable: "--font-fraunces",
+  weight: "100 900",
 });
 
 const jetbrainsMono = localFont({
@@ -60,10 +59,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eff2e9" },
-    { media: "(prefers-color-scheme: dark)", color: "#08090a" },
-  ],
+  themeColor: "#151514",
+  colorScheme: "dark",
 };
 
 // Restores the collapsed sidebar before the first paint, so the rail never
@@ -76,17 +73,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_SCRIPT + VIEW_SCRIPT }} />
       </head>
-      <body className={`${geist.variable} ${plexSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          {children}
-          <HistorySlides />
-          {/* One toast at a time: a new one replaces the last instead of stacking over it */}
-          <Toaster richColors position="top-center" visibleToasts={1} />
-        </ThemeProvider>
+      <body className={`${geist.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        {children}
+        <HistorySlides />
+        {/* One toast at a time: a new one replaces the last instead of stacking over it */}
+        <Toaster position="top-center" visibleToasts={1} />
         <Analytics />
       </body>
     </html>

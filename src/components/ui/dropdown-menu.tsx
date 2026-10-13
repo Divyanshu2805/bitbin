@@ -23,39 +23,9 @@ function DropdownMenuTrigger({
   )
 }
 
-/**
- * A highlight that glides between a menu's rows, like the sidebar's pills
- * (`.menu-pill` in globals.css): it follows the focused row, which Radix moves
- * with both the pointer and the arrow keys, and fades when nothing is. Called
- * from the menu's onFocus; the menu and its pill come from the event.
- */
-function glideMenuPill(event: React.FocusEvent<HTMLDivElement>) {
-  const content = event.currentTarget
-  const pill = content.querySelector<HTMLElement>(":scope > .menu-pill")
-  const target = event.target as HTMLElement
-  // A submenu's rows bubble here through React's portal; they aren't ours, so the pill stays on its trigger
-  if (!pill || !content.contains(target)) return
-  const row = target === content ? null : target.closest<HTMLElement>("[role^='menuitem']")
-  if (!row) {
-    pill.removeAttribute("data-on")
-    return
-  }
-  pill.style.setProperty("--x", `${row.offsetLeft}px`)
-  pill.style.setProperty("--y", `${row.offsetTop}px`)
-  pill.style.setProperty("--w", `${row.offsetWidth}px`)
-  pill.style.setProperty("--h", `${row.offsetHeight}px`)
-  // A row can ask for its own tone (data-tone), destructive rows are red, the rest lime
-  pill.dataset.tone = row.dataset.tone ?? (row.dataset.variant === "destructive" ? "destructive" : "default")
-  // Appear in place the first time, glide after that
-  if (!pill.hasAttribute("data-ready")) requestAnimationFrame(() => pill.setAttribute("data-ready", ""))
-  pill.setAttribute("data-on", "")
-}
-
 function DropdownMenuContent({
   className,
   sideOffset = 4,
-  onFocus,
-  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
   return (
@@ -63,19 +33,12 @@ function DropdownMenuContent({
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
-        onFocus={(event) => {
-          glideMenuPill(event)
-          onFocus?.(event)
-        }}
         className={cn(
           "relative bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-xl border p-1.5 shadow-[var(--shadow-lift)]",
           className
         )}
         {...props}
-      >
-        <span aria-hidden className="menu-pill" />
-        {children}
-      </DropdownMenuPrimitive.Content>
+      />
     </DropdownMenuPrimitive.Portal>
   )
 }
@@ -210,26 +173,17 @@ function DropdownMenuSubTrigger({
 
 function DropdownMenuSubContent({
   className,
-  onFocus,
-  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
-      onFocus={(event) => {
-        glideMenuPill(event)
-        onFocus?.(event)
-      }}
       className={cn(
         "relative bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-xl border p-1.5 shadow-[var(--shadow-lift)]",
         className
       )}
       {...props}
-    >
-      <span aria-hidden className="menu-pill" />
-      {children}
-    </DropdownMenuPrimitive.SubContent>
+    />
   )
 }
 

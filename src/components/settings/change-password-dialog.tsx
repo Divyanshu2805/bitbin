@@ -138,11 +138,11 @@ export default function ChangePasswordDialog({
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
+       type="button"
+       variant="cancel"
+       onClick={handleClose}
+       disabled={isLoading}
+      >
               <X className="h-4 w-4" />
               Cancel
             </Button>

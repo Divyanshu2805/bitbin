@@ -22,11 +22,10 @@ interface UserMenuProps {
   onNavigate?: () => void;
 }
 
-// Rows are sidebar rows: same height and type, the same faint lime pill with a lime
-// edge when highlighted, the same one-way sweep of light (`.sidebar-row`), and the
-// icon turns lime. Radix highlights on hover and keyboard alike (`data-highlighted`).
+// Rows are sidebar rows: same height and type, the same faint lime tint with a lime
+// edge when highlighted, and the icon turns lime. Radix highlights on hover and keyboard alike (`data-highlighted`).
 const ITEM =
-  "sidebar-row relative h-8 gap-3 overflow-hidden rounded-lg px-2.5 text-[13.5px] text-foreground/80 transition-colors duration-200 focus:text-foreground focus:[&_svg:not([class*='text-'])]:text-lime";
+  "sidebar-row relative h-8 gap-3 overflow-hidden rounded-lg px-2.5 text-[13.5px] text-foreground/80 focus:text-foreground focus:[&_svg:not([class*='text-'])]:text-lime";
 
 /**
  * The account menu (sidebar and mobile sidebar). It opens above its trigger at
@@ -84,7 +83,7 @@ export default function UserMenuContent({ isPro, onNavigate }: UserMenuProps) {
       {!isPro && (
         <DropdownMenuItem
           asChild
-          // The gliding highlight turns coral here
+          // The row's highlight is coral here
           data-tone="coral"
           className={cn(ITEM, "focus:text-coral focus:[&_svg:not([class*='text-'])]:text-coral")}
         >

@@ -16,7 +16,7 @@ export default function UsageMeter({ label, used, limit, className }: UsageMeter
   const nearlyFull = ratio >= 0.9;
 
   return (
-    <div className={cn("rounded-md border border-border bg-background/60 px-3 py-2.5", className)}>
+    <div className={className}>
       <p className="flex items-center justify-between font-mono text-[11px] text-muted-foreground">
         {label}
         <span className="tabular-nums">
@@ -24,7 +24,7 @@ export default function UsageMeter({ label, used, limit, className }: UsageMeter
         </span>
       </p>
       <span
-        className="mt-2 block h-1.5 overflow-hidden rounded-full bg-muted"
+        className="mt-2 block h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--foreground)_8%,var(--card))]"
         role="meter"
         aria-label={`${label}: ${used} of ${limit}`}
         aria-valuemin={0}
@@ -34,7 +34,7 @@ export default function UsageMeter({ label, used, limit, className }: UsageMeter
         <span
           className={cn(
             "block h-full origin-left rounded-full animate-[bar-fill_1.2s_cubic-bezier(0.22,1,0.36,1)_both]",
-            nearlyFull ? "bg-coral" : "bg-gradient-to-r from-lime to-lime/60"
+            nearlyFull ? "bg-coral" : "bg-lime"
           )}
           style={{ width: `${ratio * 100}%` }}
         />

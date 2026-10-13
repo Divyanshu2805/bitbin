@@ -39,7 +39,7 @@ export default function Sidebar({ itemTypes, sidebarCollections, user, isPro }: 
   const itemCount = itemTypes.reduce((sum, type) => sum + type.count, 0);
 
   return (
-    <aside className="app-sidebar flex h-full flex-col overflow-hidden border-r border-sidebar-border bg-sidebar">
+    <aside className="app-sidebar flex h-full flex-col overflow-hidden bg-sidebar">
       {/* Head: logo, name and the collapse button. On the rail the logo itself expands */}
       <div className="flex h-14 shrink-0 items-center gap-2 px-3">
         {/* The mark never re-mounts; only the control over it changes */}
@@ -74,9 +74,9 @@ export default function Sidebar({ itemTypes, sidebarCollections, user, isPro }: 
           href="/dashboard"
           tabIndex={-1}
           aria-hidden
-          className="sidebar-label min-w-0 whitespace-nowrap font-display text-lg font-bold tracking-tight"
+          className="sidebar-label min-w-0 whitespace-nowrap font-sans text-lg font-bold tracking-tight"
         >
-          Bit<span className="text-lime">Bin</span>
+          Bit<span className="logo-word">Bin</span>
         </Link>
         <Tooltip>
           <TooltipTrigger asChild>

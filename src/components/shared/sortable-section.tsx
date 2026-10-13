@@ -24,7 +24,7 @@ interface SortableSectionProps {
   bare?: boolean;
 }
 
-/** A `// title [n] ───── sort ▾` rule over a hairline-divided list. */
+/** A `title [n] ───── sort ▾` rule over a hairline-divided list. */
 export default function SortableSection({
   title,
   count,
@@ -38,13 +38,12 @@ export default function SortableSection({
     <section className="animate-fade-up">
       <div className="mb-4 flex items-center gap-3">
         <h2 className="shrink-0 font-mono text-sm text-foreground">
-          <span className="text-muted-foreground">{"// "}</span>
           {title.toLowerCase()}
           <span className="ml-2 text-xs tabular-nums text-muted-foreground">[{count}]</span>
         </h2>
         <span aria-hidden className="h-px flex-1 bg-[linear-gradient(90deg,var(--border),transparent)]" />
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger size="sm" className="h-7 gap-1.5 border-border bg-card/70 font-mono text-xs" aria-label={`Sort ${title.toLowerCase()}`}>
+          <SelectTrigger size="sm" className="h-7 gap-1.5 border-border bg-card font-mono text-xs" aria-label={`Sort ${title.toLowerCase()}`}>
             <span className="text-muted-foreground">sort:</span>
             <SelectValue />
           </SelectTrigger>
@@ -60,7 +59,7 @@ export default function SortableSection({
       {bare ? (
         children
       ) : (
-        <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card/80">
+        <div className="card-surface divide-y divide-border overflow-hidden">
           {children}
         </div>
       )}

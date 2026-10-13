@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { ItemTypeIcon } from "@/components/shared/item-type-icon";
-import { Button } from "@/components/ui/button";
 import { ITEM_TYPE_COLORS } from "@/lib/constants/item-types";
-import { readableColor } from "@/lib/utils/color";
+import { readableColor, typeChipBackground } from "@/lib/utils/color";
 import NewItemDialog, { type ItemTypeName } from "@/components/items/new-item-dialog";
 
 const TYPES: { name: ItemTypeName; icon: string }[] = [
@@ -16,7 +15,7 @@ const TYPES: { name: ItemTypeName; icon: string }[] = [
 ];
 
 /**
- * `new › snippet prompt command note link`: one chip per type, each opening the
+ * One chip per type (snippet, prompt, command, note, link), each opening the
  * new-item dialog already set to that type.
  */
 export default function QuickCreate({ isPro }: { isPro?: boolean }) {
@@ -24,23 +23,24 @@ export default function QuickCreate({ isPro }: { isPro?: boolean }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 animate-fade-up" style={{ animationDelay: "140ms" }}>
-      <span className="mr-1 font-mono text-xs text-muted-foreground">
-        <span className="text-lime">+</span> new
-      </span>
       {TYPES.map(({ name, icon }) => {
         const color = readableColor(ITEM_TYPE_COLORS[name]);
         return (
-          <Button
+          <button
             key={name}
-            variant="outline"
-            size="sm"
+            type="button"
             onClick={() => setType(name)}
-            className="font-mono text-xs font-normal"
-            style={{ "--grid-color": color } as React.CSSProperties}
+            className="term-btn term-chip inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] capitalize"
+            style={
+              {
+                "--chip-bg": typeChipBackground(ITEM_TYPE_COLORS[name]),
+                "--chip-bg-hover": typeChipBackground(ITEM_TYPE_COLORS[name], 26),
+              } as React.CSSProperties
+            }
           >
             <ItemTypeIcon icon={icon} className="h-3.5 w-3.5" style={{ color }} />
             {name}
-          </Button>
+          </button>
         );
       })}
 

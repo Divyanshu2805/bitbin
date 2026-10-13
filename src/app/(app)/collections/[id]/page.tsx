@@ -14,7 +14,7 @@ import PageHeader from '@/components/shared/page-header';
 import SectionHeader from '@/components/dashboard/section-header';
 import { ItemTypeIcon } from '@/components/shared/item-type-icon';
 import { FileText, FolderOpen, Image as ImageIcon, Layers } from 'lucide-react';
-import { readableColor } from '@/lib/utils/color';
+import { readableColor, typeChipBackground } from '@/lib/utils/color';
 
 interface CollectionDetailPageProps {
   params: Promise<{ id: string }>;
@@ -46,8 +46,6 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
 
   const { items, pageInfo } = paginatedItems;
   const accent = readableColor(collection.dominantColor || '#6b7280');
-  // A readable path segment for the header pill, e.g. "react-patterns"
-  const slug = collection.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'collection';
 
   // Separate items by type for different rendering
   const fileItems = items.filter((item) => item.itemType.name === 'file');
@@ -61,7 +59,6 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
       <div className="mx-auto max-w-6xl space-y-10">
         <div className="space-y-5">
           <PageHeader
-            path={`collections/${slug}`}
             title={collection.name}
             count={collection.itemCount}
             description={collection.description ?? undefined}
@@ -90,7 +87,8 @@ export default async function CollectionDetailPage({ params, searchParams }: Col
               {collection.itemTypes.map((itemType) => (
                 <span
                   key={itemType.name}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/70 px-2 py-1 font-mono text-[11px] text-muted-foreground"
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-[11px] text-foreground/80"
+                  style={{ background: typeChipBackground(itemType.color) }}
                 >
                   <ItemTypeIcon icon={itemType.icon} className="h-3.5 w-3.5" style={{ color: readableColor(itemType.color) }} />
                   {itemType.name}s

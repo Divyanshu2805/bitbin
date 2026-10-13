@@ -83,12 +83,12 @@ function ActionButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant="outline"
-          size="icon"
-          onClick={onClick}
-          aria-label={label}
-          className="term-bare"
-        >
+     variant="outline"
+     size="icon"
+     onClick={onClick}
+     aria-label={label}
+     className="term-bare"
+    >
           {children}
         </Button>
       </TooltipTrigger>

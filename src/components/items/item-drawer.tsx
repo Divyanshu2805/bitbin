@@ -43,7 +43,7 @@ import { Kbd } from "@/components/shared/kbd";
 import LanguagePicker from "./language-picker";
 import { detectLanguage } from "@/lib/detect-language";
 import { fileDownloadPath, fileViewPath } from "@/lib/file-url";
-import { readableColor } from "@/lib/utils/color";
+import { readableColor, typeChipBackground } from "@/lib/utils/color";
 import { isTyping } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { MAX_DESCRIPTION_LENGTH } from "@/lib/validation";
@@ -80,23 +80,21 @@ function DrawerSkeleton() {
 }
 
 /**
- * An edit field's label in the same `// label` voice as the section labels,
+ * An edit field's label in the same lowercase mono voice as the section labels,
  * still tied to its field (`htmlFor`) for screen readers and clicks.
  */
 function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
-    <Label htmlFor={htmlFor} className="gap-0 font-mono text-[11px] font-normal text-muted-foreground">
-      <span className="mr-[1ch] text-faint dark:text-muted-foreground/50">{"//"}</span>
+    <Label htmlFor={htmlFor} className="gap-0 text-xs font-medium capitalize text-muted-foreground">
       {children}
     </Label>
   );
 }
 
-/** `// description`: the drawer's section labels, in the app's code-comment voice. */
+/** `description`: the drawer's section labels, lowercase mono. */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 font-mono text-[11px] text-muted-foreground">
-      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
+    <p className="mb-2 font-mono text-[11px] text-muted-foreground first-letter:uppercase">
       {children}
     </p>
   );
@@ -129,8 +127,7 @@ function Description({ text }: { text: string }) {
       {/* The section label, with a copy button for the description */}
       <div className="mb-2 flex items-center gap-2">
         <p className="font-mono text-[11px] text-muted-foreground">
-          <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
-          description
+          Description
         </p>
         <button
           type="button"
@@ -187,7 +184,7 @@ function ToolButton({
       data-anim-icons
       aria-pressed={active}
       className={cn(
-        "group/tool flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-xs outline-none",
+        "group/tool flex items-center gap-1.5 rounded-[10px] border px-2.5 py-1.5 text-xs font-medium outline-none",
         "transition-[color,background-color,border-color,scale] duration-150 active:scale-95",
         "focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--tool)_45%,transparent)]",
         "hover:border-[color-mix(in_srgb,var(--tool)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--tool)_12%,transparent)] hover:text-(--tool)",
@@ -459,7 +456,7 @@ export default function ItemDrawer() {
   const details = item ? (
     <div>
       <SectionLabel>details</SectionLabel>
-      <dl className="space-y-2 rounded-lg border border-border bg-card/60 px-3 py-2.5 font-mono text-xs">
+      <dl className="space-y-2 rounded-2xl border border-border bg-card px-4 py-3 font-mono text-xs">
         <div>
           <dt className="text-muted-foreground">created</dt>
           <dd className="mt-0.5 text-foreground">{formatLongDate(item.createdAt)}</dd>
@@ -480,7 +477,7 @@ export default function ItemDrawer() {
       <DialogContent
         showCloseButton={false}
         className={cn(
-          "flex max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.6)]",
+          "flex max-w-none flex-col gap-0 overflow-hidden border-border bg-background p-0 shadow-[var(--shadow-lift)]",
           "transition-[width,height,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-none",
           "max-sm:h-dvh max-sm:w-screen max-sm:rounded-none max-sm:border-0",
           expanded
@@ -524,21 +521,10 @@ export default function ItemDrawer() {
                 className="absolute inset-x-0 top-0 h-[2px]"
                 style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 75%)" }}
               />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-0 h-32"
-                style={{ background: "radial-gradient(80% 100% at 0% 0%, color-mix(in srgb, var(--brand-lime) 8%, transparent), transparent 70%)" }}
-              />
-              <p className="relative mb-4 pr-20 font-mono text-[11px] text-muted-foreground">
-                <span className="text-lime">~/</span>items/{item.itemType.name}s
-              </p>
               <div data-anim-icons className="relative flex items-center gap-3.5 pr-16">
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border"
-                  style={{
-                    backgroundColor: `color-mix(in srgb, ${iconColor} 12%, transparent)`,
-                    borderColor: `color-mix(in srgb, ${iconColor} 30%, transparent)`,
-                  }}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: typeChipBackground(item.itemType.color) }}
                 >
                   {IconComponent && <IconComponent className="h-5 w-5" style={{ color: iconColor }} />}
                 </div>
@@ -555,12 +541,12 @@ export default function ItemDrawer() {
                       />
                     </>
                   ) : (
-                    <DialogTitle className="truncate font-display text-xl font-bold tracking-[-0.03em] sm:text-2xl">
+                    <DialogTitle className="truncate font-display text-2xl font-normal tracking-[-0.03em] sm:text-[28px]">
                       {item.title}
                     </DialogTitle>
                   )}
                   <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
-                    <span style={{ color: iconColor }}>{item.itemType.name}</span>
+                    <span className="capitalize" style={{ color: iconColor }}>{item.itemType.name}</span>
                     {!isEditing && item.language && (
                       <>
                         <span className="text-faint dark:text-muted-foreground/40">·</span>
@@ -568,7 +554,7 @@ export default function ItemDrawer() {
                       </>
                     )}
                     <span className="text-faint dark:text-muted-foreground/40">·</span>
-                    <span className="text-muted-foreground">updated {formatRelativeDate(item.updatedAt)}</span>
+                    <span className="text-muted-foreground">Updated {formatRelativeDate(item.updatedAt)}</span>
                   </div>
                 </div>
               </div>
@@ -581,10 +567,10 @@ export default function ItemDrawer() {
             {isEditing ? (
               <div className="flex items-center gap-2 px-6 py-3 sm:px-8">
                 <Button
-                  onClick={handleSave}
-                  disabled={!canSave || isSaving}
-                  size="sm"
-                >
+         onClick={handleSave}
+         disabled={!canSave || isSaving}
+         size="sm"
+        >
                   <Save className="h-4 w-4" />
                   {isSaving ? "Saving…" : "Save"}
                   <span aria-hidden className="btn-kbd">
@@ -592,11 +578,11 @@ export default function ItemDrawer() {
                   </span>
                 </Button>
                 <Button
-                  onClick={handleCancel}
-                  variant="outline"
-                  size="sm"
-                  disabled={isSaving}
-                >
+         onClick={handleCancel}
+         variant="cancel"
+         size="sm"
+         disabled={isSaving}
+        >
                   <X className="h-4 w-4" />
                   Cancel
                 </Button>

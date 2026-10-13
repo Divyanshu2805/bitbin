@@ -196,13 +196,13 @@ export default function FileUpload({
           </div>
 
           <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0"
-            onClick={handleRemoveFile}
-            disabled={disabled}
-          >
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 flex-shrink-0"
+      onClick={handleRemoveFile}
+      disabled={disabled}
+     >
             <X className="h-4 w-4" />
           </Button>
         </div>

@@ -71,30 +71,23 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
     <>
       <div
         // Mouse users click anywhere on the card; keyboard and screen-reader users get the name button below
-        className="card-lift card-glow icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--brand-lime)_22%,var(--border))] bg-card p-5 shadow-[var(--shadow-soft)] outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
-        style={{ "--accent-color": "var(--brand-lime)" } as React.CSSProperties}
+        className="card-surface card-lift icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden p-5 outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
+        // Sage, the collections' colour, as a solid block
+        style={{ "--tone": "var(--brand-cyan)" } as React.CSSProperties}
         // Drop an item here to add it to this collection
         {...drop}
         onClick={handleCardClick}
       >
-        {/* Lime, like an item card: a rule along the top edge and a soft wash behind the header */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 85%)" }}
-        />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-28 opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--brand-lime) 10%, transparent), transparent 70%)" }}
-        />
-
         <div className="relative flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
             {/* The folder opens on hover */}
             <span
-              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-              style={{ backgroundColor: "color-mix(in srgb, var(--brand-lime) 13%, transparent)", color: "var(--brand-lime)" }}
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--tone) 22%, var(--card))",
+                borderColor: "color-mix(in srgb, var(--tone) 40%, var(--card))",
+                color: "var(--tone)",
+              }}
             >
               <Folder className="h-4 w-4 transition-opacity duration-200 group-hover:opacity-0" />
               <FolderOpen className="absolute h-4 w-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
@@ -175,7 +168,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             {collection.description}
           </p>
         ) : (
-          <p className="mt-3 font-mono text-xs text-faint dark:text-muted-foreground/50">{"// no description"}</p>
+          <p className="mt-3 font-mono text-xs text-faint dark:text-muted-foreground/50">No description</p>
         )}
 
         {/* What's inside, by type: a thin stacked bar and the type icons */}

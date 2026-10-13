@@ -1,0 +1,346 @@
+.landing :is(h1, h2, h3, h4, .font-display) {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+/* Fraunces (loaded by app/page.tsx), upright, with its "soft" axis taking the edge off the serifs */
+.landing :is(.landing-headline, .landing-section-heading > h2, .landing-closing h2) {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+}
+.landing .text-brand-gradient { background: none; color: var(--brand-lime); -webkit-text-fill-color: currentColor; }
+.landing header nav a, .landing header nav button { font-family: var(--font-geist-sans), sans-serif; font-size: 13px; }
+/* The navbar's highlight: one card per state that glides between the links (Navbar.tsx sets --x and width).
+   .is-current is the section you are in, a solid block of its colour (--c) standing on a hard lower edge;
+   .is-hover is the same card, lighter, under the pointer or keyboard focus. Solid colours only, no glow. */
+.nav-pill { --c: var(--brand-lime); --y: 0px; position: absolute; top: 0; left: 0; height: 36px; border: 1px solid transparent; border-radius: 10px; pointer-events: none; transform: translate3d(var(--x, 0px), var(--y), 0); will-change: transform, width;
+  transition: transform .55s cubic-bezier(.22, 1, .36, 1), width .55s cubic-bezier(.22, 1, .36, 1), opacity .3s ease, background-color .4s ease, border-color .4s ease, box-shadow .4s ease; }
+.nav-pill.is-current { --y: -2px; border-color: color-mix(in srgb, var(--c) 50%, var(--card)); background: color-mix(in srgb, var(--c) 20%, var(--card)); box-shadow: 0 3px 0 color-mix(in srgb, var(--c) 34%, var(--background)), 0 10px 16px -10px rgb(0 0 0 / .6); }
+.nav-pill.is-current.is-lifted { --y: -3px; box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 38%, var(--background)), 0 14px 20px -12px rgb(0 0 0 / .6); }
+.nav-pill.is-hover { --y: -1px; border-color: color-mix(in srgb, var(--c) 26%, var(--card)); background: color-mix(in srgb, var(--c) 9%, var(--card)); box-shadow: 0 2px 0 color-mix(in srgb, var(--c) 16%, var(--background)), 0 8px 14px -12px rgb(0 0 0 / .45);
+  transition-duration: .42s, .42s, .22s, .3s, .3s, .3s; }
+.nav-pill.is-hover.is-snapping { transition: opacity .22s ease; }
+@media (prefers-reduced-motion: reduce) { .nav-pill { transition: opacity .2s ease; } }
+/* The navbar's buttons are flat, not glass: a plain surface and hairline, no glow, tint or sweep. */
+.landing header :is(.btn-terminal, .term-btn) { background: var(--card); box-shadow: inset 0 0 0 1px var(--border); translate: none; }
+.landing header :is(.btn-terminal, .term-btn)::after { display: none; }
+.landing header :is(.btn-terminal, .term-btn):is(:hover, :focus-visible, :active) { background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); translate: none; }
+.landing header .term-bare:not(:hover, :active, :focus-visible) { background: transparent; box-shadow: none; }
+
+/* The hero is the first sheet: it starts just under the navbar with the same rounded shoulders as the rest.
+   It is four screens tall and pins its contents (.hero-pin) under the navbar, so the page scrolls
+   through a story instead of past a picture: HeroSort reads how far through it you are and places everything by it. */
+.landing-hero { margin-top: 72px; height: calc(400svh - 72px); border-top: 1px solid var(--border); border-radius: 36px 36px 0 0; box-shadow: 0 -34px 70px -48px rgb(0 0 0 / .55); }
+.hero-pin { position: sticky; top: 72px; height: calc(100svh - 72px); overflow: clip; border-radius: inherit; }
+/* The words sit in the middle of the ring, and lift away as the scroll begins: HeroSort writes their opacity and
+   translate (and the warm light's opacity) as the page moves, so they are a layer of their own until they are gone */
+.landing-hero-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px 12svh; text-align: center; will-change: opacity, translate; }
+.landing-hero[data-deep] :is(.landing-hero-copy, .hero-backdrop) { visibility: hidden; }
+.landing-hero::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: 0 0 auto; height: 760px; border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 82% 30%, color-mix(in srgb, var(--brand-lime) 10%, transparent), transparent 54%),
+    radial-gradient(ellipse at 30% 70%, color-mix(in srgb, var(--brand-lime) 4%, transparent), transparent 55%);
+}
+.landing .logo-mark.landing-hero-logo { display: block; width: clamp(64px, 9svh, 88px); height: clamp(64px, 9svh, 88px); }
+.landing .landing-headline { margin: 24px 0; font-size: clamp(50px, 5vw, 80px); line-height: 1.04; letter-spacing: -.035em; font-weight: 400; }
+.landing-headline .hero-line:nth-child(2) > span { animation-delay: .12s; }
+.landing-headline .hero-line:nth-child(3) > span { position: relative; display: inline-block; color: var(--brand-lime); animation-delay: .24s; }
+.landing-hero-description { max-width: 520px; color: var(--muted-foreground); font-size: 16px; line-height: 1.85; }
+.landing-hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 24px; margin-top: 30px; }
+.landing .landing-hero-actions .btn { min-height: 50px; border-radius: 10px; padding-inline: 22px 8px; font-size: 15px; }
+
+/* The navbar's Sign in: on hover a white sheet fills it from where the pointer entered and the label turns dark */
+.landing header .btn.btn-secondary { --btn-fill: var(--foreground); --btn-ink: var(--background); }
+.landing header .btn.btn-secondary:is(:hover, :focus-visible) { color: var(--btn-ink); background: transparent; border-color: var(--foreground); }
+
+/* The hero's scene (HeroSort): twelve cards on a ring around the words, and the bin they are sorted into.
+   The scene fills the pinned hero; the bin (the stage) is centred in it and waits below the middle of the
+   screen by --lift; HeroSort writes the same translate with the lift going to zero as the page scrolls (the default
+   here is where it waits, so nothing jumps when the script starts). Every position and size inside the bin is in cqw, so it scales as one.
+   HeroSort lays the bin out (three panels to a row, or two on a narrow screen) and sets its height over its
+   width (--ar), a tile's size (--tw, --th, in cqw) and --k, which scales the title bar and footer (--u) so they
+   keep their size when the bin is wider. */
+.hero-scene { --pin: calc(100svh - 72px); --w: min(1080px, 100vw - 40px, (var(--pin) - 90px) / var(--ar, .52)); position: absolute; inset: 0; pointer-events: none; }
+.sort-stage { --u: calc(var(--k, .7) * 1cqw); position: absolute; top: 50%; left: 50%; width: var(--w); height: calc(var(--w) * var(--ar, .52)); translate: -50% calc(-50% + var(--lift, calc(var(--pin) / 2 + var(--w) * var(--ar, .52) / 2 - min(84px, var(--pin) * .1)))); pointer-events: auto; container-type: inline-size; font-size: clamp(8.5px, var(--w) * var(--k, .7) * .0205, 15.5px); isolation: isolate; }
+/* A field of dots that thins out to nothing, and a glow under the bin that warms as it fills */
+.sort-stage::before { content: ""; position: absolute; inset: -34cqw -26cqw -30cqw; z-index: -1; pointer-events: none; background: radial-gradient(color-mix(in srgb, var(--foreground) 16%, transparent) 1px, transparent 1.5px) 0 0 / 4cqw 4cqw; -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); }
+.sort-stage::after { content: ""; position: absolute; inset: -14cqw -18cqw -16cqw; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--brand-lime) 22%, transparent), transparent 62%); opacity: .35; transition: opacity 1.2s ease; }
+.sort-stage.is-sorted::after { opacity: 1; }
+.sort-bin { position: absolute; inset: 0; border: 1px solid var(--border); border-radius: calc(3.6 * var(--u)); background: var(--card); box-shadow: var(--shadow-lift); transition: border-color .8s ease; }
+.sort-stage.is-sorted .sort-bin { border-color: color-mix(in srgb, var(--brand-lime) 38%, var(--border)); }
+.sort-bar { display: flex; align-items: center; justify-content: space-between; height: calc(8 * var(--u)); padding: 0 calc(3.4 * var(--u)); border-bottom: 1px solid var(--border); font-size: 1.15em; }
+.sort-search { display: flex; align-items: center; gap: calc(1.4 * var(--u)); width: calc(42 * var(--u)); height: calc(5.2 * var(--u)); padding: 0 calc(1.6 * var(--u)); border: 1px solid var(--border); border-radius: calc(1.4 * var(--u)); background: var(--background); color: var(--muted-foreground); font-family: var(--font-jetbrains-mono), monospace; font-size: .8em; transition: border-color .3s ease, box-shadow .3s ease; }
+.sort-search.is-active { border-color: color-mix(in srgb, var(--brand-lime) 60%, var(--border)); box-shadow: 0 0 0 calc(.7 * var(--u)) color-mix(in srgb, var(--brand-lime) 12%, transparent); color: var(--foreground); }
+.sort-search svg { flex: none; width: calc(2.4 * var(--u)); height: calc(2.4 * var(--u)); color: var(--brand-lime); }
+.sort-search > span { flex: 1; white-space: nowrap; }
+.sort-search :is(kbd, em) { flex: none; font-style: normal; font-size: .9em; }
+.sort-search em { color: var(--brand-lime); }
+.sort-panel { position: absolute; border: 1px solid var(--border); border-radius: calc(2.2 * var(--u)); background: color-mix(in srgb, var(--background) 55%, var(--card)); transition: border-color .6s ease; }
+.sort-panel.is-filled { border-color: color-mix(in srgb, var(--tile) 45%, var(--border)); }
+.sort-panel > p { display: flex; align-items: center; gap: calc(1.1 * var(--u)); padding: calc(1.5 * var(--u)) calc(1.6 * var(--u)) 0; font-family: var(--font-jetbrains-mono), monospace; font-size: .85em; letter-spacing: .1em; text-transform: uppercase; }
+.sort-panel svg { width: calc(2.4 * var(--u)); height: calc(2.4 * var(--u)); }
+.sort-panel > p > span { color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.sort-slot { position: absolute; width: calc(var(--tw) * 1cqw); height: calc(var(--th) * 1cqw); border: 1px dashed var(--border); border-radius: calc(1.8 * var(--u)); transition: opacity .4s ease; }
+.sort-slot.is-filled { opacity: 0; transition-delay: .9s; }
+/* A card is placed every frame by HeroSort (translate, rotate and scale, in pixels from the bin's corner);
+   until the script runs it sits in its slot, unseen. HeroSort fades one face into the other as it changes into
+   an item card, and data-kept says it is more than half way. */
+.sort-chip { position: absolute; top: 0; left: 0; z-index: 2; translate: calc(var(--x) * 1cqw) calc(var(--y) * 1cqw); opacity: 0; pointer-events: auto; transition: opacity .7s ease; will-change: translate, rotate, scale; }
+.sort-stage[data-ready] .sort-chip { opacity: 1; }
+.sort-chip.is-match { z-index: 3; }
+/* A tile has two faces. On the ring it is a scrap from another app, its logo large; in the bin it is an item
+   card with its type. It spins a full turn on the way in while the first face melts into the second, and
+   rests with no rotation or scale at all, so the small type stays sharp.
+   A card is a solid block of colour mixed into the card surface: nothing about it is see-through or glowing,
+   in the bin or out of it. A search marks its match by lifting it and brightening its edge; the others stay
+   as they are. The tile is a container, so everything on it is sized in its own cqw. */
+.sort-tile { position: relative; container-type: inline-size; width: calc(var(--tw) * 1cqw); height: calc(var(--th) * 1cqw); border: 1px solid color-mix(in srgb, var(--tile) 52%, var(--card)); border-radius: calc(1.7 * var(--u)); background: color-mix(in srgb, var(--tile) 24%, var(--card)); box-shadow: var(--shadow-soft); transition: border-color .5s ease, opacity .4s ease, scale .4s cubic-bezier(.34, 1.56, .64, 1), box-shadow .4s ease; }
+/* On the ring the edge follows the app, like the face it frames; in the bin it takes the type's colour */
+.sort-chip:not([data-kept]) .sort-tile { border-color: color-mix(in srgb, var(--src) 22%, var(--card)); box-shadow: var(--shadow-lift); }
+.sort-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 7.5cqw; overflow: hidden; border-radius: inherit; font-size: clamp(7px, 9cqw, 15px); }
+.sort-face-loose { background: linear-gradient(155deg, color-mix(in srgb, var(--src) 30%, var(--card)), color-mix(in srgb, var(--src) 12%, var(--card))); }
+.sort-face-kept { opacity: 0; }
+/* The picture: the app's logo, large, and again as a faint mark bleeding off the corner */
+.sort-art { position: relative; display: grid; place-items: center; width: 34cqw; aspect-ratio: 1; border-radius: 9cqw; background: color-mix(in srgb, var(--src) 24%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--src) 40%, transparent); color: var(--src); }
+.sort-art svg { width: 60%; height: 60%; }
+.sort-mark { position: absolute; right: -12cqw; bottom: -16cqw; width: 70cqw; aspect-ratio: 1; color: var(--src); opacity: .13; rotate: -12deg; pointer-events: none; }
+.sort-mark svg { width: 100%; height: 100%; }
+.sort-face-loose .sort-title { position: relative; }
+.sort-type-icon { display: grid; place-items: center; flex: none; width: 20cqw; height: 20cqw; border-radius: 5cqw; background: color-mix(in srgb, var(--tile) 42%, var(--card)); color: var(--foreground); }
+.sort-type-icon svg { width: 12cqw; height: 12cqw; }
+.sort-type { color: var(--tile); font: .85em var(--font-jetbrains-mono), monospace; }
+/* Without BitBin, one tile at a time slips your mind: it goes dashed and wears a question mark */
+.sort-tile.is-forgotten { border-style: dashed; }
+.sort-q { position: absolute; z-index: 1; top: -8cqw; right: -8cqw; display: grid; place-items: center; width: 20cqw; height: 20cqw; border-radius: 50%; background: var(--brand-coral); color: var(--primary-foreground); font: 700 clamp(8px, 10cqw, 16px)/1 var(--font-jetbrains-mono), monospace; scale: 0; transition: scale .4s cubic-bezier(.34, 1.56, .64, 1); }
+.sort-tile.is-forgotten .sort-q { scale: 1; }
+@media (hover: hover) {
+  .sort-chip[data-kept] .sort-tile:not(.is-dim):hover { scale: 1.07; border-color: var(--tile) !important; box-shadow: var(--shadow-lift); }
+  .sort-chip:not([data-kept]) .sort-tile:hover { border-color: color-mix(in srgb, var(--brand-lime) 55%, var(--border)); }
+  .sort-panel:hover { border-color: color-mix(in srgb, var(--foreground) 28%, var(--border)); }
+}
+.sort-brand { display: flex; align-items: center; gap: calc(1.4 * var(--u)); }
+.sort-brand .logo-mark { width: calc(4.4 * var(--u)); height: calc(4.4 * var(--u)); }
+.sort-tile.is-match { scale: 1.09; box-shadow: var(--shadow-lift); }
+.sort-from { display: flex; align-items: center; gap: 6cqw; min-width: 0; }
+.sort-title { overflow: hidden; font-weight: 500; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.sort-foot { position: absolute; inset: auto 0 0; display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--u)); height: calc(9.5 * var(--u)); padding: 0 calc(2.8 * var(--u)); border-top: 1px solid var(--border); border-radius: 0 0 calc(3.6 * var(--u)) calc(3.6 * var(--u)); background: var(--surface); font-family: var(--font-jetbrains-mono), monospace; font-size: .86em; }
+/* The switch: BitBin off and on. A track, a knob that carries the logo, and the state named beside it.
+   Until it has been used (.is-new) a faint ring breathes out of the track and a quiet hint sits beside it. */
+.sort-switch { --h: max(calc(4.6 * var(--u)), 22px); display: flex; flex: none; align-items: center; gap: calc(1.6 * var(--u)); padding: calc(.6 * var(--u)) var(--u) calc(.6 * var(--u)) calc(.6 * var(--u)); border-radius: 999px; color: var(--muted-foreground); font-size: 1em; font-weight: 500; white-space: nowrap; transition: color .3s ease; }
+.sort-switch:hover, .sort-switch[aria-checked="true"] { color: var(--foreground); }
+.landing .sort-switch:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.sort-track { position: relative; flex: none; width: calc(var(--h) * 1.8); height: var(--h); border: 1px solid color-mix(in srgb, var(--foreground) 22%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--foreground) 10%, transparent); transition: background-color .35s ease, border-color .35s ease; }
+.sort-switch:hover .sort-track { border-color: color-mix(in srgb, var(--foreground) 40%, transparent); }
+.sort-switch[aria-checked="true"] .sort-track { border-color: transparent; background: var(--brand-lime); }
+.sort-knob { position: absolute; top: 2px; left: 2px; display: grid; place-items: center; width: calc(var(--h) - 6px); height: calc(var(--h) - 6px); border-radius: 50%; background: var(--card); box-shadow: 0 1px 3px rgb(0 0 0 / .35), 0 0 0 .5px color-mix(in srgb, var(--foreground) 18%, transparent); transition: translate .45s cubic-bezier(.3, 1.25, .5, 1); }
+.sort-switch[aria-checked="true"] .sort-knob { translate: calc(var(--h) * .8) 0; }
+.sort-switch:active .sort-knob { scale: .92; }
+.sort-knob .logo-mark { width: 64%; height: 64%; }
+.sort-state { animation: sort-thought .35s ease both; }
+.sort-switch.is-new .sort-track::after { content: ""; position: absolute; inset: -1px; border: 1px solid var(--brand-lime); border-radius: inherit; pointer-events: none; animation: sort-halo 2.8s cubic-bezier(.2, .6, .3, 1) infinite; }
+@keyframes sort-halo { 0% { opacity: .7; scale: 1; } 70%, 100% { opacity: 0; scale: 1.3 1.6; } }
+.sort-hint { flex: none; margin-right: auto; padding-left: calc(1.6 * var(--u)); border-left: 1px solid var(--border); color: var(--faint); font-size: .9em; }
+.sort-caption { overflow: hidden; color: var(--brand-coral); font-style: italic; text-overflow: ellipsis; white-space: nowrap; animation: sort-thought .5s ease both; }
+.sort-caption.is-in { font-style: normal; }
+@keyframes sort-thought { from { opacity: 0; translate: 0 .8cqw; } }
+.sort-caption.is-in { color: var(--brand-cyan); }
+
+/* How it works (HowItWorks): three cards that stick under the navbar and stack. Each is opaque, in its
+   own wash, and plays its idea on a loop: rows wear their item type's colour (--c), as in the app. */
+.flow-stack { display: grid; gap: 18px; max-width: 980px; margin: 44px auto 0; }
+.flow-card { position: sticky; top: calc(104px + var(--i) * 20px); }
+.flow-card-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; gap: 36px; min-height: 280px; padding: 26px 30px; position: relative; overflow: hidden; border: 1px solid color-mix(in srgb, var(--tone) 24%, var(--border)); border-radius: 22px; background: color-mix(in srgb, var(--tone) 15%, var(--card)); box-shadow: var(--shadow-lift); transform-origin: 50% 0; }
+/* A soft pool of the card's colour drifts behind its content */
+.flow-card-body::before { content: ""; position: absolute; right: -8%; bottom: -70%; width: 62%; height: 140%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 20%, transparent), transparent); pointer-events: none; animation: flow-drift 9s ease-in-out infinite alternate; }
+.flow-card-body > * { position: relative; min-width: 0; }
+.flow-number { display: block; color: var(--tone); font: 11px var(--font-jetbrains-mono), monospace; letter-spacing: .16em; }
+.landing .flow-card h3 { margin-top: 12px; font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(23px, 2.1vw, 30px); line-height: 1.14; letter-spacing: -.035em; }
+.flow-card-body > div > p { margin-top: 10px; max-width: 400px; color: var(--muted-foreground); font-size: 14px; line-height: 1.7; }
+.flow-visual { position: relative; display: grid; gap: 6px; justify-self: end; width: 100%; max-width: 500px; padding: 12px 12px 14px; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--background); box-shadow: var(--shadow-soft); }
+/* How far the visual has played, which is how far its card has been scrolled into place */
+.flow-visual::after { content: ""; position: absolute; inset: auto 0 0; height: 2px; background: var(--tone); transform-origin: 0 50%; scale: var(--p, 0) 1; transition: scale .2s linear; }
+.flow-label, .flow-foot { display: flex; align-items: center; gap: 6px; min-height: 18px; color: var(--muted-foreground); font: 11px var(--font-jetbrains-mono), monospace; }
+.flow-label, .flow-foot { height: 18px; overflow: hidden; white-space: nowrap; }
+.flow-foot > svg { flex: none; }
+.flow-foot { transition: color .3s ease; }
+.flow-foot b { font-weight: inherit; transition: color .25s ease; }
+.flow-foot b[data-on] { color: var(--foreground); }
+.flow-count { display: inline-block; font-weight: inherit; animation: flow-tick .3s cubic-bezier(.22, 1, .36, 1); }
+.flow-foot[data-done] { color: var(--brand-lime); }
+.flow-row, .flow-shelf { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); font-size: 12.5px; }
+.flow-row { position: relative; overflow: hidden; transition: opacity .3s ease, translate .35s cubic-bezier(.22, 1, .36, 1), border-color .3s ease, background-color .3s ease, box-shadow .3s ease; }
+.flow-row:not([data-shown]) { opacity: 0; translate: 0 -10px; }
+:is(.flow-row, .flow-shelf):is([data-fresh], [data-active]) { border-color: color-mix(in srgb, var(--c) 50%, var(--border)); background: color-mix(in srgb, var(--c) 9%, var(--card)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 10%, transparent); }
+/* A row that just landed gets a sheen across it and a bump on its icon; a copied one rings */
+.flow-row[data-fresh]::after, .flow-shelf-bar > span[data-filling]::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--c) 24%, transparent) 50%, transparent 70%); animation: flow-sheen .5s ease-out both; }
+.flow-shelf-bar > span[data-filling]::after { background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / .6) 50%, transparent 70%); }
+:is(.flow-row:is([data-fresh], [data-copied]), .flow-shelf[data-full]) .flow-row-icon { animation: flow-bump .45s cubic-bezier(.34, 1.56, .64, 1); }
+.flow-row[data-dim] { opacity: .45; }
+.flow-row[data-copied] { animation: flow-ring .6s ease-out; }
+.flow-row-icon { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--c) 13%, transparent); color: var(--c); }
+.flow-row-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.flow-row-meta, .flow-row-ext, .flow-row-type { flex: none; color: var(--muted-foreground); font: 10.5px var(--font-jetbrains-mono), monospace; }
+.flow-row-type { color: var(--c); }
+.flow-row-ext { padding: 2px 6px; border: 1px solid var(--border); border-radius: 5px; }
+.flow-row-key { display: grid; flex: none; color: var(--c); }
+.flow-mark { border-radius: 3px; background: color-mix(in srgb, var(--brand-lime) 26%, transparent); color: inherit; }
+.flow-shelf { flex-wrap: wrap; row-gap: 0; padding-block: 7px 8px; transition: border-color .3s ease, background-color .3s ease, box-shadow .3s ease; }
+.flow-shelf-bar { flex-basis: 100%; height: 4px; margin-top: 6px; overflow: hidden; border-radius: 5px; background: var(--muted); }
+.flow-shelf-bar > span { position: relative; display: flex; gap: 2px; width: 0; height: 100%; transition: width .55s cubic-bezier(.65, 0, .35, 1); }
+.flow-shelf-bar i { min-width: 0; border-radius: 5px; }
+.flow-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; font: 11px/1 var(--font-jetbrains-mono), monospace; }
+.flow-tags > span { padding: 4px 7px; border: 1px solid color-mix(in srgb, var(--tone) 28%, var(--border)); border-radius: 999px; background: color-mix(in srgb, var(--tone) 7%, transparent); color: var(--tone); transition: opacity .2s ease, scale .3s cubic-bezier(.34, 1.56, .64, 1), border-color .25s ease, background-color .25s ease; }
+.flow-tags > span[data-picked] { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 24%, transparent); scale: 1.08; }
+.flow-tags > span:not([data-shown]) { opacity: 0; scale: .6; }
+.flow-tags i { font-style: normal; opacity: .55; }
+.flow-search { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); font: 12.5px var(--font-jetbrains-mono), monospace; transition: border-color .3s ease, box-shadow .3s ease; }
+.flow-search[data-active] { border-color: color-mix(in srgb, var(--brand-lime) 55%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-lime) 12%, transparent); }
+.flow-search > b { color: var(--brand-lime); font-weight: 500; }
+.flow-search > span { flex: 1; min-width: 0; white-space: nowrap; }
+.flow-search em { color: var(--muted-foreground); font-style: normal; }
+.flow-search kbd { padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted-foreground); font-size: 10px; transition: color .15s ease, border-color .15s ease, scale .15s ease; }
+/* The opened item's content: its lines arrive one after another, and flash when copied */
+.flow-peek { display: grid; margin: 0; padding: 7px 10px; overflow: hidden; border: 1px solid var(--border); border-left: 2px solid var(--c); border-radius: 9px; background: var(--card); color: var(--muted-foreground); font: 10.5px/1.65 var(--font-jetbrains-mono), monospace; white-space: pre; transition: opacity .3s ease, border-color .3s ease, background-color .3s ease, color .3s ease; }
+.flow-peek > span { overflow: hidden; text-overflow: ellipsis; transition: opacity .3s ease calc(var(--n) * 90ms), translate .35s cubic-bezier(.22, 1, .36, 1) calc(var(--n) * 90ms); }
+.flow-peek:not([data-shown]) { opacity: 0; }
+.flow-peek:not([data-shown]) > span { opacity: 0; translate: -8px 0; }
+.flow-peek[data-copied] { border-color: color-mix(in srgb, var(--c) 50%, var(--border)); background: color-mix(in srgb, var(--c) 9%, var(--card)); color: var(--foreground); }
+.flow-search kbd[data-pressed] { border-color: var(--brand-lime); color: var(--brand-lime); scale: .88; }
+
+.landing .plan-card h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 25px; line-height: 1.1; letter-spacing: -.035em; }
+/* The hero's two buttons, flat: the recommended plan gets the filled one */
+.landing .plan-card .btn { justify-content: center; box-shadow: none; }
+/* Label and arrow sit together in the middle; the hover fill grows out of the arrow badge, as in the hero */
+.landing .plan-card .btn-primary { border-color: transparent; background: var(--brand-lime); }
+.landing .plan-card .btn-secondary { border-color: color-mix(in srgb, var(--foreground) 22%, transparent); background: transparent; }
+.landing .plan-card .btn-secondary:is(:hover, :focus-visible) { color: var(--btn-ink); }
+.landing .plan-billing > button:focus-visible { outline-offset: 2px; }
+
+/* Sheets: every section is an opaque sheet with rounded shoulders, laid over the end of the one before. */
+.landing main > section { position: relative; background: var(--background); }
+.landing main > section:nth-of-type(odd) { background: var(--surface); }
+.landing main > section + section, .landing footer { margin-top: -36px; border-top: 1px solid var(--border); border-radius: 36px 36px 0 0; box-shadow: 0 -34px 70px -48px rgb(0 0 0 / .55); }
+.landing main > section:last-of-type { padding-bottom: 150px; }
+.landing-section-heading > p:first-child { background: none; border: none; padding: 0; border-radius: 0; font-size: 10px; letter-spacing: .09em; text-transform: uppercase; }
+.landing-section-heading > h2 { max-width: 790px; font-size: clamp(34px, 3.65vw, 50px); font-weight: 400; line-height: 1.12; letter-spacing: -.04em; }
+.landing-section-heading .text-desc { color: var(--muted-foreground); font-family: var(--font-geist-sans), sans-serif; font-size: 16px; line-height: 1.85; }
+/* The footer is the last sheet and follows the theme like the rest: ivory in light, charcoal in dark. */
+.landing footer { position: relative; z-index: 1; background: var(--surface); color: var(--foreground); }
+.landing .landing-closing { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding-top: 70px; padding-bottom: 60px; border-bottom: 1px solid var(--border); }
+.landing-closing h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 500; letter-spacing: -.05em; }
+.landing-closing p { color: var(--muted-foreground); margin-top: 10px; font-size: 14px; }
+
+/*
+ * Scroll choreography. Everything here is tied to the scroll position with CSS scroll timelines,
+ * so it runs off the main thread and plays backwards on the way up. Nothing moves against the
+ * scroll as it enters: blocks hinge, tilt and widen in place. Browsers without scroll timelines
+ * get the timed reveal below instead, and reduced motion gets neither.
+ */
+@keyframes sheet-recede { to { opacity: .3; transform: translateY(14vh) scale(.95); } }
+@keyframes scroll-unfold { from { opacity: 0; transform: perspective(1500px) rotateX(-34deg) scale(.95); } 45% { opacity: 1; } }
+@keyframes scroll-tilt { from { opacity: 0; transform: perspective(1700px) rotateX(26deg) scale(.88); } 40% { opacity: 1; } }
+@keyframes scroll-book-left { from { opacity: 0; transform: perspective(1700px) rotateY(52deg); } 45% { opacity: 1; } }
+@keyframes scroll-book-right { from { opacity: 0; transform: perspective(1700px) rotateY(-52deg); } 45% { opacity: 1; } }
+@keyframes scroll-widen { from { opacity: 0; clip-path: inset(0 14% round 22px); } 40% { opacity: 1; } to { clip-path: inset(0 round 22px); } }
+@keyframes scroll-flap { from { opacity: 0; transform: perspective(900px) rotateX(-72deg); } 55% { opacity: 1; } }
+@keyframes ink-fill { to { background-position: 0 0; } }
+@keyframes flow-drift { to { translate: -34% -18%; scale: 1.15; } }
+@keyframes flow-sheen { from { translate: -100% 0; } to { translate: 100% 0; } }
+@keyframes flow-bump { 40% { scale: 1.3; } }
+@keyframes flow-tick { from { translate: 0 7px; } }
+@keyframes flow-ring { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 50%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
+@keyframes flow-shrink { to { transform: scale(calc(1 - (2 - var(--i)) * .045)); } }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* A section sinks back and dims while the next sheet slides over it. The id stays on the
+       section, which never moves, so in-page links and the scroll spy measure the real layout. */
+    .landing main > section { view-timeline: --sheet block; }
+    .landing main > section > div { transform-origin: 50% 100%; animation: sheet-recede linear both; animation-timeline: --sheet; animation-range: exit 0% exit 100%; }
+    /* The hero's div is its pinned contents. Its exit only starts once the pin lets go (the section's
+       bottom at the bottom of the screen), so the bin sinks back under the next sheet like the rest. */
+
+    /* [data-scroll]: a block that opens as it enters. unfold hinges at its top edge, tilt lies
+       back and stands up, book-left / book-right open like two pages, widen grows from its middle.
+       cascade and stack apply to the children: side by side one after another, or each as it arrives. */
+    .landing [data-scroll]:where(:not([data-scroll="cascade"], [data-scroll="stack"]])), .landing [data-scroll="cascade"] > *, .landing [data-scroll="stack"] > * { transform-origin: 50% 0; animation: scroll-unfold linear both; animation-timeline: view(); animation-range: entry 0% cover 30%; }
+    .landing [data-scroll="tilt"] { transform-origin: 50% 100%; animation-name: scroll-tilt; animation-range: entry 0% cover 36%; }
+    .landing [data-scroll="widen"] { animation-name: scroll-widen; }
+    .landing [data-scroll="stack"] > * { animation-name: scroll-flap; animation-range: entry 0% cover 20%; }
+    .landing [data-scroll="cascade"] > * { animation-range: cover calc(var(--n, 0) * 5%) cover calc(24% + var(--n, 0) * 7%); }
+    .landing [data-scroll="cascade"] > :nth-child(2) { --n: 1; }
+    .landing [data-scroll="cascade"] > :nth-child(3) { --n: 2; }
+    .landing [data-scroll="cascade"] > :nth-child(4) { --n: 3; }
+    @media (min-width: 768px) {
+      .landing [data-scroll="book-left"] { transform-origin: 100% 50%; animation-name: scroll-book-left; }
+      .landing [data-scroll="book-right"] { transform-origin: 0 50%; animation-name: scroll-book-right; }
+    }
+
+    /* A section heading is inked in reading order as it climbs the screen. */
+    .landing-section-heading > h2 { view-timeline: --ink block; }
+    .landing .ink { background: linear-gradient(90deg, var(--foreground) 46%, color-mix(in srgb, var(--foreground) 24%, transparent) 54%) 100% 0 / 220% 100% no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; animation: ink-fill linear both; animation-timeline: --ink; animation-range: cover 4% cover 38%; }
+
+    /* The stacked cards: each shrinks back a step while the next one covers it. */
+    .flow-stack { view-timeline: --flow block; view-timeline-inset: 104px 0px; }
+    .flow-card-body { animation: flow-shrink linear both; animation-timeline: --flow; animation-range: exit-crossing calc(var(--i) / 3 * 100%) exit-crossing calc((var(--i) + 1) / 3 * 100%); }
+
+  }
+}
+/* No scroll timelines: the same blocks fade up once, on the timer that drives [data-reveal]. */
+@supports not (animation-timeline: view()) {
+  .reveal-ready [data-scroll]:not([data-scroll="cascade"], [data-scroll="stack"]) { opacity: 0; translate: 0 18px; transition: opacity .7s cubic-bezier(.22, 1, .36, 1), translate .7s cubic-bezier(.22, 1, .36, 1); }
+  .reveal-ready [data-scroll].is-visible { opacity: 1; translate: 0 0; }
+}
+
+html[data-motion-paused] .landing :is(main, footer, .logo-mark) *,
+html[data-motion-paused] .landing :is(main, footer, .logo-mark) *::before,
+html[data-motion-paused] .landing :is(main, footer, .logo-mark) *::after { animation-play-state: paused !important; }
+/* Scroll-linked motion follows the page, not a clock: pausing it would freeze a block half open. */
+html[data-motion-paused] .landing :is(main, footer) :is(section > div, [data-scroll], [data-scroll] > *, .ink, .flow-card-body) { animation-play-state: running !important; }
+/* Entry reveals must still finish when visitors pause the looping demos. */
+html[data-motion-paused] .landing [class*="animate-"] { animation: none !important; opacity: 1; translate: none; }
+@media (prefers-reduced-motion: reduce) {
+  .landing *, .landing *::before, .landing *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 1100px) {
+  .landing-hero-actions { gap: 15px; }
+}
+@media (max-width: 767px) {
+  .landing-hero { border-radius: 24px 24px 0 0; }
+  .sort-caption { display: none; }
+  .sort-foot { justify-content: center; }
+  .sort-switch { font-size: 10px; }
+  .sort-hint { display: none; }
+  /* On a phone the ring passes above and below the words, so they sit in the middle and stay compact */
+  .landing-hero-copy { padding-bottom: 0; }
+  .landing .logo-mark.landing-hero-logo { width: 56px; height: 56px; }
+  .landing .landing-headline { margin: 18px 0; font-size: clamp(42px, 12vw, 68px); }
+  .landing-hero-description { max-width: 500px; font-size: 15px; line-height: 1.7; }
+  .flow-stack { margin-top: 40px; max-width: none; }
+  .flow-card { top: calc(72px + var(--i) * 14px); }
+  .flow-card-body { grid-template-columns: minmax(0, 1fr); gap: 18px; min-height: 0; padding: 20px 16px; border-radius: 18px; }
+  .flow-visual { max-width: none; }
+  .flow-stack { view-timeline-inset: 72px 0px; }
+  .landing main > section + section, .landing footer { margin-top: -24px; border-radius: 24px 24px 0 0; }
+  .landing .landing-closing { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 400px) {
+  .landing-hero-actions { flex-direction: column; gap: 5px; }
+}
+
+
+/* Reduced motion: the hero is an ordinary sheet. The words, then the bin with everything in it. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero { height: auto; }
+  .hero-pin { position: static; height: auto; padding: 70px 0 130px; }
+  .landing-hero-copy { position: static; padding: 0 20px; opacity: 1; translate: none; }  .hero-scene { position: relative; inset: auto; height: calc(var(--w) * var(--ar, .52)); margin-top: 60px; }
+  .sort-stage { --lift: 0px; }
+  .sort-chip { opacity: 1; transition: none; }
+}
+/* The MCP section's cursor: a ring that spreads from each click */
+@keyframes cursor-ripple {
+  from { transform: scale(0.3); opacity: 0.8; }
+  to { transform: scale(1.5); opacity: 0; }
+}

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { MAX_ITEMS } from "@/lib/constants/plan";
+import RoundArrow from "@/components/shared/round-arrow";
 
 /**
- * The Free plan's item allowance as a commit-style grid: one cell per item slot,
- * filled lime as the bin fills (coral when it's nearly full). Cells light up one
- * after another on load. Folds away on the icon rail. Display only; the limit is
- * enforced on the server.
+ * The Free plan's item allowance: a rounded bar that fills lime as the bin fills
+ * (coral when it's nearly full), over a link to upgrade. Folds away on the icon
+ * rail. Display only; the limit is enforced on the server.
  */
 export default function SidebarUsage({ itemCount }: { itemCount: number }) {
   const used = Math.min(itemCount, MAX_ITEMS);
@@ -15,37 +15,35 @@ export default function SidebarUsage({ itemCount }: { itemCount: number }) {
   return (
     <div className="sidebar-fold">
       <div>
-        <div className="mx-3 mb-3 rounded-md border border-border bg-background/50 p-3">
-          <div className="mb-2 flex items-baseline justify-between font-mono text-xs">
-            <span className="text-muted-foreground">
-              <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>free plan
-            </span>
-            <span className={cn("tabular-nums", nearlyFull ? "text-coral" : "text-foreground")}>
-              {used}/{MAX_ITEMS}
+        <div className="mx-3 mb-3 rounded-2xl bg-card p-3.5">
+          <div className="flex items-baseline justify-between text-[13px]">
+            <span className="font-medium text-foreground">Free plan</span>
+            <span className={cn("font-mono text-xs tabular-nums", nearlyFull ? "text-coral" : "text-muted-foreground")}>
+              {used} / {MAX_ITEMS}
             </span>
           </div>
-          <div
-            className="grid grid-cols-[repeat(25,1fr)] gap-[2px]"
-            role="img"
-            aria-label={`${used} of ${MAX_ITEMS} items used`}
+          <span
+            className="mt-3 block h-2 overflow-hidden rounded-full bg-foreground/[0.08]"
+            role="meter"
+            aria-label="Items used"
+            aria-valuemin={0}
+            aria-valuemax={MAX_ITEMS}
+            aria-valuenow={used}
           >
-            {Array.from({ length: MAX_ITEMS }, (_, i) => (
-              <span
-                key={i}
-                className={cn(
-                  "usage-cell aspect-square rounded-[1.5px]",
-                  i < used ? (nearlyFull ? "bg-coral/80" : "bg-lime/75") : "bg-foreground/[0.07]"
-                )}
-                style={{ "--i": i } as React.CSSProperties}
-              />
-            ))}
-          </div>
+            <span
+              className={cn(
+                "block h-full origin-left rounded-full animate-[bar-fill_1.2s_cubic-bezier(0.22,1,0.36,1)_both]",
+                nearlyFull ? "bg-coral" : "bg-lime"
+              )}
+              style={{ width: `${(used / MAX_ITEMS) * 100}%` }}
+            />
+          </span>
           <Link
             href="/upgrade"
-            className="group mt-2.5 flex items-center justify-between font-mono text-xs text-muted-foreground transition-colors hover:text-lime"
+            className="group mt-3 flex items-center justify-between rounded-lg text-[13px] font-medium text-foreground/80 transition-colors hover:text-lime"
           >
-            unlimited with pro
-            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+            Unlimited with Pro
+            <RoundArrow />
           </Link>
         </div>
       </div>

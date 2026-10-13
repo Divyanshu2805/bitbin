@@ -65,19 +65,19 @@ export default function ConfirmDeleteDialog({
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
+       type="button"
+       variant="cancel"
+       onClick={handleClose}
+       disabled={isLoading}
+      >
               <X className="h-4 w-4" />
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
+       variant="destructive"
+       onClick={handleDelete}
+       disabled={isLoading}
+      >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Delete
             </Button>

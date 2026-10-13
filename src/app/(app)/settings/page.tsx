@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import AccountSettings from '@/components/settings/account-settings';
+import AssistantSettings from '@/components/settings/assistant-settings';
 import BillingSettings from '@/components/settings/billing-settings';
 import DataSettings from '@/components/settings/data-settings';
 import DesktopSettings from '@/components/settings/desktop-settings';
@@ -12,7 +13,7 @@ import { getUserTags } from '@/lib/db/tags';
 import { getUserWithSettings } from '@/lib/db/users';
 import { getUserUsage } from '@/lib/usage';
 import PageHeader from '@/components/shared/page-header';
-import SettingsNav from '@/components/settings/settings-nav';
+import { SITE_URL } from '@/lib/site';
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -39,27 +40,23 @@ export default async function SettingsPage() {
     <>
       <div className="mx-auto max-w-5xl space-y-10">
         <PageHeader
-          path="settings"
           title="Settings"
-          description="Your editor, plan, browser extension, desktop app, tags, data and account."
+          description="Your editor, plan, browser extension, AI assistants, desktop app, tags, data and account."
         />
 
-        <div className="grid gap-10 lg:grid-cols-[160px_minmax(0,1fr)]">
-          <SettingsNav />
-
-          <div className="space-y-6">
-            <EditorSettings />
-            <BillingSettings
-              isPro={isPro}
-              itemCount={usage.itemCount}
-              collectionCount={usage.collectionCount}
-            />
-            <ExtensionSettings isPro={isPro} tokens={apiTokens} />
-            <DesktopSettings isPro={isPro} />
-            <TagSettings tags={tags} />
-            <DataSettings isPro={isPro} />
-            <AccountSettings hasPassword={user.hasPassword} />
-          </div>
+        <div className="space-y-6">
+          <EditorSettings />
+          <BillingSettings
+            isPro={isPro}
+            itemCount={usage.itemCount}
+            collectionCount={usage.collectionCount}
+          />
+          <ExtensionSettings isPro={isPro} tokens={apiTokens} />
+          <AssistantSettings isPro={isPro} siteUrl={SITE_URL} />
+          <DesktopSettings isPro={isPro} />
+          <TagSettings tags={tags} />
+          <DataSettings isPro={isPro} />
+          <AccountSettings hasPassword={user.hasPassword} />
         </div>
       </div>
     </>

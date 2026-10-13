@@ -36,12 +36,11 @@ export default async function FavoritesPage() {
       <div className="mx-auto max-w-5xl space-y-10">
         {/* Header */}
         <PageHeader
-          path="favorites"
           title="Favorites"
           count={totalFavorites}
           description="Everything you've starred, items and collections, in one place."
           icon={
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-400/30 bg-amber-400/10 shadow-[0_10px_30px_-12px_#fbbf24]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-400/10">
               <Star className="h-5 w-5 fill-amber-400 text-amber-500 dark:text-amber-400" />
             </span>
           }

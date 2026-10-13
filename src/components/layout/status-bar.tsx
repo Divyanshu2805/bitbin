@@ -26,8 +26,8 @@ export default function StatusBar({ itemTypes, isPro }: StatusBarProps) {
   const path = pathname.replace(/^\/+/, "").replace(/\/[a-z0-9]{20,}$/i, "/…") || "dashboard";
 
   return (
-    <footer className="hidden h-7 shrink-0 items-center gap-4 border-t border-border bg-sidebar/60 backdrop-blur-sm px-3 dark:bg-sidebar/25 font-mono text-[11px] text-muted-foreground md:flex">
-      <span className="flex items-center gap-2 text-foreground/80">
+    <footer className="hidden h-7 shrink-0 items-center gap-4 border-t border-border bg-sidebar px-3 font-mono text-[11px] text-foreground/80 md:flex">
+      <span className="flex items-center gap-2 text-foreground">
         <span aria-hidden className="size-1.5 rounded-full bg-lime text-lime animate-led" />
         ~/bin/{path}
       </span>
@@ -46,26 +46,26 @@ export default function StatusBar({ itemTypes, isPro }: StatusBarProps) {
 
       <span className="ml-auto flex items-center gap-4">
         <button type="button" onClick={openSearch} className="transition-colors hover:text-foreground">
-          <span className="text-foreground/70">⌘K</span> search
+          <span className="text-foreground">⌘K</span> Search
         </button>
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event(SHORTCUTS_EVENT))}
           className="transition-colors hover:text-foreground"
         >
-          <span className="text-foreground/70">?</span> shortcuts
+          <span className="text-foreground">?</span> Shortcuts
         </button>
         <span className="hidden xl:inline">
-          <span className="text-foreground/70">N</span> new item
+          <span className="text-foreground">N</span> New item
         </span>
         <span className="hidden xl:inline">
-          <span className="text-foreground/70">C</span> new collection
+          <span className="text-foreground">C</span> New collection
         </span>
         {isPro ? (
-          <span className="text-lime">● pro</span>
+          <span className="text-lime">● Pro</span>
         ) : (
           <Link href="/upgrade" className={cn("transition-colors hover:text-lime", nearlyFull && "text-coral")}>
-            free · <span className="tabular-nums">{Math.min(itemCount, MAX_ITEMS)}/{MAX_ITEMS}</span>
+            Free · <span className="tabular-nums">{Math.min(itemCount, MAX_ITEMS)}/{MAX_ITEMS}</span>
           </Link>
         )}
       </span>

@@ -17,13 +17,15 @@ function finePointer(): boolean {
  * Reveals every `[data-reveal]` element under the returned ref the first time it
  * scrolls into view. The root gets `.reveal-ready` only once JS runs, so content
  * is never hidden for visitors without it. Items may set `--d` to delay.
+ * `[data-scroll]` blocks are marked too: they follow the scroll position where the
+ * browser has scroll timelines (landing.css) and use this as their fallback.
  */
 export function useReveal<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T>(null);
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    const items = root.querySelectorAll<HTMLElement>("[data-reveal]");
+    const items = root.querySelectorAll<HTMLElement>("[data-reveal], [data-scroll]");
     if (typeof IntersectionObserver === "undefined") return;
     root.classList.add("reveal-ready");
     const observer = new IntersectionObserver(
@@ -62,21 +64,25 @@ export function useInView(ref: RefObject<Element | null>, { once = false, thresh
 }
 
 const PAUSE_ATTR = "data-features-open";
+/** Set on <html> by lib/smooth-scroll.ts while the homepage is being scrolled. */
+export const SCROLLING_ATTR = "data-scrolling";
 
 function subscribePaused(onChange: () => void) {
   const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: [PAUSE_ATTR] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: [PAUSE_ATTR, SCROLLING_ATTR, "data-motion-paused"] });
   return () => observer.disconnect();
 }
 
 /**
- * True while the landing navbar's Features panel covers the page. Looping demos
- * hold their clocks then, so the blurred page behind the panel stops repainting.
+ * True while the landing navbar's Features panel covers the page, or while the
+ * homepage is being scrolled. Looping demos hold their clocks then: the blurred
+ * page behind the panel stops repainting, and a scroll gets the whole frame to
+ * itself instead of sharing it with a dozen re-rendering demos.
  */
 export function usePagePaused() {
   return useSyncExternalStore(
     subscribePaused,
-    () => document.documentElement.hasAttribute(PAUSE_ATTR),
+    () => document.documentElement.hasAttribute(PAUSE_ATTR) || document.documentElement.hasAttribute(SCROLLING_ATTR) || document.documentElement.hasAttribute("data-motion-paused"),
     () => false
   );
 }
@@ -166,7 +172,8 @@ export function usePointerEffects(ref: RefObject<HTMLElement | null>) {
 
     const onMove = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
-      const spot = event.target.closest<HTMLElement>("[data-spotlight]");
+      // Landing buttons use the same coordinates: their fill spreads from the pointer
+      const spot = event.target.closest<HTMLElement>("[data-spotlight], .btn");
       if (spot) {
         const rect = spot.getBoundingClientRect();
         spot.style.setProperty("--mx", `${event.clientX - rect.left}px`);
@@ -198,6 +205,28 @@ export function usePointerEffects(ref: RefObject<HTMLElement | null>) {
       root.removeEventListener("pointerleave", onLeave);
     };
   }, [ref]);
+}
+
+/**
+ * App buttons (`.term-btn`) fill from where the pointer came in, like the landing
+ * page's: one listener on the document (dialogs and menus are portalled out of
+ * the shell) writes --mx/--my on the button the pointer enters.
+ */
+export function useButtonFill() {
+  useEffect(() => {
+    const onOver = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const button = event.target.closest<HTMLElement>(".term-btn");
+      if (!button) return;
+      // Moving between a button's own children isn't a new entry
+      if (event.relatedTarget instanceof Node && button.contains(event.relatedTarget)) return;
+      const rect = button.getBoundingClientRect();
+      button.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+      button.style.setProperty("--my", `${event.clientY - rect.top}px`);
+    };
+    document.addEventListener("pointerover", onOver, { passive: true });
+    return () => document.removeEventListener("pointerover", onOver);
+  }, []);
 }
 
 /**

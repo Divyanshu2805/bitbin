@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
-import { AUTH_LIGHT_STRENGTH, AUTH_LIGHT_STRENGTH_LIGHT, AuthFormBackdrop } from "@/components/auth/auth-form-backdrop";
-import { AuthTagline } from "@/components/auth/auth-tagline";
-import LandingBackdrop from "@/components/homepage/LandingBackdrop";
-import { BRAND_SURFACE } from "@/components/homepage/brand-surface";
+import { AuthAccent, AuthRoot, TypedWord } from "@/components/auth/auth-ui";
+import HeroLogo from "@/components/homepage/HeroLogo";
+import HeroVideo from "@/components/homepage/HeroVideo";
 import { TransitionLink } from "@/components/shared/transition-link";
-import { cn } from "@/lib/utils";
+import "../brand.css";
+
+// What the brand panel's headline types out in turn: "Every snippet, … one bin."
+const TYPED_WORDS = ["snippet", "prompt", "command", "note", "link", "file", "image"];
 
 export default function AuthLayout({
   children,
@@ -14,61 +16,62 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="auth-page grid min-h-screen bg-background lg:grid-cols-[1.05fr_1fr]">
-      {/* Brand panel: the homepage's falling bits and pointer light. Follows the theme, like the homepage */}
-      <aside
-        className={cn(
-          "relative isolate hidden flex-col justify-between overflow-hidden border-r border-border bg-background p-10 text-foreground lg:flex",
-          BRAND_SURFACE
-        )}
-      >
-        <LandingBackdrop contained glow={1} darkGlow={0.65} lightStrength={AUTH_LIGHT_STRENGTH_LIGHT} darkLightStrength={AUTH_LIGHT_STRENGTH} />
+    <AuthRoot className="grid min-h-screen bg-background text-foreground lg:grid-cols-[1.05fr_1fr]">
+      {/* Brand panel: the landing hero in miniature (brand.css), the same footage behind it, its headline typing what the bin holds. Follows the theme */}
+      <aside className="auth-brand">
+        <HeroVideo />
+        <div aria-hidden className="hero-backdrop" />
 
-        <p className="text-center font-mono text-xs text-muted-foreground">~/bitbin</p>
+        <Link href="/" className="w-fit" aria-label="BitBin home">
+          <Logo />
+        </Link>
 
-        <div className="mx-auto flex max-w-md flex-col items-center space-y-6 text-center">
-          <Link href="/" className="block w-fit">
-            <Logo
-              animated
-              className="gap-4 [&>svg]:h-14 [&>svg]:w-14"
-              wordmarkClassName="text-5xl"
-            />
-          </Link>
-
-          <AuthTagline />
-
-          <p className="text-muted-foreground">
-            Snippets, prompts, commands, notes and links — saved once, tagged
-            by AI, found with ⌘K.
+        <div className="mx-auto flex max-w-lg flex-col items-center text-center">
+          <HeroLogo />
+          <p className="auth-headline brand-serif">
+            <span className="sr-only">{`Every ${TYPED_WORDS.join(", ")}: one bin.`}</span>
+            <span className="hero-line">
+              <span aria-hidden>
+                Every <TypedWord words={TYPED_WORDS} />
+              </span>
+            </span>
+            <span className="hero-line">
+              <span>
+                <span aria-hidden><AuthAccent>one bin.</AuthAccent></span>
+              </span>
+            </span>
+          </p>
+          <p className="auth-brand-description animate-fade-up" style={{ animationDelay: "160ms" }}>
+            Save it once. AI tags it, ⌘K finds it in a keystroke.
           </p>
         </div>
 
-        {/* keeps the brand block centred under justify-between */}
-        <span aria-hidden />
+        <p className="auth-facts animate-fade-up" style={{ animationDelay: "240ms" }}>
+          <span>Free for 50 items</span>
+          <span>AI tags</span>
+          <span>⌘K search</span>
+        </p>
       </aside>
 
-      {/* Form panel */}
-      <main className="relative isolate flex min-h-screen flex-col overflow-hidden bg-card [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:bg-transparent [&_[data-slot=card]]:shadow-none">
-        <AuthFormBackdrop />
-
-        <div className="flex items-center justify-between p-6">
-          <Link href="/" className="lg:invisible">
+      {/* Form panel: the next sheet, laid over the brand panel's edge */}
+      <main className="auth-sheet">
+        <div className="flex items-center justify-between px-6 pt-4">
+          <Link href="/" className="lg:invisible" aria-label="BitBin home">
             <Logo />
           </Link>
-          <TransitionLink
-            href="/"
-            back
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-lime"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back home
+          <TransitionLink href="/" back className="landing-tour-link text-muted-foreground">
+            <span aria-hidden className="tour-arrow tour-arrow-back">
+              <ArrowLeft />
+              <ArrowLeft />
+            </span>
+            <span>Back home</span>
           </TransitionLink>
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-4 pb-16">
+        <div className="flex flex-1 items-center justify-center px-5 pb-16 pt-6 sm:px-8">
           {children}
         </div>
       </main>
-    </div>
+    </AuthRoot>
   );
 }

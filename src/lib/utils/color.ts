@@ -15,14 +15,22 @@ export function readableColor(hex: string): string {
 }
 
 /**
- * A type colour at `percent` opacity, for tinted fills, borders and rings:
- * `readableColor` mixed with transparent, so it follows the theme too.
+ * A type colour at `percent` strength over the card surface, for chip and tile
+ * fills: `readableColor` mixed with `--card`, so it is opaque and follows the theme.
  */
 export function readableTint(hex: string, percent: number): string {
-  return `color-mix(in srgb, ${readableColor(hex)} ${percent}%, transparent)`;
+  return `color-mix(in srgb, ${readableColor(hex)} ${percent}%, var(--card))`;
 }
 
-type Rgb = [number, number, number];
+/**
+ * An opaque fill for a type chip: the type colour at `percent` strength over the
+ * card surface (never transparent, so nothing shows through it).
+ */
+export function typeChipBackground(hex: string, percent = 16): string {
+  return `color-mix(in srgb, ${readableColor(hex)} ${percent}%, var(--card))`;
+}
+
+type Rgb =[number, number, number];
 
 // Contrast of 4.5:1 against white needs a relative luminance of at most ~0.183; the type chips set
 // this text on a tint of its own colour (a darker background), which needs about 0.13.

@@ -41,7 +41,6 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-6xl space-y-12">
         <div className="space-y-6">
           <PageHeader
-            path="dashboard"
             title={
               <>
                 Welcome back{firstName ? <>, <TitleAccent>{firstName}</TitleAccent></> : ''}

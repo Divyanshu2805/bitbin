@@ -50,8 +50,8 @@ export default function EditableName({ name }: { name: string | null }) {
 
   if (!editing) {
     return (
-      <div className="group/name flex min-w-0 items-center gap-1.5">
-        <p className="truncate font-display text-xl font-bold tracking-[-0.03em]">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <p className="truncate font-display text-2xl tracking-[-0.03em]">
           {name || <span className="text-muted-foreground">No name set</span>}
         </p>
         <Button
@@ -59,7 +59,7 @@ export default function EditableName({ name }: { name: string | null }) {
           size="icon-xs"
           onClick={startEditing}
           aria-label="Edit name"
-          className="shrink-0 text-muted-foreground hover:text-lime sm:opacity-0 sm:group-hover/name:opacity-100 sm:focus-visible:opacity-100"
+          className="shrink-0 text-muted-foreground hover:text-lime"
         >
           <PencilLine />
         </Button>
@@ -89,7 +89,7 @@ export default function EditableName({ name }: { name: string | null }) {
             aria-label="Name"
             aria-invalid={error ? true : undefined}
             placeholder="Your name"
-            className="h-9 font-display text-base font-semibold"
+            className="h-9 text-base font-medium"
           />
         </div>
         <Button type="submit" size="icon-sm" disabled={saving} aria-label="Save name">

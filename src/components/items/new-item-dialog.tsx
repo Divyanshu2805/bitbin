@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Lock, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { readableColor } from "@/lib/utils/color";
+import { readableColor, typeChipBackground } from "@/lib/utils/color";
 import { createItem } from "@/actions/items";
 import type { CreateItemInput } from "@/lib/item-create";
 import { getUserCollections } from "@/actions/collections";
@@ -53,11 +53,10 @@ const CONTENT_LABEL: Partial<Record<ItemTypeName, string>> = {
   note: "note",
 };
 
-/** `// title` field labels, in the app's code-comment voice. */
+/** `title` field labels, lowercase mono. */
 function FieldLabel({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
   return (
-    <Label htmlFor={htmlFor} className="font-mono text-xs font-medium text-foreground/85">
-      <span className="text-muted-foreground">{"// "}</span>
+    <Label htmlFor={htmlFor} className="text-[13px] font-medium capitalize text-foreground">
       {children}
       {required && <span className="text-coral">*</span>}
     </Label>
@@ -88,7 +87,7 @@ function TagInput({
   return (
     <div
       className={cn(
-        "field-frame flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background/60 px-2 py-1.5 transition-[border-color,background-color] hover:border-foreground/20 focus-within:border-ring/50 focus-within:bg-background/80",
+        "field-frame flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 transition-[border-color,background-color] hover:border-foreground/20 focus-within:border-ring/50 focus-within:bg-background",
         disabled && "opacity-60"
       )}
     >
@@ -282,7 +281,7 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
         className={cn(
           "flex flex-col gap-0 overflow-hidden p-0",
           "h-dvh max-h-dvh w-full max-w-full rounded-none border-0",
-          "sm:h-[min(90dvh,820px)] sm:max-w-[min(calc(100%-2rem),76rem)] sm:rounded-xl sm:border"
+          "sm:h-[min(90dvh,820px)] sm:max-w-[min(calc(100%-2rem),76rem)] sm:rounded-card sm:border"
         )}
         style={{ "--grid-color": "var(--brand-lime)", "--ring": "var(--brand-lime)" } as React.CSSProperties}
         onOpenAutoFocus={(e) => {
@@ -298,23 +297,11 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
       >
         {/* Header */}
         <header className="relative shrink-0 border-b border-border px-5 pt-5 pb-4 pr-12">
-          <span
-            aria-hidden
-            className="absolute inset-x-0 top-0 h-[2px] transition-colors"
-            style={{ background: "linear-gradient(90deg, var(--brand-lime), transparent 70%)" }}
-          />
-          <p className="font-mono text-[11px] text-muted-foreground">
-            <span className="text-lime">~/</span>items/{typeName}s/<span className="text-foreground/70">new</span>
-          </p>
-          <DialogTitle data-anim-icons className="mt-1.5 flex items-center gap-2.5 font-display text-xl font-bold tracking-[-0.03em]">
+          <DialogTitle data-anim-icons className="mt-2.5 flex items-center gap-2.5 font-display text-2xl font-normal tracking-[-0.03em]">
             {IconComponent && (
               <span
-                className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors"
-                style={{
-                  color,
-                  backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
-                  borderColor: `color-mix(in srgb, ${color} 30%, transparent)`,
-                }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg"
+                style={{ color, backgroundColor: typeChipBackground(ITEM_TYPE_COLORS[typeName], 20) }}
               >
                 <IconComponent className="h-4 w-4" />
               </span>
@@ -328,7 +315,7 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
         <div
           role="radiogroup"
           aria-label="Item type"
-          className="thin-scrollbar flex shrink-0 gap-1.5 overflow-x-auto border-b border-border bg-surface/60 px-5 py-2.5"
+          className="thin-scrollbar flex shrink-0 gap-1.5 overflow-x-auto border-b border-border bg-surface px-5 py-2.5"
         >
           {ITEM_TYPES.map((type) => {
             const Icon = getItemTypeIcon(type.icon);
@@ -345,20 +332,15 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
                 title={locked ? `${type.label}s are part of BitBin Pro` : undefined}
                 onClick={() => setTypeName(type.value)}
                 className={cn(
-                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border px-2.5 font-mono text-xs transition-colors",
-                  active
-                    ? "text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-[color-mix(in_srgb,var(--type-color)_28%,transparent)] hover:bg-[color-mix(in_srgb,var(--type-color)_8%,transparent)] hover:text-(--type-color)",
-                  locked && "cursor-not-allowed opacity-50 hover:border-transparent hover:bg-transparent hover:text-muted-foreground"
+                  "term-btn term-chip inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] capitalize",
+                  !active && "text-foreground/80",
+                  locked && "cursor-not-allowed opacity-50"
                 )}
-                // --type-color tints the chip on hover; the chosen one is filled with it
+                // every chip is a solid fill of its type colour; the chosen one is filled stronger
                 style={
                   {
-                    "--type-color": typeColor,
-                    ...(active && {
-                      borderColor: `color-mix(in srgb, ${typeColor} 45%, transparent)`,
-                      backgroundColor: `color-mix(in srgb, ${typeColor} 12%, transparent)`,
-                    }),
+                    "--chip-bg": typeChipBackground(ITEM_TYPE_COLORS[type.value], active ? 34 : 16),
+                    "--chip-bg-hover": typeChipBackground(ITEM_TYPE_COLORS[type.value], 26),
                   } as React.CSSProperties
                 }
               >
@@ -374,7 +356,7 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
         <form
           id="new-item-form"
           onSubmit={handleSubmit}
-          className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto thin-scrollbar md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden"
+          className="item-form grid min-h-0 flex-1 grid-cols-1 overflow-y-auto thin-scrollbar md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden"
         >
           {/* Main column */}
           <div className="flex min-w-0 flex-col gap-5 px-5 py-5 thin-scrollbar md:overflow-y-auto">
@@ -470,7 +452,7 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
           </div>
 
           {/* Details panel */}
-          <aside className="min-w-0 space-y-5 border-t border-border bg-surface/40 px-5 py-5 thin-scrollbar md:overflow-y-auto md:border-t-0 md:border-l">
+          <aside className="min-w-0 space-y-5 border-t border-border bg-surface px-5 py-5 thin-scrollbar md:overflow-y-auto md:border-t-0 md:border-l">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <FieldLabel htmlFor="description">description</FieldLabel>
@@ -515,7 +497,7 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
                 )}
               </div>
               <TagInput tags={tags} onChange={setTags} disabled={isLoading} />
-              <p className="font-mono text-[11px] text-muted-foreground">enter or comma to add</p>
+              <p className="font-mono text-[11px] text-muted-foreground">Enter or comma to add</p>
             </div>
 
             <div className="space-y-2">
@@ -532,17 +514,17 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
         </form>
 
         {/* Footer */}
-        <footer className="flex shrink-0 items-center gap-3 border-t border-border bg-surface/60 px-5 py-3">
+        <footer className="flex shrink-0 items-center gap-3 border-t border-border bg-surface px-5 py-3">
           <p className="hidden items-center gap-3 font-mono text-[11px] text-muted-foreground sm:flex">
             <span className="flex items-center gap-1">
-              <Kbd keys={["⌘", "↵"]} /> create
+              <Kbd keys={["⌘", "↵"]} /> Create
             </span>
             <span className="flex items-center gap-1">
-              <Kbd keys={["esc"]} /> cancel
+              <Kbd keys={["esc"]} /> Cancel
             </span>
           </p>
           <div className="ml-auto flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+            <Button type="button" variant="cancel" onClick={handleClose} disabled={isLoading}>
               <X className="h-4 w-4" />
               Cancel
             </Button>

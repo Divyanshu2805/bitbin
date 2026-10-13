@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface PanelProps {
-  /** Anchor for in-page navigation (the settings index links to it) */
+  /** Anchor, so a link can point at this card (`/settings#billing`) */
   id?: string;
   title: React.ReactNode;
   description?: React.ReactNode;
@@ -16,8 +16,9 @@ interface PanelProps {
 }
 
 /**
- * A settings-style pane: a header strip (icon, title, a line of description,
- * optional action) over a padded body. Used by Settings and Profile.
+ * A settings-style card: a header (icon, serif title, a line of description,
+ * optional action) over a padded body. Used by Settings and Profile. A danger
+ * panel is the same card in the destructive colour.
  */
 export default function Panel({
   id,
@@ -34,39 +35,38 @@ export default function Panel({
   return (
     <section
       id={id}
-      className={cn(
-        "scroll-mt-6 overflow-hidden rounded-lg border bg-card/80 animate-fade-up",
-        danger ? "border-destructive/30" : "border-border",
-        className
-      )}
+      className={cn("card-surface scroll-mt-6 overflow-hidden animate-fade-up", className)}
+      style={danger ? ({ "--tone": "var(--destructive)" } as React.CSSProperties) : undefined}
     >
       <header
         data-anim-icons
         className={cn(
-          "flex items-start gap-3 border-b px-5 py-4",
-          danger ? "border-destructive/20 bg-destructive/[0.04]" : "border-border bg-surface/60"
+          "flex items-start gap-3 border-b px-6 py-5",
+          danger ? "border-destructive/25" : "border-border"
         )}
       >
         {icon && (
           <span
             className={cn(
-              "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background/60 [&_svg]:h-4 [&_svg]:w-4",
-              danger ? "border-destructive/30 text-destructive" : "border-border text-lime"
+              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border [&_svg]:h-4 [&_svg]:w-4",
+              danger
+                ? "border-destructive/30 bg-destructive/10 text-destructive"
+                : "border-[color-mix(in_srgb,var(--brand-lime)_40%,var(--card))] bg-[color-mix(in_srgb,var(--brand-lime)_22%,var(--card))] text-lime"
             )}
           >
             {icon}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <h2 className="flex flex-wrap items-center gap-2 font-display text-base font-semibold tracking-[-0.02em] text-foreground">
+          <h2 className="flex flex-wrap items-center gap-2 font-display text-xl leading-tight text-foreground">
             {title}
             {badge}
           </h2>
-          {description && <p className="text-desc mt-0.5 text-sm">{description}</p>}
+          {description && <p className="text-desc mt-1 text-sm leading-relaxed">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </header>
-      <div className="px-5 py-5">{children}</div>
+      <div className="px-6 py-6">{children}</div>
     </section>
   );
 }
@@ -74,7 +74,7 @@ export default function Panel({
 /** The coral `PRO` tag used next to Pro-only features. */
 export function ProTag() {
   return (
-    <span className="rounded-sm border border-coral/35 px-1 font-mono text-[9px] font-normal uppercase tracking-wide text-coral">
+    <span className="rounded-sm border border-[color-mix(in_srgb,var(--brand-coral)_35%,var(--card))] px-1 font-mono text-[9px] font-normal uppercase tracking-wide text-coral">
       pro
     </span>
   );

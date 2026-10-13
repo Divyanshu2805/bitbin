@@ -11,7 +11,7 @@ interface BinOverviewProps {
 }
 
 /**
- * The dashboard's `bin --stats` pane: four counters, then the bin broken down by
+ * The dashboard's overview card: four counters, then the bin broken down by
  * type as one stacked bar (like a disk-usage view) with a legend that links to
  * each type. Segments grow in from the left, one after another.
  */
@@ -21,26 +21,23 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
   const isProType = (name: string) => name === "file" || name === "image";
 
   const counters = [
-    { label: "items", value: stats.totalItems, limit: isPro ? undefined : MAX_ITEMS, color: "var(--brand-lime)" },
+    { label: "Items", value: stats.totalItems, limit: isPro ? undefined : MAX_ITEMS, color: "var(--brand-lime)" },
     {
-      label: "collections",
+      label: "Collections",
       value: stats.totalCollections,
       limit: isPro ? undefined : MAX_COLLECTIONS,
       color: "var(--brand-cyan)",
     },
-    { label: "starred items", value: stats.favoriteItems, color: "light-dark(#7f4d06, #ffc857)" },
-    { label: "starred collections", value: stats.favoriteCollections, color: "var(--brand-coral)" },
+    { label: "Starred items", value: stats.favoriteItems, color: "light-dark(#7f4d06, #ffc857)" },
+    { label: "Starred collections", value: stats.favoriteCollections, color: "var(--brand-coral)" },
   ];
 
   return (
     <section
       aria-label="Your bin at a glance"
-      className="tui bg-card/80 backdrop-blur-sm animate-fade-up [--tui-bg:var(--card)]"
+      className="card-surface overflow-hidden animate-fade-up"
       style={{ animationDelay: "80ms" }}
     >
-      <span className="tui-title font-mono">
-        <span className="text-lime">$</span> bin --stats
-      </span>
 
       {/* Counters */}
       <div className="grid grid-cols-2 lg:grid-cols-4">
@@ -50,7 +47,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
             <div
               key={counter.label}
               className={cn(
-                "group relative px-5 pt-6 pb-5",
+                "relative px-5 pt-6 pb-5",
                 i % 2 === 1 && "border-l border-border",
                 i >= 2 && "border-t border-border lg:border-t-0",
                 i === 2 && "lg:border-l"
@@ -63,7 +60,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
               <p className="mt-2 flex items-baseline gap-1.5">
                 <AnimatedNumber
                   value={counter.value}
-                  className="font-display text-[2rem] font-bold leading-none tabular-nums tracking-[-0.04em]"
+                  className="font-sans text-[2rem] font-semibold leading-none tabular-nums tracking-[-0.045em]"
                 />
                 {counter.limit !== undefined && (
                   <span className={cn("font-mono text-xs text-muted-foreground", nearlyFull && "text-coral")}>
@@ -71,12 +68,6 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
                   </span>
                 )}
               </p>
-              {/* A hairline in the counter's colour that draws in on hover */}
-              <span
-                aria-hidden
-                className="absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
-                style={{ backgroundColor: counter.color }}
-              />
             </div>
           );
         })}
@@ -86,13 +77,13 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
       <div className="border-t border-border px-5 pt-4 pb-5">
         <div className="mb-3 flex items-center justify-between font-mono text-[11px] text-muted-foreground">
           <span>
-            <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>by type
+            By type
           </span>
-          <span className="tabular-nums">{total} total</span>
+          <span className="tabular-nums">{total} Total</span>
         </div>
 
         <div
-          className="flex h-2.5 gap-[3px] overflow-hidden rounded-[3px] bg-foreground/[0.05]"
+          className="flex h-2.5 gap-[3px] overflow-hidden rounded-full bg-muted"
           role="img"
           aria-label={filled.map((type) => `${type.count} ${type.name}s`).join(", ") || "No items yet"}
         >
@@ -117,7 +108,7 @@ export default function BinOverview({ stats, itemTypes, isPro }: BinOverviewProp
                 <Link
                   href={`/items/${type.name}s`}
                   className={cn(
-                    "group inline-flex items-center gap-2 font-mono text-xs transition-colors hover:text-foreground",
+                    "group inline-flex items-center gap-2 font-mono text-xs capitalize transition-colors hover:text-foreground",
                     type.count > 0 ? "text-foreground/80" : "text-muted-foreground"
                   )}
                 >

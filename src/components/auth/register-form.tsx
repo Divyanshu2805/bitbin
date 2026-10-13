@@ -60,7 +60,6 @@ export function RegisterForm() {
   return (
     <div className="w-full space-y-7">
       <AuthHeader
-        path="register"
         title={<>Start your <AuthAccent>bin.</AuthAccent></>}
         description="Free for your first 50 items. No card needed."
       />
@@ -123,11 +122,11 @@ export function RegisterForm() {
           </div>
           <p className="text-center text-xs text-muted-foreground">
             By creating an account you agree to the{" "}
-            <Link href="/terms" className="underline hover:text-lime">
+            <Link href="/terms" className="brand-link brand-link-quiet">
               Terms
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="underline hover:text-lime">
+            <Link href="/privacy" className="brand-link brand-link-quiet">
               Privacy Policy
             </Link>.
           </p>
@@ -136,7 +135,7 @@ export function RegisterForm() {
 
       <AuthSwitch>
         Already have an account?{" "}
-        <Link href="/sign-in" className="font-medium text-lime hover:underline">
+        <Link href="/sign-in" className="brand-link">
           Sign in
         </Link>
       </AuthSwitch>

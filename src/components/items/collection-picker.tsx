@@ -111,12 +111,12 @@ export default function CollectionPicker({
     >
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between h-auto min-h-10"
-          disabled={disabled}
-        >
+     variant="outline"
+     role="combobox"
+     aria-expanded={open}
+     className="w-full justify-between h-auto min-h-10"
+     disabled={disabled}
+    >
           {selectedCollections.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {selectedCollections.map((collection) => (

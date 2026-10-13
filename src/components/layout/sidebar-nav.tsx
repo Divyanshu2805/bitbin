@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Folder, FolderOpen, LayoutGrid, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,79 +26,11 @@ const OVERVIEW_LINKS = [
   { href: "/collections", label: "Collections", icon: FolderOpen },
 ];
 
-/**
- * Two pills that glide between rows: one follows the pointer, one sits under the
- * current page and slides there when you navigate. Positions are written as CSS
- * variables straight to the DOM (see `.sidebar-pill` in globals.css).
- */
-function useSlidingPills(pathname: string) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const root = ref.current;
-    if (!root) return;
-    const hover = root.querySelector<HTMLElement>('[data-pill="hover"]');
-    const active = root.querySelector<HTMLElement>('[data-pill="active"]');
-    if (!hover || !active) return;
-
-    const place = (pill: HTMLElement, row: Element) => {
-      const box = root.getBoundingClientRect();
-      const rect = row.getBoundingClientRect();
-      pill.style.setProperty("--y", `${rect.top - box.top}px`);
-      pill.style.setProperty("--h", `${rect.height}px`);
-    };
-
-    // A row inside a folded block (collapsed collections, the icon rail) is hidden
-    const visible = (row: Element) => {
-      const fold = row.parentElement?.closest(".sidebar-fold");
-      return !fold || fold.getBoundingClientRect().height >= row.getBoundingClientRect().height;
-    };
-
-    const placeActive = () => {
-      const row = root.querySelector('.sidebar-row[aria-current="page"]');
-      if (row && visible(row)) {
-        place(active, row);
-        active.style.opacity = "1";
-      } else {
-        active.style.opacity = "0";
-      }
-    };
-
-    placeActive();
-    const frame = requestAnimationFrame(() => {
-      active.setAttribute("data-ready", "");
-      hover.setAttribute("data-ready", "");
-    });
-    // Folds opening and closing move rows around; keep the active pill on its row
-    const resize = new ResizeObserver(placeActive);
-    resize.observe(root);
-
-    const onOver = (event: PointerEvent) => {
-      const row = (event.target as Element).closest(".sidebar-row");
-      if (!row || !root.contains(row)) return;
-      place(hover, row);
-      hover.setAttribute("data-on", "");
-    };
-    const onLeave = () => hover.removeAttribute("data-on");
-    root.addEventListener("pointerover", onOver);
-    root.addEventListener("pointerleave", onLeave);
-    return () => {
-      cancelAnimationFrame(frame);
-      resize.disconnect();
-      root.removeEventListener("pointerover", onOver);
-      root.removeEventListener("pointerleave", onLeave);
-    };
-  }, [pathname]);
-
-  return ref;
-}
-
-/** `// types`: a code-comment section label. Folds away on the icon rail. */
+/** `types`: a lowercase mono section label. Folds away on the icon rail. */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     // Fades on the rail but keeps its height, so the icons below never move up or down
-    <h3 className="sidebar-label mb-1 whitespace-nowrap px-2.5 font-mono text-[11.5px] font-normal text-muted-foreground">
-      <span className="text-faint dark:text-muted-foreground/50">{"// "}</span>
+    <h3 className="sidebar-label mb-1.5 whitespace-nowrap px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.09em] text-muted-foreground">
       {children}
     </h3>
   );
@@ -114,8 +46,8 @@ interface NavLinkProps {
 }
 
 /**
- * A sidebar row. The pills behind it do the highlighting; on the icon rail the
- * label fades out and a tooltip carries the name and shortcut instead.
+ * A sidebar row, highlighted by `.sidebar-row` in globals.css; on the icon rail
+ * the label fades out and a tooltip carries the name and shortcut instead.
  */
 function NavLink({ href, isActive, label, keys, onClick, children }: NavLinkProps) {
   return (
@@ -126,7 +58,7 @@ function NavLink({ href, isActive, label, keys, onClick, children }: NavLinkProp
           onClick={onClick}
           aria-current={isActive ? "page" : undefined}
           className={cn(
-            "sidebar-row group relative flex h-8 items-center gap-3 overflow-hidden whitespace-nowrap rounded-lg px-2.5 text-[13.5px] outline-none transition-colors duration-200",
+            "sidebar-row group relative flex h-8 items-center gap-3 overflow-hidden whitespace-nowrap rounded-lg px-2.5 text-[13.5px] outline-none",
             "text-foreground/80 hover:text-foreground focus-visible:text-foreground focus-visible:ring-1 focus-visible:ring-lime/40",
             isActive && "font-medium text-foreground"
           )}
@@ -174,13 +106,10 @@ function CollectionDrop({ id, name, children }: { id: string; name: string; chil
 export default function SidebarNav({ itemTypes, sidebarCollections, onLinkClick }: SidebarNavProps) {
   const pathname = usePathname();
   const [collectionsExpanded, setCollectionsExpanded] = useState(true);
-  const ref = useSlidingPills(pathname);
   const hasCollections = sidebarCollections.favorites.length + sidebarCollections.recents.length > 0;
 
   return (
-    <div ref={ref} className="relative space-y-5">
-      <span aria-hidden data-pill="hover" className="sidebar-pill" />
-      <span aria-hidden data-pill="active" className="sidebar-pill" />
+    <div className="relative space-y-5">
 
       {/* Overview */}
       <div className="space-y-0.5">
@@ -231,10 +160,10 @@ export default function SidebarNav({ itemTypes, sidebarCollections, onLinkClick 
           <button
             type="button"
             onClick={() => setCollectionsExpanded((v) => !v)}
-            className="mb-1 flex w-full items-center gap-1 rounded px-2.5 font-mono text-[11.5px] text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-1.5 flex w-full items-center gap-1 rounded px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.09em] text-muted-foreground transition-colors hover:text-foreground"
             aria-expanded={collectionsExpanded}
           >
-            <span className="text-faint dark:text-muted-foreground/50">{"//"}</span> collections
+            collections
             <ChevronRight
               className={cn(
                 "ml-auto h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",

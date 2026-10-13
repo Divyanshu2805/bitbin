@@ -18,11 +18,11 @@ export default function DialogFormFooter({
   return (
     <div className="flex justify-end gap-3 pt-2">
       <Button
-        type="button"
-        variant="outline"
-        onClick={onCancel}
-        disabled={isLoading}
-      >
+    type="button"
+    variant="cancel"
+    onClick={onCancel}
+    disabled={isLoading}
+   >
         <X className="h-4 w-4" />
         Cancel
       </Button>

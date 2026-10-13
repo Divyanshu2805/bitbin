@@ -33,9 +33,9 @@ export default function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
         }
       }}
       aria-label={`Open ${item.title}`}
-      // The same edge as an item card: rounded, tinted in the accent, softly shadowed
-      className="card-lift card-glow group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--accent-color)_22%,var(--border))] bg-card text-left shadow-[var(--shadow-soft)] outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-      style={{ '--accent-color': 'var(--brand-lime)' } as React.CSSProperties}
+      // The same card as every other item, in the image type's colour
+      className="card-surface card-lift group relative flex cursor-pointer flex-col overflow-hidden text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      style={{ '--tone': readableColor(item.itemType.color) } as React.CSSProperties}
     >
       <div className="relative aspect-video overflow-hidden bg-[repeating-conic-gradient(var(--muted)_0_25%,var(--card)_0_50%)] bg-[length:16px_16px]">
         {fileViewPath(item.fileUrl) ? (
@@ -54,10 +54,10 @@ export default function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
         )}
         {/* Open, copy, favorite, pin, add to a collection, delete: the same menu as every other item */}
         <div className="absolute right-2 top-2 z-10">
-          <ItemActionsMenu item={item} className="bg-background/80 backdrop-blur hover:bg-background" />
+          <ItemActionsMenu item={item} className="bg-background" />
         </div>
         {item.fileName && (
-          <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
+          <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
             {item.fileName}
           </span>
         )}
