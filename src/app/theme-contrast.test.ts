@@ -39,7 +39,7 @@ function over(fg: string, bg: string, alpha: number): string {
   return '#' + mixed.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('');
 }
 
-const pageSurfaces = ['background', 'card', 'muted', 'accent'];
+const pageSurfaces = ['background', 'card', 'card-ink', 'muted', 'accent'];
 const accents = ['brand-lime', 'brand-coral', 'brand-cyan', 'brand-violet', 'brand-green', 'destructive', 'chart-4'];
 
 describe('theme contrast', () => {

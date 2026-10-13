@@ -71,8 +71,8 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
     <>
       <div
         // Mouse users click anywhere on the card; keyboard and screen-reader users get the name button below
-        className="card-surface card-lift icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden p-5 outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
-        // Sage, the collections' colour, as a solid block
+        className="card-ink icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden p-5 outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60"
+        // A plain black card, like an item's; sage, the collections' colour, is in the folder only
         style={{ "--tone": "var(--brand-cyan)" } as React.CSSProperties}
         // Drop an item here to add it to this collection
         {...drop}
@@ -84,8 +84,8 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             <span
               className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border"
               style={{
-                backgroundColor: "color-mix(in srgb, var(--tone) 22%, var(--card))",
-                borderColor: "color-mix(in srgb, var(--tone) 40%, var(--card))",
+                backgroundColor: "color-mix(in srgb, var(--tone) 16%, var(--card-ink))",
+                borderColor: "color-mix(in srgb, var(--tone) 32%, var(--card-ink))",
                 color: "var(--tone)",
               }}
             >
@@ -124,7 +124,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
               className={cn(
-                "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-sm transition-all duration-200",
+                "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 transition-all duration-200",
                 "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100",
                 "group-focus-within:pointer-events-auto group-focus-within:opacity-100",
                 "max-md:pointer-events-auto max-md:static max-md:translate-y-0 max-md:border-transparent max-md:bg-transparent max-md:opacity-100 max-md:shadow-none"

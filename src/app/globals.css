@@ -94,6 +94,8 @@
   --card-radius: 22px;
   /* The pricing cards' ground, on the landing page and the upgrade page: the page's darkest colour */
   --plan-ink: #0e0e0d;
+  /* Item and collection cards: black, a step below the page, so the colour on them stands out */
+  --card-ink: #0b0b0a;
   /* The app has one theme, and it is dark. `.dark` is set on <html> in the root layout so `dark:` utilities apply */
   color-scheme: dark;
   --brand-lime: #e3a184;
@@ -476,28 +478,38 @@
 }
 
 /*
- * The one card: the landing page's flat, rounded block. Opaque, a hairline edge, a soft drop shadow,
- * nothing see-through and nothing glowing. `--tone` (an item type's colour, a collection's sage)
- * mixes into the surface and the edge as a solid colour; without it the card is plain.
+ * The one card: a flat, rounded, opaque block in the card colour with a neutral hairline edge.
+ * Nothing see-through or glowing, and no drop shadow. `--tone` (an item type's colour, a
+ * collection's sage) adds a little of itself to the surface as a solid colour; the edge stays neutral.
  */
 @utility card-surface {
-  /* The landing workflow cards' mix exactly: 24% of the tone in the edge, 15% in the surface */
-  border: 1px solid color-mix(in srgb, var(--tone, var(--border)) 24%, var(--border));
+  border: 1px solid var(--border);
   border-radius: var(--card-radius);
-  background: color-mix(in srgb, var(--tone, var(--card)) 15%, var(--card));
-  box-shadow: var(--shadow-soft);
+  background: color-mix(in srgb, var(--tone, var(--card)) 7%, var(--card));
 }
 
-/* A card you can open rises a little on hover and its edge takes more of its tone */
+/* A card you can open rises a little on hover and takes a touch more of its colour; the edge never changes */
 @utility card-lift {
   transition:
     transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
+    background-color 0.3s ease;
   &:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--tone, var(--brand-lime)) 55%, var(--border));
-    box-shadow: var(--shadow-lift);
+    background: color-mix(in srgb, var(--tone, var(--foreground)) 11%, var(--card));
+  }
+}
+
+/*
+ * Item and collection cards: plain black with a neutral hairline. Their colour lives in the type chip,
+ * the content preview or the folder icon, not on the card. On hover it only rises: no colour, no glow.
+ */
+@utility card-ink {
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  background: var(--card-ink);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  &:hover {
+    transform: translateY(-2px);
   }
 }
 

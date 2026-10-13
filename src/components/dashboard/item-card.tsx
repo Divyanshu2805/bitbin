@@ -42,9 +42,9 @@ function previewLines(content: string) {
 }
 
 /**
- * The code-ish preview under the title: snippets get a line-number gutter,
- * commands a `$` prompt, links their URL. Prompts and notes show a four-line
- * excerpt of their text.
+ * The code-ish preview under the title, where the card's type colour (`--tone`) shows, the way an
+ * editor shows it: snippets get their line numbers and gutter rule in it, commands their `$` prompt,
+ * links their icon. Prompts and notes are a four-line excerpt behind a rule in it, like a quote.
  */
 function ContentPreview({ item }: { item: ItemWithType }) {
   const type = item.itemType.name;
@@ -52,7 +52,7 @@ function ContentPreview({ item }: { item: ItemWithType }) {
   if (type === "link" && item.url) {
     return (
       <p className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 font-mono text-[12px] text-tok-path">
-        <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+        <ExternalLink className="h-3 w-3 shrink-0 text-(--tone)" />
         <span className="truncate">{item.url.replace(/^https?:\/\//, "")}</span>
       </p>
     );
@@ -63,24 +63,23 @@ function ContentPreview({ item }: { item: ItemWithType }) {
     if (shown.length === 0) return null;
     return (
       <div className="relative overflow-hidden rounded-xl border border-border bg-background font-mono text-[12.5px] leading-[1.7]">
-        {/* A thin gutter rule in the type's colour, like an active editor pane */}
+        {/* The gutter's edge, one rule down the whole preview */}
         <span
           aria-hidden
-          className="absolute inset-y-0 left-0 w-[2px] opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ backgroundColor: "var(--accent-color)" }}
+          className="absolute inset-y-0 left-9 w-px bg-[color-mix(in_srgb,var(--tone)_35%,var(--background))]"
         />
         <div className="py-2">
           {shown.map((line) => (
             <div key={line.number} className="flex whitespace-pre pr-3">
-              <span className="w-9 shrink-0 select-none pr-3 text-right tabular-nums text-faint dark:text-muted-foreground/60">
-                {type === "command" ? <span className="text-lime">$</span> : line.number}
+              <span className="w-9 shrink-0 select-none pr-2.5 text-right tabular-nums text-(--tone)">
+                {type === "command" ? "$" : line.number}
               </span>
-              <span className="min-w-0 truncate text-foreground">{line.text}</span>
+              <span className="min-w-0 truncate pl-2.5 text-foreground">{line.text}</span>
             </div>
           ))}
         </div>
         {hidden > 0 && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-9 items-end justify-end bg-gradient-to-t from-background via-background/80 to-transparent px-2 pb-1.5">
+          <div className="pointer-events-none absolute right-2 bottom-1.5 flex">
             <span className="rounded border border-border bg-card px-1.5 text-[10px] leading-4 text-muted-foreground">
               +{hidden} {hidden === 1 ? "line" : "lines"}
             </span>
@@ -90,18 +89,14 @@ function ContentPreview({ item }: { item: ItemWithType }) {
     );
   }
 
-  // Prose: an excerpt in a quiet block, like a quote from the item
+  // Prose: an excerpt set off by a rule in the type's colour, like a quote from the item
   if ((type === "prompt" || type === "note") && item.content) {
     return (
-      <div
-        className="rounded-xl border border-border bg-background px-3 py-2.5"
-        style={{ boxShadow: "inset 2px 0 0 0 var(--accent-color)" }}
-      >
-        {/* Clamped inside the padding, so no half line peeks out under the "…" */}
+      <blockquote className="border-l-2 border-l-(--tone) pl-3">
         <p className="line-clamp-4 text-[13px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
           {item.content}
         </p>
-      </div>
+      </blockquote>
     );
   }
 
@@ -207,9 +202,9 @@ export default function ItemCard({ item }: ItemCardProps) {
       <div
         // Mouse users click anywhere on the card; keyboard and screen-reader users get the title button below
         className={cn(
-          "card-surface card-lift icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
+          "card-ink icon-anim-off group relative flex min-h-60 cursor-pointer flex-col overflow-hidden outline-none has-[[data-card-open]:focus-visible]:ring-2 has-[[data-card-open]:focus-visible]:ring-ring/60",
         )}
-        // A solid block in the item type's colour, like the cards on the landing page
+        // A plain black card; the item type's colour is in the chip and the preview
         style={{ "--tone": color } as React.CSSProperties}
         // Drag onto a collection (sidebar or collection card) to add it there
         {...itemDragProps(item.id, item.title, item.itemType.name, color)}
@@ -220,8 +215,9 @@ export default function ItemCard({ item }: ItemCardProps) {
           <span
             className="flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 font-mono text-[11px] font-medium"
             style={{
-              backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
-              borderColor: `color-mix(in srgb, ${color} 28%, transparent)`,
+              // Solid mixes into the card, never a colour over transparent
+              backgroundColor: `color-mix(in srgb, ${color} 16%, var(--card-ink))`,
+              borderColor: `color-mix(in srgb, ${color} 32%, var(--card-ink))`,
               color,
             }}
           >
@@ -252,7 +248,7 @@ export default function ItemCard({ item }: ItemCardProps) {
               onClick={stop}
               onKeyDown={stop}
               className={cn(
-                "absolute right-0 flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 shadow-sm transition-all duration-200",
+                "absolute right-0 flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 transition-all duration-200",
                 "pointer-events-none translate-y-1 opacity-0",
                 "group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100",
                 "group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100",
@@ -367,7 +363,7 @@ export default function ItemCard({ item }: ItemCardProps) {
             {item.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-foreground/80 transition-colors group-hover:border-[color-mix(in_srgb,var(--accent-color)_35%,var(--border))]"
+                className="rounded-full border border-border bg-muted px-2 py-0.5 text-foreground/80"
               >
                 <span className="text-faint dark:text-muted-foreground/50">#</span>
                 {tag}

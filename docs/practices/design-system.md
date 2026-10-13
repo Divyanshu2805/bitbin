@@ -13,6 +13,7 @@ see-through, blurred or glowing: every surface is a solid colour. All tokens liv
 | `--background` | `#151514` | Page background |
 | `--surface` | `#1c1b19` | Title bars, panel header strips, nested tiles, every second sheet of the landing page |
 | `--card` | `#222120` | Cards, panes, panels |
+| `--card-ink` | `#0b0b0a` | Item and collection cards (`card-ink`): black, a step below the page |
 | `--popover` | `#2b2927` | Menus, dialogs, the ⌘K palette |
 | `--muted` / `--secondary` | `#2f2d2a` | Chips, kbd, subtle fills |
 | `--border` | `#4b453b` | Hairlines |
@@ -149,7 +150,8 @@ Keyframes and utilities are defined once in `globals.css`:
 | `animate-fade-up` | 14px rise + fade. Uses the `translate` property so it composes with hover transforms |
 | `stagger` | Put on a grid/list. Children fade up one after another |
 | `card-surface` | The one card: see [Cards](#cards) |
-| `card-lift` | On a card that opens something: a 2px rise, a deeper drop shadow and more of the card's `--tone` in its edge. No glow |
+| `card-lift` | On a card that opens something: a 2px rise and a touch more of its `--tone` in the surface. The edge doesn't change; no glow, no shadow |
+| `card-ink` | Item and collection cards, in place of `card-surface card-lift`: see [Cards](#cards) |
 | Animated icons | Icons inside any button, link, `role="button"`/`radio`/`option`, menu item, sidebar row or `[data-anim-icons]` move on hover, each its own way, keyed off lucide's `lucide-*` classes (plus turns, trash wiggles, download bobs, star spins…) |
 | `animate-shimmer` | Skeleton loading sweep (used by `<Skeleton />`) |
 | `animate-led` | A breathing status LED (status bar) |
@@ -245,24 +247,32 @@ tab, and the border and language label take the accent.
 
 ## Cards
 
-There is one card, `card-surface` (a utility in `globals.css`), taken from the landing page's workflow and
-pricing cards: opaque, a hairline edge, a 22px corner (`--card-radius`, 18px on a phone; `rounded-card` for
-anything that only needs the corner) and a soft drop shadow. No blur, no transparency, no gradient wash and
-no glowing or animated border. Set `--tone` on it and that colour is mixed into the surface and the edge
-as a solid colour:
+The card is `card-surface` (a utility in `globals.css`): opaque, the card colour, a neutral hairline
+edge and a 22px corner (`--card-radius`, 18px on a phone; `rounded-card` for anything that only needs the
+corner). No blur, no transparency, no gradient wash, no drop shadow and no glowing, coloured or animated
+border. Set `--tone` on it and a little of that colour (7%, 11% on hover for a `card-lift` card) is mixed
+into the surface as a solid colour; fills on a card (a type chip, a tag) are solid mixes too, never a
+colour over `transparent`:
 
 | Card | `--tone` |
 | --- | --- |
-| Item cards, image cards | The item type's colour, through `readableColor()` |
-| Collection cards | `--brand-cyan` (sage) |
+| Item cards, image cards | The item type's colour, through `readableColor()`, on `card-ink` (below) |
+| Collection cards | `--brand-cyan` (sage), on `card-ink` (below) |
 | The Pro plan card | Clay at the landing pricing card's strength (34% into `--plan-ink`); the Free card sits on `--plan-ink` |
-| A danger `Panel` | `--destructive` |
+| A danger `Panel` | None: plain `--card` with a red hairline |
 | Panels, the dashboard overview, lists, the Free plan card, `<Card>` | None: plain `--card` |
 
 Dialogs and the item drawer are the same shape (`rounded-card`, `bg-card`, `--shadow-lift`) over a plain
 dimmed overlay. Tiles nested in a card (a code preview, a stat, a usage meter) are `rounded-xl` boxes in
 `--background` with a hairline. A new card uses `card-surface`; never write `bg-card/80`,
 `backdrop-blur` or a coloured `box-shadow`.
+
+Item and collection cards (`ItemCard`, `ImageThumbnailCard`, `CollectionCard`) are the exception:
+`card-ink` puts them on plain black (`--card-ink`) with the same neutral hairline, and on hover they only
+rise (no colour, no glow). The `--tone` stays off the card itself. On an item card it shows where an
+editor would show it: the type chip (mixed into `--card-ink`), a snippet's line numbers and gutter rule,
+a command's `$`, a link's icon, and the rule beside a prompt's or note's excerpt, which is a quote, not a
+boxed tile. On a collection card it is the folder icon's sage, beside the bar of its item types.
 
 > `.btn` and `.btn-kbd` are unlayered CSS, so they beat Tailwind utilities such
 > as `hidden` or `sm:inline-flex`. Put responsive visibility on a wrapper

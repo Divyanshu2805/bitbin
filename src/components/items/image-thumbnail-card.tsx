@@ -34,7 +34,7 @@ export default function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
       }}
       aria-label={`Open ${item.title}`}
       // The same card as every other item, in the image type's colour
-      className="card-surface card-lift group relative flex cursor-pointer flex-col overflow-hidden text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      className="card-ink group relative flex cursor-pointer flex-col overflow-hidden text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
       style={{ '--tone': readableColor(item.itemType.color) } as React.CSSProperties}
     >
       <div className="relative aspect-video overflow-hidden bg-[repeating-conic-gradient(var(--muted)_0_25%,var(--card)_0_50%)] bg-[length:16px_16px]">
