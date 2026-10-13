@@ -46,10 +46,8 @@ Developers keep their essentials scattered across editor snippets, browser bookm
 |---|---|
 | <img src="docs/assets/screenshots/drawer.webp" alt="A snippet open in the drawer, with the code editor, tags, collections and dates" /> | <img src="docs/assets/screenshots/search.webp" alt="The search palette showing items and a collection that match 'react'" /> |
 | An item in the drawer, with the Monaco editor | ⌘K search across titles, content, tags and collections |
-| <img src="docs/assets/screenshots/collections.webp" alt="The collections page with favorite and pinned collections" /> | <img src="docs/assets/screenshots/settings.webp" alt="Settings: editor preferences and the plan" /> |
-| Collections, coloured by their contents | Settings: editor, billing, tokens, assistants, desktop app, tags, data and account |
-| <img src="docs/assets/screenshots/organize.webp" alt="The landing page's interactive demo: loose items sorted into one bin by type" /> | <img src="docs/assets/screenshots/sign-in.webp" alt="The sign-in page: GitHub or email, beside footage of a screen at work" /> |
-| The landing page sorts loose items into one bin | Sign in with GitHub or email |
+| <img src="docs/assets/screenshots/settings.webp" alt="Settings: editor preferences and the plan" /> | <img src="docs/assets/screenshots/sign-in.webp" alt="The sign-in page: GitHub or email, beside footage of a screen at work" /> |
+| Settings: editor, billing, tokens, assistants, desktop app, tags, data and account | Sign in with GitHub or email |
 
 ## Features
 
