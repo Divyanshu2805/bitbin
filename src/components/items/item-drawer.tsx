@@ -36,7 +36,7 @@ import CodeEditor from "./code-editor";
 import MarkdownEditor from "./markdown-editor";
 import ImageViewer from "./image-viewer";
 import FileViewer from "./file-viewer";
-import CollectionPicker, { type CollectionOption } from "./collection-picker";
+import CollectionPicker, { createCollectionOption, withCollection, type CollectionOption } from "./collection-picker";
 import SuggestTagsButton from "./suggest-tags-button";
 import GenerateDescriptionButton from "./generate-description-button";
 import { Kbd } from "@/components/shared/kbd";
@@ -288,6 +288,12 @@ export default function ItemDrawer() {
     } else {
       toast.error(result.error || "Failed to update pin");
     }
+  };
+
+  const handleCreateCollection = async (name: string) => {
+    const created = await createCollectionOption(name);
+    if (created) setCollections((prev) => withCollection(prev, created));
+    return created;
   };
 
   const handleEdit = async () => {
@@ -761,17 +767,16 @@ export default function ItemDrawer() {
                     </div>
 
                   {/* Collections (editable) */}
-                  {collections.length > 0 && (
-                    <div className="space-y-2">
-                      <FieldLabel>collections</FieldLabel>
-                      <CollectionPicker
-                        collections={collections}
-                        selectedIds={selectedCollectionIds}
-                        onChange={setSelectedCollectionIds}
-                        disabled={isSaving}
-                      />
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <FieldLabel>collections</FieldLabel>
+                    <CollectionPicker
+                      collections={collections}
+                      selectedIds={selectedCollectionIds}
+                      onChange={setSelectedCollectionIds}
+                      onCreate={handleCreateCollection}
+                      disabled={isSaving}
+                    />
+                  </div>
 
                       {details}
                     </aside>

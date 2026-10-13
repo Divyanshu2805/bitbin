@@ -41,7 +41,7 @@ Seven item types, each with its own page (`/items/snippets`, `/items/prompts`, �
 
 ## Collections
 
-- Named groups of items, with an optional description. An item can be in many collections, and deleting a collection keeps its items.
+- Named groups of items, with an optional description. The item form's collection picker can also create one: type a name and choose *Create*, and the item is filed into it (the extension and desktop app have *+ New collection*). An item can be in many collections, and deleting a collection keeps its items.
 - **Favorite** a collection to keep it in the sidebar; **pin** it to list it first.
 - A collection's colour is the colour of its most common item type, so it changes with its contents.
 - The collection page shows items as cards, images as thumbnails and files as rows.
@@ -79,7 +79,7 @@ Two companion apps save into BitBin without opening it, through the [token API](
 | Trigger | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>, or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> from any app, or the tray icon |
 | Saves | The selected text, titled from the page's heading, with a link back | The clipboard (text or a copied image), or an attached file |
 | Types | Snippet, command, note, prompt or link, guessed from the text | The same, plus files and images |
-| Extras | Collection picker, tags, language picker, ✦ Suggest | Collection picker, tags, ✦ Suggest, start at login, a changeable shortcut |
+| Extras | Collection picker (create one on the spot), tags, language picker, ✦ Suggest | Collection picker (create one on the spot), tags, ✦ Suggest, start at login, a changeable shortcut |
 | Install | Download from **Settings → Browser extension**, load unpacked | Download from **Settings → Desktop app**, or run from [`desktop/`](../desktop/README.md) |
 
 **API tokens** (Settings → Browser extension) connect them: `bb_…` tokens shown once, stored hashed, expiring after 30, 90 or 365 days, revocable, at most 10 per account, and limited to the permissions chosen when they are made: *List collections*, *Save items*, *Save files and images* and *AI suggestions*.

@@ -23,7 +23,7 @@ import { Kbd } from "@/components/shared/kbd";
 import CodeEditor from "./code-editor";
 import MarkdownEditor from "./markdown-editor";
 import FileUpload from "./file-upload";
-import CollectionPicker, { type CollectionOption } from "./collection-picker";
+import CollectionPicker, { createCollectionOption, withCollection, type CollectionOption } from "./collection-picker";
 import SuggestTagsButton from "./suggest-tags-button";
 import GenerateDescriptionButton from "./generate-description-button";
 
@@ -180,6 +180,13 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
       setTypeName(defaultType);
     }
   }, [defaultType]);
+
+  // Make a collection from the picker's search box; the caller selects it
+  const handleCreateCollection = async (name: string) => {
+    const created = await createCollectionOption(name);
+    if (created) setCollections((prev) => withCollection(prev, created));
+    return created;
+  };
 
   const resetForm = () => {
     setTypeName(defaultType || "snippet");
@@ -513,16 +520,13 @@ export default function NewItemDialog({ open, onOpenChange, defaultType, isPro }
 
             <div className="space-y-2">
               <FieldLabel>collections</FieldLabel>
-              {collections.length > 0 ? (
-                <CollectionPicker
-                  collections={collections}
-                  selectedIds={selectedCollectionIds}
-                  onChange={setSelectedCollectionIds}
-                  disabled={isLoading}
-                />
-              ) : (
-                <p className="text-desc text-sm">No collections yet. You can add this to one later.</p>
-              )}
+              <CollectionPicker
+                collections={collections}
+                selectedIds={selectedCollectionIds}
+                onChange={setSelectedCollectionIds}
+                onCreate={handleCreateCollection}
+                disabled={isLoading}
+              />
             </div>
           </aside>
         </form>
