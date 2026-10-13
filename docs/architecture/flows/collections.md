@@ -22,7 +22,7 @@ Collections group items by project, topic or workflow. Membership is **many-to-m
 | `toggleCollectionPin` | Pinned collections come first on the dashboard, `/collections` and `/favorites` (then by last edit) |
 | `getUserCollections` | A lightweight id + name list for the collection picker |
 
-The ⋯ menu on a collection (`collection-actions-menu.tsx`) also **exports** it, as JSON or (Pro) as a ZIP with its files, through `GET /api/export?collection={id}` — see [import and export](import-export.md#export).
+The ⋯ menu on a collection (`collection-actions-menu.tsx`) also **exports** it, as JSON or (Pro) as a ZIP with its files, through `GET /api/export?collection={id}` — see [import and export](import-export.md#export). A collection's own page has edit (`E`), export and delete beside its title (`collection-actions.tsx`); deleting there goes back to `/collections`.
 
 Items join a collection from the item side — the picker in the create dialog and the drawer sends `collectionIds` with `createItem` / `updateItem`. Two quicker ways add or remove one collection at a time through `setItemCollection` (both the item and the collection are checked for ownership):
 
