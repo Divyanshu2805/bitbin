@@ -70,8 +70,8 @@ Vercel doesn't run migrations. Apply a migration to production **before** pushin
 2. Push a tag:
 
    ```bash
-   git tag desktop-v0.3.0
-   git push origin desktop-v0.3.0
+   git tag desktop-v0.4.0
+   git push origin desktop-v0.4.0
    ```
 
 3. `.github/workflows/desktop-release.yml` runs the desktop tests, builds the unsigned Windows installer on a Windows runner, and publishes `BitBin-Setup.exe` as a GitHub Release. The name has no version, so **Settings → Desktop app**'s link (`releases/latest/download/BitBin-Setup.exe`) always points at the newest.

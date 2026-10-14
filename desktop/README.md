@@ -55,7 +55,7 @@ Builds are unsigned, so Windows SmartScreen and macOS Gatekeeper warn on first l
 BitBin's **Settings → Desktop app** links to the newest GitHub Release. To publish one, bump `version` in `package.json` (the settings window shows it), commit, then push a tag:
 
 ```bash
-git tag desktop-v0.3.0 && git push origin desktop-v0.3.0
+git tag desktop-v0.4.0 && git push origin desktop-v0.4.0
 ```
 
 `.github/workflows/desktop-release.yml` runs the tests, builds the Windows installer on a Windows runner and attaches `BitBin-Setup.exe` to a new release. Only Windows is built there; macOS and Linux run from source.
