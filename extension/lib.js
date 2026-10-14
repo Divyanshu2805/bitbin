@@ -219,6 +219,11 @@ const FILE_EXTENSIONS = ['.pdf', '.txt', '.md', '.json', '.yaml', '.yml', '.xml'
 /** The `accept` list for the file picker. */
 export const FILE_ACCEPT = [...IMAGE_EXTENSIONS, ...FILE_EXTENSIONS].join(',');
 
+/** The `accept` list for one kind of item, 'image' or 'file'. */
+export function acceptFor(kind) {
+  return (kind === 'image' ? IMAGE_EXTENSIONS : FILE_EXTENSIONS).join(',');
+}
+
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 

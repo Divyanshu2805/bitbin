@@ -1,5 +1,5 @@
 import {
-  FILE_ACCEPT,
+  acceptFor,
   ITEM_TYPES,
   PENDING_TTL_MS,
   api,
@@ -20,7 +20,13 @@ import {
 } from './lib.js';
 
 const $ = (id) => document.getElementById(id);
-const isWindow = new URLSearchParams(location.search).has('window');
+const params = new URLSearchParams(location.search);
+const isWindow = params.has('window');
+
+/** File and Image items carry a file instead of text. */
+function isAttachType(type) {
+  return type === 'file' || type === 'image';
+}
 
 let settings;
 let tags = [];
@@ -133,13 +139,18 @@ function commitTagDraft() {
 }
 
 function applyType(type) {
-  const isLink = type === 'link' && !attached;
-  $('type-field').hidden = Boolean(attached);
+  const isLink = type === 'link';
+  const carriesFile = isAttachType(type);
   $('url-field').hidden = !isLink;
-  $('content-field').hidden = isLink || Boolean(attached);
+  $('content-field').hidden = isLink || carriesFile;
   $('url').required = isLink;
   $('content').placeholder = type === 'command' ? 'npm run dev' : '';
-  $('language-field').hidden = type !== 'snippet' || Boolean(attached);
+  $('language-field').hidden = type !== 'snippet';
+  // Choosing a file only makes sense for the File and Image types
+  $('attach-zone').hidden = !carriesFile;
+  $('attachment').hidden = !attached;
+  $('attach').hidden = Boolean(attached);
+  $('attach').firstChild.textContent = type === 'image' ? '+ Choose an image ' : '+ Choose a file ';
   if (type === 'snippet' && !$('language').dataset.touched) {
     $('language').value = guessLanguage($('content').value);
   }
@@ -199,12 +210,11 @@ async function loadCollections() {
   }
 }
 
-/** Show a file or image (or take it away): it replaces the type picker and the text fields. */
+/** Show a file or image (or take it away). A file sets the type to File or Image to match. */
 function applyAttachment(file) {
   attached = file;
-  $('attachment').hidden = !file;
-  $('attach').hidden = Boolean(file);
   if (file) {
+    $('type').value = classifyFile(file.name);
     $('attachment-name').textContent = file.name;
     $('attachment-name').title = file.name;
     $('attachment-size').textContent = `${classifyFile(file.name)} · ${formatSize(file.size)}`;
@@ -229,13 +239,15 @@ function attachFile(file) {
  * opens again as a window (carrying the selection with it), where the picker works.
  */
 async function pickFile() {
+  const kind = $('type').value;
   if (isWindow) {
+    $('file-input').accept = acceptFor(kind);
     $('file-input').click();
     return;
   }
   await chrome.storage.session.set({ pending: { ...page, at: Date.now() } });
   await chrome.windows.create({
-    url: chrome.runtime.getURL('popup.html?window=1&attach=1'),
+    url: chrome.runtime.getURL(`popup.html?window=1&attach=${kind}`),
     type: 'popup',
     width: 500,
     height: 660,
@@ -280,6 +292,10 @@ async function createCollection() {
 async function suggestWithAi() {
   const button = $('suggest');
   const type = $('type').value;
+  if (isAttachType(type) && !attached) {
+    setStatus(type === 'image' ? 'Choose an image first.' : 'Choose a file first.', 'error');
+    return;
+  }
   const content = attached ? attached.name : type === 'link' ? $('url').value : $('content').value;
 
   if (!$('title').value.trim()) {
@@ -323,6 +339,10 @@ async function save(event) {
   if (!$('form').reportValidity()) return;
 
   const type = $('type').value;
+  if (isAttachType(type) && !attached) {
+    setStatus(type === 'image' ? 'Choose an image first.' : 'Choose a file first.', 'error');
+    return;
+  }
   const collectionId = $('collection').value;
   const written = $('description').value.trim();
 
@@ -393,7 +413,7 @@ async function init() {
   }
   $('language').addEventListener('change', () => { $('language').dataset.touched = '1'; });
 
-  for (const type of ITEM_TYPES) {
+  for (const type of [...ITEM_TYPES, 'file', 'image']) {
     const option = document.createElement('option');
     option.value = type;
     option.textContent = type[0].toUpperCase() + type.slice(1);
@@ -402,7 +422,14 @@ async function init() {
 
   $('open-options').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('open-bitbin').addEventListener('click', () => chrome.tabs.create({ url: `${settings.baseUrl}/dashboard` }));
-  $('type').addEventListener('change', () => applyType($('type').value));
+  $('type').addEventListener('change', () => {
+    // A file stays only while the type still matches it
+    if (attached && classifyFile(attached.name) !== $('type').value) {
+      $('file-input').value = '';
+      applyAttachment(null);
+    }
+    applyType($('type').value);
+  });
   $('suggest').addEventListener('click', suggestWithAi);
   $('tags').addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && $('tags').value.trim()) {
@@ -440,7 +467,6 @@ async function init() {
     $('file-input').value = '';
     applyAttachment(null);
   });
-  $('file-input').accept = FILE_ACCEPT;
   $('file-input').addEventListener('change', () => {
     const [file] = $('file-input').files;
     if (file) attachFile(file);
@@ -478,6 +504,12 @@ async function init() {
   const collectionsLoaded = loadCollections();
   page = pending ?? (isWindow ? page : await readActiveTab());
   prefill();
+  // The window the picker opened in starts on the type that was asked for
+  const wanted = params.get('attach');
+  if (isAttachType(wanted)) {
+    $('type').value = wanted;
+    applyType(wanted);
+  }
   show('form');
   $('title').focus();
   $('title').select();
