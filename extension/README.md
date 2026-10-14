@@ -11,7 +11,7 @@ Plain JavaScript with no build step. The folder is excluded from the Next app's 
 | `options.html` / `options.js` | Site (production or local) and API token; checks the token with `/api/v1/me` |
 | `background.js` | The "Save selection to BitBin" context-menu entry |
 | `lib.js` | Settings storage, the API client, type, language and title guessing. `LANGUAGES` mirrors `src/lib/constants/editor.ts`, so keep the two in sync |
-| `styles.css`, `icons/` | Graphite and lime, matching the app |
+| `styles.css`, `fonts/`, `icons/` | The app's warm charcoal and clay: the same tokens, buttons and motion, Geist, Fraunces and JetBrains Mono (copied from `src/app/fonts`), and the app's bin icon. `desktop/renderer/styles.css` is a copy; change both together |
 
 ## How users install it
 
