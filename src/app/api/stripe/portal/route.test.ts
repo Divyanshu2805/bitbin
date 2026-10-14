@@ -49,6 +49,15 @@ describe('POST /api/stripe/portal', () => {
     expect(portalCreate).not.toHaveBeenCalled();
   });
 
+  it('answers 400 when Stripe does not know the saved customer', async () => {
+    portalCreate.mockRejectedValue({ code: 'resource_missing', param: 'customer' });
+
+    const res = await POST();
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'No billing account found' });
+  });
+
   it('answers 429 and calls Stripe not at all when over the limit', async () => {
     mockCheckRateLimit.mockResolvedValueOnce({ success: false, remaining: 0, reset: 0, retryAfter: 180 });
 

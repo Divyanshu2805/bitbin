@@ -16,7 +16,7 @@ Limits are enforced on the server — see [plan enforcement](../security-model.m
 ## Checkout
 
 1. "Upgrade" on `/upgrade` or `/settings` posts `{ plan: 'monthly' | 'yearly' }` to `POST /api/stripe/checkout`.
-2. The handler maps the plan to `STRIPE_PRICE_ID_MONTHLY` / `_YEARLY` (`400` for anything else), then finds the user's Stripe customer — or creates one with `metadata.userId` and saves `stripeCustomerId`.
+2. The handler maps the plan to `STRIPE_PRICE_ID_MONTHLY` / `_YEARLY` (`400` for anything else), then finds the user's Stripe customer — or creates one with `metadata.userId` and saves `stripeCustomerId`. A saved id Stripe rejects as unknown (`resource_missing` on `customer`) is replaced by a new customer and the session is created again, once.
 3. It creates a Checkout Session (`mode: 'subscription'`, metadata `{ userId, app: 'bitbin' }`), with `success_url` `/settings?upgraded=true` and `cancel_url` `/settings`, and returns its URL. The browser redirects to Stripe.
 4. Back on `/settings?upgraded=true`, the page shows a "Welcome to BitBin Pro!" toast.
 
@@ -48,7 +48,7 @@ A separate Stripe account per app is still the cleanest setup: the tag can't sto
 
 ## Managing the subscription
 
-"Manage subscription" calls `POST /api/stripe/portal`, which creates a Customer Portal session for the saved `stripeCustomerId` (`400` if there isn't one) with `return_url` `/settings`. Cancelling in the portal ends in `customer.subscription.updated` / `.deleted`.
+"Manage subscription" calls `POST /api/stripe/portal`, which creates a Customer Portal session for the saved `stripeCustomerId` (`400` if there isn't one, or Stripe doesn't know it) with `return_url` `/settings`. Cancelling in the portal ends in `customer.subscription.updated` / `.deleted`.
 
 ## Local testing
 

@@ -67,7 +67,67 @@ describe('POST /api/stripe/checkout', () => {
   });
 });
 
+describe('POST /api/stripe/checkout customers', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockCheckRateLimit.mockResolvedValue({ success: true, remaining: 10, reset: 0, retryAfter: 0 });
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-1', email: 'a@b.dev', isPro: false },
+      expires: new Date().toISOString(),
+    });
+    sessionsCreate.mockResolvedValue({ url: 'https://checkout.stripe.test/s' });
+    customersCreate.mockResolvedValue({ id: 'cus_new' });
+  });
+
+  it('reuses the saved customer', async () => {
+    findUnique.mockResolvedValue({ stripeCustomerId: 'cus_1', email: 'a@b.dev', isPro: false });
+
+    const res = await post();
+
+    expect(res.status).toBe(200);
+    expect(customersCreate).not.toHaveBeenCalled();
+    expect(sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ customer: 'cus_1' }));
+  });
+
+  it('creates a customer when none is saved', async () => {
+    findUnique.mockResolvedValue({ stripeCustomerId: null, email: 'a@b.dev', isPro: false });
+
+    const res = await post();
+
+    expect(res.status).toBe(200);
+    expect(customersCreate).toHaveBeenCalledOnce();
+    expect(sessionsCreate).toHaveBeenCalledWith(expect.objectContaining({ customer: 'cus_new' }));
+  });
+
+  it('replaces a saved customer Stripe does not know and tries again', async () => {
+    findUnique.mockResolvedValue({ stripeCustomerId: 'cus_stale', email: 'a@b.dev', isPro: false });
+    sessionsCreate.mockRejectedValueOnce({ code: 'resource_missing', param: 'customer' });
+
+    const res = await post();
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ url: 'https://checkout.stripe.test/s' });
+    expect(customersCreate).toHaveBeenCalledOnce();
+    expect(sessionsCreate).toHaveBeenCalledTimes(2);
+    expect(sessionsCreate).toHaveBeenLastCalledWith(expect.objectContaining({ customer: 'cus_new' }));
+  });
+
+  it('does not retry for any other Stripe error', async () => {
+    findUnique.mockResolvedValue({ stripeCustomerId: 'cus_1', email: 'a@b.dev', isPro: false });
+    sessionsCreate.mockRejectedValue({ code: 'resource_missing', param: 'line_items[0][price]' });
+
+    const res = await post();
+
+    expect(res.status).toBe(500);
+    expect(customersCreate).not.toHaveBeenCalled();
+    expect(sessionsCreate).toHaveBeenCalledOnce();
+  });
+});
+
 describe('POST /api/stripe/checkout rate limit', () => {
+  beforeEach(() => vi.clearAllMocks());
+
   it('answers 429 and creates nothing in Stripe when over the limit', async () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-1', email: 'a@b.dev', isPro: false },

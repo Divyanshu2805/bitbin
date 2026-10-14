@@ -15,7 +15,7 @@ Session required. `{ "plan": "monthly" | "yearly" }`.
 | `409` | The user is already Pro. A second subscription would bill them twice; manage it in the portal |
 | `500` | Stripe error |
 
-Creates the Stripe customer on first use (`metadata.userId`) and saves `stripeCustomerId`. The session's metadata is `{ userId, app: 'bitbin' }`. Success returns to `/settings?upgraded=true`, cancel to `/settings`.
+Creates the Stripe customer on first use (`metadata.userId`) and saves `stripeCustomerId`. If Stripe doesn't know the saved id (it came from another account or mode, or was deleted there), the handler creates a new customer, saves it and retries once. The session's metadata is `{ userId, app: 'bitbin' }`. Success returns to `/settings?upgraded=true`, cancel to `/settings`.
 
 ## `POST /api/stripe/portal`
 
@@ -24,7 +24,7 @@ Session required, no body.
 | Status | When |
 |---|---|
 | `200` | `{ url }` — the Customer Portal URL |
-| `400` | "No billing account found" — the user has no `stripeCustomerId` |
+| `400` | "No billing account found" — the user has no `stripeCustomerId`, or Stripe doesn't know the saved one |
 | `401` | No session |
 | `500` | Stripe error |
 

@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-975 tests in 81 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+988 tests in 82 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|

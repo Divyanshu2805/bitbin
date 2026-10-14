@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { stripe } from '@/lib/stripe'
 import { getStripeCustomerId } from '@/lib/db/billing'
 import { rejectCrossSite } from '@/lib/same-origin'
+import { isMissingCustomerError } from '@/lib/stripe-errors'
 
 export async function POST(request?: Request) {
   try {
@@ -41,6 +42,10 @@ export async function POST(request?: Request) {
 
     return NextResponse.json({ url: portalSession.url })
   } catch (error) {
+    // The saved id isn't known to this Stripe account (another mode, or deleted there)
+    if (isMissingCustomerError(error)) {
+      return NextResponse.json({ error: 'No billing account found' }, { status: 400 })
+    }
     console.error('Stripe portal error:', error)
     return NextResponse.json(
       { error: 'Failed to create portal session' },

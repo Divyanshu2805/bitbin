@@ -5,6 +5,7 @@ import { stripe, STRIPE_APP_TAG } from '@/lib/stripe'
 import { demoBlockedMessage, isDemoEmail } from '@/lib/demo'
 import { getCheckoutRecord, setStripeCustomerId } from '@/lib/db/billing'
 import { rejectCrossSite } from '@/lib/same-origin'
+import { isMissingCustomerError } from '@/lib/stripe-errors'
 
 const PRICE_MAP: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_ID_MONTHLY,
@@ -57,28 +58,41 @@ export async function POST(request: Request) {
       )
     }
 
-    let customerId = user?.stripeCustomerId
+    const userId = session.user.id
 
-    if (!customerId) {
+    const createCustomer = async () => {
       const customer = await stripe.customers.create({
         email: user?.email ?? undefined,
-        metadata: { userId: session.user.id },
+        metadata: { userId },
       })
-      customerId = customer.id
-
-      await setStripeCustomerId(session.user.id, customerId)
+      await setStripeCustomerId(userId, customer.id)
+      return customer.id
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${appUrl}/settings?upgraded=true`,
-      cancel_url: `${appUrl}/settings`,
-      metadata: { userId: session.user.id, app: STRIPE_APP_TAG },
-    })
+    const createCheckout = (customerId: string) =>
+      stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${appUrl}/settings?upgraded=true`,
+        cancel_url: `${appUrl}/settings`,
+        metadata: { userId, app: STRIPE_APP_TAG },
+      })
+
+    const customerId = user?.stripeCustomerId ?? (await createCustomer())
+
+    let checkoutSession
+    try {
+      checkoutSession = await createCheckout(customerId)
+    } catch (error) {
+      // A saved id Stripe doesn't know (another account or mode, or deleted there) would block
+      // checkout for good: replace it with a fresh customer and try once more.
+      if (!user?.stripeCustomerId || !isMissingCustomerError(error)) throw error
+      console.error('Stripe customer missing, creating a new one:', customerId)
+      checkoutSession = await createCheckout(await createCustomer())
+    }
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
