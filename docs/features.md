@@ -76,7 +76,7 @@ Two companion apps save into BitBin without opening it, through the [token API](
 | | Browser extension | Desktop tray app |
 |---|---|---|
 | Platform | Chrome and Edge (Manifest V3) | Windows installer; macOS and Linux from source (Electron) |
-| Trigger | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>, or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> from any app, or the tray icon |
+| Trigger | <kbd>Ctrl</kbd> + <kbd>B</kbd>, or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> from any app, or the tray icon |
 | Saves | The selected text, titled from the page's heading, with a link back | The clipboard (text or a copied image), or an attached file |
 | Types | Snippet, command, note, prompt or link, guessed from the text (no files or images) | The same, plus files and images |
 | Extras | Collection picker (create one on the spot), tags, language picker, ✦ Suggest, a collection list that appears instantly | Collection picker (create one on the spot), tags, ✦ Suggest, start at login, a changeable shortcut |

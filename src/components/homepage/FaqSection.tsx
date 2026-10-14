@@ -51,7 +51,7 @@ const FAQS: { q: string; a: Part[] }[] = [
       "On Pro, yes. The ",
       ["Chrome/Edge extension"],
       " saves a selection with ",
-      ["Ctrl+Shift+B"],
+      ["Ctrl+B"],
       ", the ",
       ["desktop tray app"],
       " saves your clipboard from any app with ",

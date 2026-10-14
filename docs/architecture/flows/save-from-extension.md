@@ -18,7 +18,7 @@ Until the extension is on the Chrome Web Store, users install it from BitBin:
 ## Saving
 
 ```
-Ctrl+Shift+B (or the context menu)
+Ctrl+B (or the context menu)
   → popup.js reads the selection, page title and URL from the active tab (chrome.scripting)
   → guesses the type: lone URL → link, shell line → command, code → snippet, else note
   → GET  /api/v1/collections          (picker; remembers the last one used)

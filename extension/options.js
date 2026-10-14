@@ -12,7 +12,7 @@ async function showShortcut() {
   const action = commands.find((command) => command.name === '_execute_action');
   $('shortcut').textContent = action?.shortcut || 'not set';
   if (!action?.shortcut) {
-    setStatus('No shortcut is assigned (another extension or the browser may use Ctrl+Shift+B). Use "Change shortcut" to pick one.', 'error');
+    setStatus('No shortcut is assigned (another extension or the browser may use Ctrl+B). Use "Change shortcut" to pick one.', 'error');
   }
 }
 

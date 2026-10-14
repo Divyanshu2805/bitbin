@@ -12,7 +12,7 @@ import { Accent, Section } from "./ui";
 
 // Saving without opening BitBin, end to end, on a loop while on screen. Two
 // companion apps take turns: the browser extension (ExtensionDemo: a selection
-// on a page, Ctrl+Shift+B, the popup) and the desktop tray app (DesktopDemo:
+// on a page, Ctrl+B, the popup) and the desktop tray app (DesktopDemo:
 // the clipboard from any app, Ctrl+Alt+B, a small window). Both open the same
 // form, suggest tags and save; beside them, BitBin (ExtensionAppDemo) shows the
 // item arrive. Above them, the switch picks an app (and fills while its turn
@@ -33,7 +33,7 @@ type Step = { icon: LucideIcon; title: string; text: string; from: number; to: n
 const STEPS: Record<Mode, Step[]> = {
   extension: [
     { icon: MousePointer2, title: "Select", text: "Code, a command or a paragraph, on any page.", from: 0, to: KEYS_AT[0] },
-    { icon: Keyboard, title: "Shortcut", text: "Ctrl+Shift+B, or right-click › Save selection to BitBin.", from: KEYS_AT[0], to: FORM_OPEN },
+    { icon: Keyboard, title: "Shortcut", text: "Ctrl+B, or right-click › Save selection to BitBin.", from: KEYS_AT[0], to: FORM_OPEN },
     { icon: ListChecks, title: "Check", text: "Type, title and language are guessed for you.", from: FORM_OPEN, to: SUGGEST },
     { icon: Sparkles, title: "Tag", text: "✦ Suggest fills in tags and a description.", from: SUGGEST, to: SAVE },
     { icon: Check, title: "Saved", text: "In your bin, with a link back to the page.", from: SAVE, to: FORM_CLOSE },

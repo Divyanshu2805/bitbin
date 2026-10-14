@@ -68,7 +68,7 @@ Two companion apps get things into BitBin without opening it. Both use the same 
 | | Browser extension | Desktop tray app |
 |---|---|---|
 | Platform | Chrome and Edge (Manifest V3) | Windows installer; macOS and Linux from source (Electron) |
-| Trigger | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (<kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> on macOS), or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> (<kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>B</kbd> on macOS) from any app, or the tray icon |
+| Trigger | <kbd>Ctrl</kbd> + <kbd>B</kbd> (<kbd>⌘</kbd> + <kbd>B</kbd> on macOS), or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> (<kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>B</kbd> on macOS) from any app, or the tray icon |
 | What it saves | The selected text, titled from the page's heading, with a link back | The clipboard (text or a screenshot), or a file you attach or drop |
 | Extras | Type and language guessing, collection picker, tags, **✦ Suggest** (AI tags and description) | Type guessing, collection picker, tags, **✦ Suggest**, start at login, a changeable shortcut |
 | Install | Download the ZIP from **Settings → Browser extension** and load it unpacked | **Settings → Desktop app**, or run it from [`desktop/`](desktop/README.md) |

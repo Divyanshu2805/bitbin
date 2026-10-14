@@ -8,7 +8,7 @@ import { readableColor, readableTint } from "@/lib/utils/color";
 import { CaptureForm, DemoCursor, FORM_CLOSE, FORM_OPEN, KeyCaps, selectionAt, useCursorTargets, type CaptureFields } from "./capture-demo";
 
 // The browser extension, as it really works: Chrome with a react.dev page open.
-// A cursor drags across a line of code to select it, Ctrl+Shift+B opens the
+// A cursor drags across a line of code to select it, Ctrl+B opens the
 // BitBin popup (the same form as extension/popup.html) filled in from the
 // selection, the cursor clicks ✦ Suggest for tags and a description, then Save,
 // and "Saved to BitBin". Driven by `t`, ms into the loop (capture-demo.tsx);
@@ -105,7 +105,7 @@ export default function ExtensionDemo({ t }: { t: number }) {
         </p>
       </div>
 
-      <KeyCaps t={t} keys={["Ctrl", "Shift", "B"]} className="bottom-5 left-5" />
+      <KeyCaps t={t} keys={["Ctrl", "B"]} className="bottom-5 left-5" />
 
       {/* The BitBin popup, hanging off its toolbar icon */}
       <div
