@@ -23,6 +23,7 @@ import type { ItemWithType } from "@/lib/db/items";
 import { AddToCollectionMenu } from "@/components/items/add-to-collection-menu";
 import { RemoveFromCollectionItem } from "@/components/collections/current-collection";
 import { itemDragProps } from "@/components/items/item-drag";
+import FileCardPreview from "@/components/items/file-card-preview";
 
 interface ItemCardProps {
   item: ItemWithType;
@@ -86,6 +87,11 @@ function ContentPreview({ item }: { item: ItemWithType }) {
         )}
       </div>
     );
+  }
+
+  // A file: the first page of a PDF, or the first lines of a text file
+  if (type === "file") {
+    return <FileCardPreview fileUrl={item.fileUrl} fileName={item.fileName} fileSize={item.fileSize} />;
   }
 
   // Prose: an excerpt set off by a rule in the type's colour, like a quote from the item

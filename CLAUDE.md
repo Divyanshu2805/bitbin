@@ -50,7 +50,7 @@ extension/            Chrome/Edge MV3 extension, plain JS, outside the Next buil
                       served as a ZIP from Settings; bump manifest.json version on every change
 desktop/              Electron tray app (global shortcut saves the clipboard), plain CommonJS with its own package.json,
                       outside the Next build (tsconfig/eslint/vitest exclude it); `cd desktop && npm test` runs its tests
-scripts/              cleanup-users.ts, copy-monaco.mjs
+scripts/              cleanup-users.ts, copy-monaco.mjs, copy-pdfjs.mjs
 .github/              workflows/ci.yml (audit, lint, tests + coverage floor, build)
 docs/                 documentation — start at docs/README.md
 ```

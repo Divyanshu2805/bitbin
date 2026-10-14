@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-988 tests in 82 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+994 tests in 83 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -32,7 +32,7 @@ npm run test:watch   # watch mode
 | Operations | `src/lib/monitoring.test.ts`, `monitoring-start.test.ts`, `db-url.test.ts`, `db-safety.test.ts` | What is stripped from an error event, Sentry off without a DSN, `sslmode` rewriting, the guard on destructive scripts |
 | Extension download | `src/lib/extension-package.test.ts`, `src/app/api/extension/download/route.test.ts` | ZIP contents, localhost stripped in production, Pro only |
 | Pages and theme | `src/app/robots.test.ts`, `src/app/theme-contrast.test.ts`, `src/app/api/items/[id]/route.test.ts` | `robots.txt` and the sitemap never overlap; the theme's tokens meet WCAG AA; the drawer's item fetch |
-| Small helpers | `src/lib/detect-language.test.ts`, `explanation-store.test.ts`, `utils/date.test.ts`, `utils/color.test.ts`, `constants/editor.test.ts` | Language detection for each picker language, the browser-side explanation cache, relative dates, readable type colours, editor defaults |
+| Small helpers | `src/lib/file-preview.test.ts`, `src/lib/detect-language.test.ts`, `explanation-store.test.ts`, `utils/date.test.ts`, `utils/color.test.ts`, `constants/editor.test.ts` | Which files a card can preview and the excerpt of a text file, language detection for each picker language, the browser-side explanation cache, relative dates, readable type colours, editor defaults |
 
 ## Conventions
 
@@ -47,7 +47,7 @@ Check these by hand when a change touches them:
 
 - Route handlers are unit-tested, but not against real services (R2, Stripe, Resend); try those in test mode. The route tests show the pattern: call the exported `GET` / `POST` with a `Request`, and mock `@/auth` or `@/lib/api-auth`, Prisma and the library underneath.
 - The browser extension (`extension/`): load it unpacked and try it. See [`extension/README.md`](../../extension/README.md).
-- The desktop app (`desktop/`): `cd desktop && npm test` runs its 45 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
+- The desktop app (`desktop/`): `cd desktop && npm test` runs its 46 `node:test` tests (type guessing, the API client and body builders, the file rules, the config store). They're separate from Vitest and aren't part of `npm run test` at the root. The tray, shortcut and windows are checked by running `npm start` there. See [`desktop/README.md`](../../desktop/README.md).
 - NextAuth callbacks and `proxy.ts`.
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.

@@ -8,6 +8,10 @@ Prisma selects explicit columns, so code that reads a column production doesn't 
 
 The editor is served from our own origin (the CSP forbids a CDN). `public/monaco` is created by `scripts/copy-monaco.mjs` from `node_modules/monaco-editor` and is git-ignored. `npm run dev` and `npm run build` run it; `npx next dev` or `next start` on a fresh clone don't, and the editor then fails to load with a 404 on `/monaco/vs/loader.js`. The version served is the one pinned in `package.json` (`monaco-editor`), so upgrading it is a deliberate change.
 
+## The PDF previews come from `public/pdfjs`, which is generated
+
+File cards draw a PDF's first page with `pdfjs-dist`; its worker, fonts and character maps are served from `public/pdfjs`, created by `scripts/copy-pdfjs.mjs` (run by `npm run dev` and `npm run build`, git-ignored). Without it the cards simply show no preview. The policy has no `'wasm-unsafe-eval'`, so the few PDFs that need pdf.js's WebAssembly decoders (some JPEG 2000 and ICC colour images) can lose that image; don't add the exception for it.
+
 ## `script-src 'unsafe-inline'` is a trade-off, not an oversight
 
 A strict nonce-based policy would make every page render dynamically. See [ADR 0010](../../architecture/decisions/0010-content-security-policy-without-script-nonces.md). Don't "fix" it by adding a nonce to one component; the whole approach changes, or none of it does. Don't add `'unsafe-eval'` for convenience outside development.

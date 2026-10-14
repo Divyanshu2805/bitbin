@@ -20,6 +20,8 @@ const eslintConfig = defineConfig([
     "desktop/**",
     // Generated copy of the code editor (scripts/copy-monaco.mjs)
     "public/monaco/**",
+    // Generated copy of the PDF reader's files (scripts/copy-pdfjs.mjs)
+    "public/pdfjs/**",
   ]),
   // The database client is used in src/lib/db only; everything else calls a function from there,
   // so every query and its ownership check live in one layer.

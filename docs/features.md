@@ -44,7 +44,7 @@ Seven item types, each with its own page (`/items/snippets`, `/items/prompts`, â
 - Named groups of items, with an optional description. The item form's collection picker can also create one: type a name and choose *Create*, and the item is filed into it (the extension and desktop app have *+ New collection*). An item can be in many collections, and deleting a collection keeps its items.
 - **Favorite** a collection to keep it in the sidebar; **pin** it to list it first.
 - A collection's colour is the colour of its most common item type, so it changes with its contents.
-- The collection page shows items as cards, images as thumbnails and files as rows.
+- The collection page shows items as cards, images as thumbnails and files as rows. A file's card shows a small preview: the first page of a PDF (drawn in the browser with pdf.js, for PDFs up to 5 MB) or the first lines of a text file.
 - **Export one collection** as JSON (anyone) or ZIP with its files (Pro), from the collection's â‹¯ menu.
 
 ## Search

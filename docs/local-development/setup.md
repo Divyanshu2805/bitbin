@@ -51,7 +51,7 @@ This creates any missing system item types (the app can't create items without t
 npm run dev
 ```
 
-`npm run dev` and `npm run build` first run `scripts/copy-monaco.mjs`, which copies the code editor's files from `node_modules/monaco-editor` into `public/monaco` (git-ignored). The editor is served from the app's own origin instead of a CDN. If you start Next some other way (`npx next dev`), run `node scripts/copy-monaco.mjs` once, or the editor won't load.
+`npm run dev` and `npm run build` first run `scripts/copy-monaco.mjs`, which copies the code editor's files from `node_modules/monaco-editor` into `public/monaco` (git-ignored). The editor is served from the app's own origin instead of a CDN. If you start Next some other way (`npx next dev`), run `node scripts/copy-monaco.mjs` once, or the editor won't load. They also run `scripts/copy-pdfjs.mjs`, which copies the PDF reader's worker and fonts into `public/pdfjs` (git-ignored) for the first-page previews on file cards; without it those previews don't appear.
 
 - Homepage: <http://localhost:3000>
 - Dashboard: <http://localhost:3000/dashboard> (sign in first)

@@ -84,7 +84,7 @@ src/
 ├── types/                 next-auth session augmentation, CSS import types
 └── generated/prisma/      generated client (git-ignored)
 prisma/                    schema.prisma, migrations/ (9), seed.ts and demo-content.ts (the demo library)
-scripts/                   cleanup-users.ts, copy-monaco.mjs (copies the code editor into public/monaco)
+scripts/                   cleanup-users.ts, copy-monaco.mjs (copies the code editor into public/monaco), copy-pdfjs.mjs (copies the PDF reader's worker and fonts into public/pdfjs)
 public/monaco/             generated, git-ignored: the Monaco editor served from our own origin
 extension/                 the Chrome / Edge extension (plain JS, outside the Next build)
 desktop/                   the Electron tray app (plain CommonJS, own package.json and tests, outside the Next build)
