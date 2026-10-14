@@ -50,11 +50,11 @@ protocol.registerSchemesAsPrivileged([
 /** Longest clipboard text handed to the capture window; the API rejects far less. */
 const MAX_CAPTURE_CHARS = 200 * 1000;
 
-const CAPTURE_WIDTH = 560;
-const CAPTURE_MIN_HEIGHT = 200;
-const CAPTURE_MAX_HEIGHT = 820;
+const CAPTURE_WIDTH = 640;
+const CAPTURE_HEIGHT = 640;
 
 const SETTINGS_WIDTH = 720;
+const SETTINGS_HEIGHT = 600;
 
 let config;
 let tray = null;
@@ -75,7 +75,7 @@ const api = (apiPath, options, settings = config.load()) => apiRequest(fetchImpl
 function createWindow(file, options) {
   const win = new BrowserWindow({
     show: false,
-    backgroundColor: '#0a0b0d',
+    backgroundColor: '#151514',
     icon: path.join(__dirname, 'assets', 'icon.png'),
     ...options,
     webPreferences: {
@@ -152,7 +152,8 @@ async function showCapture({ fromClipboard }) {
   if (!captureWindow) {
     captureWindow = createWindow('capture.html', {
       width: CAPTURE_WIDTH,
-      height: 700,
+      // A fixed size, whatever is saved: the form scrolls inside it and the Save row stays put
+      height: Math.min(CAPTURE_HEIGHT, screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea.height - 80),
       frame: false,
       resizable: false,
       maximizable: false,
@@ -185,15 +186,15 @@ function showSettings() {
   if (!settingsWindow) {
     settingsWindow = createWindow('settings.html', {
       width: SETTINGS_WIDTH,
-      height: 520,
+      height: SETTINGS_HEIGHT,
       useContentSize: true,
       resizable: false,
       maximizable: false,
       fullscreenable: false,
       title: 'BitBin settings',
     });
-    // It's shown once the page has sized it to its content (window:fit), so it never
-    // opens at the wrong size. The timer is a fallback if the page fails to load.
+    // It's shown once the page has laid itself out (window:fit), so it never opens half
+    // drawn. The timer is a fallback if the page fails to load.
     const win = settingsWindow;
     setTimeout(() => {
       if (!win.isDestroyed() && !win.isVisible()) win.show();
@@ -300,21 +301,12 @@ function settingsState() {
 
 function registerIpc() {
   handle('window:close', (event) => BrowserWindow.fromWebContents(event.sender)?.hide());
-  // A page reports its content height; the window follows, within the screen
-  handle('window:fit', (event, height) => {
+  // Both windows have a fixed size; a page reports it has laid itself out and the settings window shows then
+  handle('window:fit', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win || !Number.isFinite(height)) return;
-    const { workAreaSize } = screen.getDisplayMatching(win.getBounds());
-    const max = Math.max(CAPTURE_MIN_HEIGHT, Math.min(CAPTURE_MAX_HEIGHT, workAreaSize.height - 80));
-    const fitted = Math.round(Math.min(Math.max(height, CAPTURE_MIN_HEIGHT), max));
-    if (win === captureWindow) {
-      win.setContentSize(CAPTURE_WIDTH, fitted);
-    } else if (win === settingsWindow) {
-      win.setContentSize(SETTINGS_WIDTH, fitted);
-      if (!win.isVisible()) {
-        win.show();
-        win.focus();
-      }
+    if (win && win === settingsWindow && !win.isVisible()) {
+      win.show();
+      win.focus();
     }
   });
   handle('app:open-settings', () => showSettings());

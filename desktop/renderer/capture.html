@@ -10,7 +10,16 @@
 <body>
   <div id="app">
     <header>
-      <img src="logo.png" alt="">
+      <svg class="logo-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <defs><linearGradient id="clay" x1="16" y1="9" x2="16" y2="29.2" gradientUnits="userSpaceOnUse"><stop offset="0" class="logo-stop-a"/><stop offset="1" class="logo-stop-b"/></linearGradient></defs>
+      <rect x="3.5" y="9" width="25" height="3.4" rx="1.7" class="logo-lid" fill="url(#clay)"/>
+      <rect x="13.5" y="1.5" width="5" height="5" rx="1.2" class="logo-bit"/>
+      <g class="logo-bin">
+        <path d="M6 14h20l-1.7 13.1a2.4 2.4 0 0 1-2.38 2.1H10.08a2.4 2.4 0 0 1-2.38-2.1L6 14Z" fill="url(#clay)"/>
+        <g class="logo-eyes"><rect x="10.2" y="17" width="3.6" height="3.6" rx="0.8" class="logo-face"/><rect x="18.2" y="17" width="3.6" height="3.6" rx="0.8" class="logo-face"/></g>
+        <rect x="14.2" y="22.2" width="3.6" height="3.6" rx="0.8" class="logo-face logo-mouth"/>
+      </g>
+    </svg>
       <h1>Save to BitBin</h1>
       <span class="eyebrow">Pro</span>
       <button id="close" class="link" type="button" aria-label="Close">×</button>
@@ -24,6 +33,7 @@
     </div>
 
     <div id="done" class="panel" hidden>
+    <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <p><strong>Saved to BitBin.</strong></p>
       <button id="open-bitbin" class="link" type="button">Open BitBin</button>
     </div>
@@ -85,13 +95,16 @@
           <textarea id="description" class="description" maxlength="1000" placeholder="Optional. ✦ Suggest writes one for you."></textarea>
         </label>
 
+      </main>
+
+      <footer class="foot">
         <div id="status" class="status" role="status"></div>
 
         <div class="actions">
           <span class="hint"><kbd>Ctrl</kbd><kbd>Enter</kbd> save<span class="sep">·</span><kbd>Esc</kbd> close</span>
           <button id="save" class="primary" type="submit">Save</button>
         </div>
-      </main>
+      </footer>
     </form>
   </div>
 

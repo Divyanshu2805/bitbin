@@ -12,7 +12,7 @@ Electron, plain JavaScript (CommonJS), no build step. The folder has its own `pa
 | `src/config.js` | Settings in `config.json` under the user-data folder. The token is encrypted with Electron `safeStorage` (DPAPI, Keychain, libsecret); with no keychain it lives in memory until quit |
 | `src/files.js` | Which files can be attached (the server's extension and size rules: 5 MB images, 10 MB files), cutting a file over 4 MB into parts for `PUT /api/v1/files/part` (hosts refuse larger request bodies), the multipart form for `POST /api/v1/files`, and the clipboard-image file name |
 | `src/guess.js` | Type and title guessing for the clipboard text. Mirrors `extension/lib.js`; keep the two in sync. No language guessing here: the API detects it for snippets and commands |
-| `renderer/` | `capture.html` / `capture.js` (the save window), `settings.html` / `settings.js` (a two-column window that sizes itself to its content), shared `styles.css` (the website's graphite and lime tokens, thin scrollbars), `fonts/` (Geist and JetBrains Mono, copied from `src/app/fonts`; recopy if the website's change) |
+| `renderer/` | `capture.html` / `capture.js` (the save window), `settings.html` / `settings.js` (a two-column window that sizes itself to its content), shared `styles.css` (a copy of `extension/styles.css`: the website's warm charcoal and clay tokens, buttons and motion, thin scrollbars), `fonts/` (Geist, Fraunces and JetBrains Mono, copied from `src/app/fonts`; recopy if the website's change) |
 | `assets/` | `icon.png` and the tray icons, rendered from `src/app/icon.svg` |
 
 ## Run it
