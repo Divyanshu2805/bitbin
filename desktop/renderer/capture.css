@@ -39,7 +39,7 @@ header h1 { font-size: 22px; }
 #form textarea.description { min-height: 84px; font-size: 14px; }
 
 .tags-row { gap: 10px; }
-.tags-row button { height: 42px; padding: 0 18px; font-size: 13px; }
+.tags-row > button { height: 42px; padding: 0 18px; font-size: 13px; }
 
 /* ------------------------------------------------------------ attachment */
 .attachment {
@@ -74,8 +74,8 @@ header h1 { font-size: 22px; }
 .field { gap: 7px; }
 .tag-box { min-height: 42px; gap: 6px; padding: 5px 8px; }
 #form .tag-box input { height: 30px; padding: 0 4px; }
-.tag-chip { padding: 3px 5px 3px 9px; }
-.tag-chip button { padding: 0 4px; font-size: 15px; }
+.tag-chip { height: 28px; padding: 0 4px 0 10px; font-size: 13px; gap: 6px; }
+.tag-chip button { width: 18px; height: 18px; padding: 0; display: grid; place-items: center; font-size: 15px; line-height: 1; }
 .new-collection { gap: 10px; }
 .new-collection button { height: 42px; padding: 0 16px; font-size: 13px; }
 .field > button.link { font: 600 12px var(--mono); letter-spacing: 0.02em; }

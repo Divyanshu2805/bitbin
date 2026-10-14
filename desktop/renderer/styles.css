@@ -287,7 +287,7 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
 
 .tags-row { display: flex; gap: 8px; }
 .tags-row input { flex: 1; }
-.tags-row button { flex: none; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 0 12px; height: 36px; }
+.tags-row > button { flex: none; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 0 12px; height: 36px; }
 
 .foot { display: grid; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--border); background: var(--card); }
 .foot .status:empty { display: none; }
@@ -351,7 +351,7 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
   font: 12px var(--mono); color: var(--foreground);
   animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.tag-chip button { padding: 0 3px; font-size: 14px; line-height: 1; color: var(--muted-foreground); }
+.tag-chip button { width: 16px; height: 16px; padding: 0; display: grid; place-items: center; font-size: 14px; line-height: 1; color: var(--muted-foreground); }
 .tag-chip button:hover:not(:disabled) { color: var(--destructive); }
 .new-collection { display: flex; gap: 8px; animation: fade-up 0.35s var(--ease) both; }
 .new-collection input { flex: 1; min-width: 0; }
