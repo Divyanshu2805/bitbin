@@ -33,7 +33,7 @@ const {
   checkFile,
   classifyFile,
   clipboardImageName,
-  PICKER_EXTENSIONS,
+  pickerExtensions,
 } = require('./src/files');
 
 // The app's pages are served from ./renderer over this scheme rather than file://:
@@ -53,8 +53,8 @@ const MAX_CAPTURE_CHARS = 200 * 1000;
 const CAPTURE_WIDTH = 640;
 const CAPTURE_HEIGHT = 640;
 
-const SETTINGS_WIDTH = 720;
-const SETTINGS_HEIGHT = 600;
+const SETTINGS_WIDTH = 520;
+const SETTINGS_HEIGHT = 780;
 
 let config;
 let tray = null;
@@ -186,7 +186,8 @@ function showSettings() {
   if (!settingsWindow) {
     settingsWindow = createWindow('settings.html', {
       width: SETTINGS_WIDTH,
-      height: SETTINGS_HEIGHT,
+      // One column is taller than it was; the page scrolls when the screen is short
+      height: Math.min(SETTINGS_HEIGHT, screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea.height - 80),
       useContentSize: true,
       resizable: false,
       maximizable: false,
@@ -319,17 +320,18 @@ function registerIpc() {
     return {
       connected: Boolean(token),
       prefill: pendingCapture,
-      itemTypes: ITEM_TYPES,
+      // The text types the API takes as items, then the two that carry a file
+      itemTypes: [...ITEM_TYPES, 'file', 'image'],
       lastCollectionId,
       attachment: attachmentInfo(),
     };
   });
-  handle('capture:pick-file', async (event) => {
+  handle('capture:pick-file', async (event, kind) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     const picked = await dialog.showOpenDialog(win, {
-      title: 'Attach a file or image',
+      title: kind === 'image' ? 'Choose an image' : kind === 'file' ? 'Choose a file' : 'Attach a file or image',
       properties: ['openFile'],
-      filters: [{ name: 'BitBin files', extensions: PICKER_EXTENSIONS }],
+      filters: [{ name: kind === 'image' ? 'Images' : kind === 'file' ? 'Files' : 'BitBin files', extensions: pickerExtensions(kind) }],
     });
     if (picked.canceled || !picked.filePaths[0]) return attachmentInfo();
 

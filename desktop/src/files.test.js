@@ -4,6 +4,7 @@ const {
   MAX_UPLOAD_BYTES,
   UPLOAD_PART_BYTES,
   splitParts,
+  pickerExtensions,
   baseName,
   buildFileForm,
   checkFile,
@@ -12,6 +13,15 @@ const {
   contentTypeFor,
   formatSize,
 } = require('./files');
+
+test('pickerExtensions offers images, files or both, without dots', () => {
+  assert.deepEqual(pickerExtensions('image'), ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
+  assert.ok(pickerExtensions('file').includes('pdf'));
+  assert.ok(!pickerExtensions('file').includes('png'));
+  const all = pickerExtensions();
+  assert.ok(all.includes('png') && all.includes('pdf'));
+  assert.ok(all.every((ext) => !ext.startsWith('.')));
+});
 
 test('classifyFile sorts a name into image, file or nothing', () => {
   assert.equal(classifyFile('shot.PNG'), 'image');

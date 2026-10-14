@@ -8,6 +8,13 @@ const FILE_EXTENSIONS = ['.pdf', '.txt', '.md', '.json', '.yaml', '.yml', '.xml'
 /** Extensions for the file picker, without the dots. */
 const PICKER_EXTENSIONS = [...IMAGE_EXTENSIONS, ...FILE_EXTENSIONS].map((ext) => ext.slice(1));
 
+/** Extensions the picker offers for one kind ('image' or 'file'), without the dots; every kind for anything else. */
+function pickerExtensions(kind) {
+  if (kind === 'image') return IMAGE_EXTENSIONS.map((ext) => ext.slice(1));
+  if (kind === 'file') return FILE_EXTENSIONS.map((ext) => ext.slice(1));
+  return PICKER_EXTENSIONS;
+}
+
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -130,6 +137,7 @@ module.exports = {
   UPLOAD_PART_BYTES,
   splitParts,
   PICKER_EXTENSIONS,
+  pickerExtensions,
   buildFileForm,
   baseName,
   checkFile,

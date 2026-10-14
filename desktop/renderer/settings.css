@@ -3,7 +3,8 @@ body { -webkit-user-select: none; user-select: none; }
 input, select { -webkit-user-select: text; user-select: text; }
 
 .shell { height: 100vh; overflow-y: auto; align-content: start; padding: 22px 24px 16px; display: grid; gap: 16px; animation: page-in 0.42s var(--ease) both; }
-.grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; align-items: start; }
+/* One column: every card stacks under the last */
+.grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
 .col { display: grid; gap: 16px; }
 
 /* ------------------------------------------------------------ hero */

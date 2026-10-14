@@ -38,7 +38,6 @@ header h1 { font-size: 22px; }
 #form textarea { min-height: 150px; font-size: 13px; }
 #form textarea.description { min-height: 84px; font-size: 14px; }
 
-.row { gap: 14px; }
 .tags-row { gap: 10px; }
 .tags-row button { height: 42px; padding: 0 18px; font-size: 13px; }
 

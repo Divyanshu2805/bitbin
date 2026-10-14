@@ -12,7 +12,7 @@ Electron, plain JavaScript (CommonJS), no build step. The folder has its own `pa
 | `src/config.js` | Settings in `config.json` under the user-data folder. The token is encrypted with Electron `safeStorage` (DPAPI, Keychain, libsecret); with no keychain it lives in memory until quit |
 | `src/files.js` | Which files can be attached (the server's extension and size rules: 5 MB images, 10 MB files), cutting a file over 4 MB into parts for `PUT /api/v1/files/part` (hosts refuse larger request bodies), the multipart form for `POST /api/v1/files`, and the clipboard-image file name |
 | `src/guess.js` | Type and title guessing for the clipboard text. Mirrors `extension/lib.js`; keep the two in sync. No language guessing here: the API detects it for snippets and commands |
-| `renderer/` | `capture.html` / `capture.js` (the save window), `settings.html` / `settings.js` (a two-column window that sizes itself to its content), shared `styles.css` (a copy of `extension/styles.css`: the website's warm charcoal and clay tokens, buttons and motion, thin scrollbars), `fonts/` (Geist, Fraunces and JetBrains Mono, copied from `src/app/fonts`; recopy if the website's change) |
+| `renderer/` | `capture.html` / `capture.js` (the save window), `settings.html` / `settings.js` (a single-column window), shared `styles.css` (a copy of `extension/styles.css`: the website's warm charcoal and clay tokens, buttons and motion, thin scrollbars), `fonts/` (Geist, Fraunces and JetBrains Mono, copied from `src/app/fonts`; recopy if the website's change) |
 | `assets/` | `icon.png` and the tray icons, rendered from `src/app/icon.svg` |
 
 ## Run it
@@ -27,7 +27,7 @@ If Electron's binary didn't download during `npm install`, run `node node_module
 
 1. In BitBin (as a Pro user), go to **Settings → Browser extension** and create a token with the **Save items** and **Save files and images** permissions (a token created before the second one existed can't upload; create a new one).
 2. The settings window opens on first run. Paste the token and click **Connect** (pick **Local development** with `npm run dev`; that option exists only when running from source).
-3. Copy some text, or a screenshot, anywhere and press `Ctrl+Alt+B`, or click the tray icon. To save a file, click **Attach a file or image** in the window or drop a file on it.
+3. Copy some text, or a screenshot, anywhere and press `Ctrl+Alt+B`, or click the tray icon. To save a file or an image, pick **File** or **Image** as the type and choose one (or drop a file on the window, which sets the type for you). Text types don't show the file chooser.
 
 The tray menu has **Save clipboard to BitBin**, **New item** (a blank form), **Open BitBin**, **Settings**, **Start at login** (installed build only) and **Quit**. Closing a window hides it; the app keeps running in the tray. Starting BitBin a second time opens the capture window instead of a second app.
 

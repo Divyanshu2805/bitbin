@@ -33,13 +33,16 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** Show the attached file (or take it away): a file replaces the type picker and the text fields. */
+/** File and Image items carry a file instead of text. */
+function isAttachType(type) {
+  return type === 'file' || type === 'image';
+}
+
+/** Show the attached file (or take it away). A file sets the type to File or Image to match. */
 function applyAttachment(info) {
   attached = info;
-  $('attachment').hidden = !info;
-  $('attach').hidden = Boolean(info);
-  $('type').closest('label').hidden = Boolean(info);
   if (info) {
+    $('type').value = info.type;
     $('attachment-name').textContent = info.name;
     $('attachment-name').title = info.name;
     $('attachment-size').textContent = `${info.type} · ${formatSize(info.size)}`;
@@ -50,7 +53,7 @@ function applyAttachment(info) {
 
 async function attachFromPicker() {
   setStatus('');
-  const result = await desktop.capture.pickFile();
+  const result = await desktop.capture.pickFile($('type').value);
   if (!result.ok) {
     setStatus(result.error, 'error');
     return;
@@ -145,10 +148,16 @@ async function createCollection() {
 }
 
 function applyType(type) {
-  const isLink = type === 'link' && !attached;
+  const isLink = type === 'link';
+  const carriesFile = isAttachType(type);
   $('url-field').hidden = !isLink;
-  $('content-field').hidden = isLink || Boolean(attached);
+  $('content-field').hidden = isLink || carriesFile;
   $('url').required = isLink;
+  // Choosing a file only makes sense for the File and Image types
+  $('attach-zone').hidden = !carriesFile;
+  $('attachment').hidden = !attached;
+  $('attach').hidden = Boolean(attached);
+  $('attach').firstChild.textContent = type === 'image' ? '+ Choose an image ' : '+ Choose a file ';
   $('content').placeholder = type === 'command' ? 'npm run dev' : '';
   requestAnimationFrame(() => desktop.fitWindow(document.getElementById('app').offsetHeight));
 }
@@ -179,7 +188,7 @@ function formValues() {
     type: $('type').value,
     collectionId: $('collection').value,
     title: $('title').value,
-    content: $('content').value,
+    content: attached ? attached.name : $('content').value,
     url: $('url').value,
     tags: currentTags().join(', '),
     description: $('description').value,
@@ -215,6 +224,10 @@ async function suggest() {
 async function save(event) {
   event?.preventDefault();
   if (!$('form').reportValidity()) return;
+  if (isAttachType($('type').value) && !attached) {
+    setStatus($('type').value === 'image' ? 'Choose an image first.' : 'Choose a file first.', 'error');
+    return;
+  }
 
   $('save').disabled = true;
   setStatus('Saving…');
@@ -278,7 +291,11 @@ async function open() {
   $('title').select();
 }
 
-$('type').addEventListener('change', () => applyType($('type').value));
+$('type').addEventListener('change', async () => {
+  // A file stays only while the type still matches it
+  if (attached && attached.type !== $('type').value) await removeAttachment();
+  applyType($('type').value);
+});
 $('attach').addEventListener('click', attachFromPicker);
 $('attachment-clear').addEventListener('click', removeAttachment);
 
