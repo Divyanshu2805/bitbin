@@ -22,7 +22,7 @@ Authorization: Bearer bb_…
   | `files:write` | Save files and images | `POST /api/v1/files`, `PUT /api/v1/files/part` |
   | `ai` | AI suggestions | `POST /api/v1/ai/tags`, `/ai/description` |
 
-  `GET /api/v1/me` needs none, and `POST /api/v1/mcp` checks the scope of each tool it runs. The extension uses `collections:read`, `items:write` and `ai`; the desktop app adds `files:write`; an assistant needs `items:read`, plus `items:write` and `collections:read` to save. Neither app reads items, so a token made before `items:read` existed keeps working for them. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
+  `GET /api/v1/me` needs none, and `POST /api/v1/mcp` checks the scope of each tool it runs. The extension and the desktop app use `collections:read`, `items:write`, `files:write` (to attach a file or image) and `ai`; an assistant needs `items:read`, plus `items:write` and `collections:read` to save. Neither app reads items, so a token made before `items:read` existed keeps working for them. A script that only saves items needs just `items:write`, and if it leaks it can't read collections, upload or spend the AI quota.
 - Cookies are ignored. A request with a session cookie and no token is rejected.
 - The owner's plan is re-read on every request, so a user who stops being Pro gets `403` from then on, even with a valid token.
 
@@ -157,7 +157,7 @@ Any other MCP client adds a remote (Streamable HTTP) server at that address with
 
 ## `POST /api/v1/files`
 
-Uploads a file or image and creates its item in one request. Needs `files:write`. Used by the desktop app.
+Uploads a file or image and creates its item in one request. Needs `files:write`. Used by the desktop app and the browser extension.
 
 Multipart form:
 
@@ -184,7 +184,7 @@ Hosts refuse request bodies above about 4.5 MB, so a larger file goes in parts.
 
 ## `PUT /api/v1/files/part`
 
-`?uploadId={uuid}&index={0–4}`, with up to 4 MB of the file's raw bytes as the body. Needs `files:write`. Stores the part in the token owner's folder for `POST /api/v1/files` to join; parts never joined are deleted by the weekly sweep after a day. `200` with `{ "data": { "stored": true } }`; `400` for a bad id, index or body; `413` for a declared body over 4 MB; `429` over the `uploadPart` limit (30 an hour). The desktop app cuts a file over 4 MB into parts, sends each, then sends the save request naming them.
+`?uploadId={uuid}&index={0–4}`, with up to 4 MB of the file's raw bytes as the body. Needs `files:write`. Stores the part in the token owner's folder for `POST /api/v1/files` to join; parts never joined are deleted by the weekly sweep after a day. `200` with `{ "data": { "stored": true } }`; `400` for a bad id, index or body; `413` for a declared body over 4 MB; `429` over the `uploadPart` limit (30 an hour). The desktop app and the extension cut a file over 4 MB into parts, sends each, then sends the save request naming them.
 
 ## `POST /api/v1/ai/tags`
 

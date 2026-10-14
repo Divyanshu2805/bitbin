@@ -34,7 +34,7 @@ export async function saveSettings(values) {
  * Call the BitBin token API. Resolves to the parsed `data`, or throws an
  * Error whose message is safe to show (the server's `error` string).
  */
-export async function api(path, { method = 'GET', body, settings } = {}) {
+export async function api(path, { method = 'GET', body, form, raw, settings } = {}) {
   const { baseUrl, token } = settings ?? (await getSettings());
   if (!token) throw new Error('Add your BitBin token in the extension options.');
 
@@ -45,8 +45,10 @@ export async function api(path, { method = 'GET', body, settings } = {}) {
       headers: {
         Authorization: `Bearer ${token}`,
         ...(body ? { 'Content-Type': 'application/json' } : {}),
+        // A multipart form sets its own Content-Type, with the boundary
+        ...(raw ? { 'Content-Type': 'application/octet-stream' } : {}),
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: raw ?? form ?? (body ? JSON.stringify(body) : undefined),
       credentials: 'omit',
     });
   } catch {
@@ -54,6 +56,10 @@ export async function api(path, { method = 'GET', body, settings } = {}) {
   }
 
   const json = await res.json().catch(() => ({}));
+  if (res.status === 413) {
+    // The host refuses a body that is too big before BitBin sees it, so there is no JSON to read
+    throw new Error('That file is too large for the server.');
+  }
   if (!res.ok) {
     const fieldError = json.fieldErrors && Object.values(json.fieldErrors).flat()[0];
     const error = new Error(fieldError || json.error || `Request failed (${res.status})`);
@@ -201,4 +207,82 @@ export function parseTags(value) {
       .map((tag) => tag.trim().toLowerCase())
       .filter(Boolean)
   )];
+}
+
+// ------------------------------------------------------------ files and images
+// Mirrors FILE_CONSTRAINTS in src/lib/r2.ts and desktop/src/files.js. The server decides; checking here
+// first saves a pointless upload and gives a clear message.
+
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+const FILE_EXTENSIONS = ['.pdf', '.txt', '.md', '.json', '.yaml', '.yml', '.xml', '.csv', '.toml', '.ini'];
+
+/** The `accept` list for the file picker. */
+export const FILE_ACCEPT = [...IMAGE_EXTENSIONS, ...FILE_EXTENSIONS].join(',');
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+/** Hosts refuse a request body above about 4.5 MB, so a bigger file is sent in parts of this size first. */
+const UPLOAD_PART_BYTES = 4 * 1024 * 1024;
+
+function extensionOf(name) {
+  const dot = String(name ?? '').lastIndexOf('.');
+  return dot === -1 ? '' : name.slice(dot).toLowerCase();
+}
+
+/** "image", "file", or null when BitBin doesn't store that type. */
+export function classifyFile(name) {
+  const ext = extensionOf(name);
+  if (IMAGE_EXTENSIONS.includes(ext)) return 'image';
+  if (FILE_EXTENSIONS.includes(ext)) return 'file';
+  return null;
+}
+
+/** Why a file can't be attached, or null when it can. */
+export function checkFile(name, size) {
+  const type = classifyFile(name);
+  if (!type) return `BitBin stores ${[...FILE_EXTENSIONS, ...IMAGE_EXTENSIONS].join(', ')} files.`;
+  const limit = type === 'image' ? MAX_IMAGE_BYTES : MAX_FILE_BYTES;
+  if (!Number.isFinite(size) || size <= 0) return 'That file is empty.';
+  if (size > limit) return `That file is too large. The limit is ${Math.round(limit / (1024 * 1024))} MB.`;
+  return null;
+}
+
+/** "12 KB", "3.4 MB" */
+export function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** The file's name without its extension, for a title. */
+export function titleFromFileName(name) {
+  const dot = name.lastIndexOf('.');
+  return (dot > 0 ? name.slice(0, dot) : name).trim().slice(0, 200) || 'Untitled';
+}
+
+/**
+ * Save a file or image as an item with `POST /api/v1/files`. A file over 4 MB goes up in parts first
+ * (`PUT /api/v1/files/part`) and the save request names them.
+ */
+export async function uploadFile(file, fields, settings) {
+  const form = new FormData();
+  if (file.size > UPLOAD_PART_BYTES) {
+    const uploadId = crypto.randomUUID();
+    const partCount = Math.ceil(file.size / UPLOAD_PART_BYTES);
+    for (let index = 0; index < partCount; index++) {
+      const part = file.slice(index * UPLOAD_PART_BYTES, (index + 1) * UPLOAD_PART_BYTES);
+      await api(`/files/part?uploadId=${uploadId}&index=${index}`, { method: 'PUT', raw: part, settings });
+    }
+    form.set('uploadId', uploadId);
+    form.set('partCount', String(partCount));
+    form.set('fileName', file.name);
+  } else {
+    form.set('file', file, file.name);
+  }
+  form.set('itemType', classifyFile(file.name));
+  for (const [key, value] of Object.entries(fields)) {
+    if (value) form.set(key, value);
+  }
+  return api('/files', { method: 'POST', form, settings });
 }

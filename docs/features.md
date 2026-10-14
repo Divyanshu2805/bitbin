@@ -78,8 +78,8 @@ Two companion apps save into BitBin without opening it, through the [token API](
 | Platform | Chrome and Edge (Manifest V3) | Windows installer; macOS and Linux from source (Electron) |
 | Trigger | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>, or right-click → *Save selection to BitBin* | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> from any app, or the tray icon |
 | Saves | The selected text, titled from the page's heading, with a link back | The clipboard (text or a copied image), or an attached file |
-| Types | Snippet, command, note, prompt or link, guessed from the text | The same, plus files and images |
-| Extras | Collection picker (create one on the spot), tags, language picker, ✦ Suggest | Collection picker (create one on the spot), tags, ✦ Suggest, start at login, a changeable shortcut |
+| Types | Snippet, command, note, prompt or link, guessed from the text; or a file or image attached or dropped | The same, plus files and images |
+| Extras | Collection picker (create one on the spot), tags, language picker, ✦ Suggest, a collection list that appears instantly | Collection picker (create one on the spot), tags, ✦ Suggest, start at login, a changeable shortcut |
 | Install | Download from **Settings → Browser extension**, load unpacked | Download from **Settings → Desktop app**, or run from [`desktop/`](../desktop/README.md) |
 
 **API tokens** (Settings → Browser extension) connect them: `bb_…` tokens shown once, stored hashed, expiring after 30, 90 or 365 days, revocable, at most 10 per account, and limited to the permissions chosen when they are made: *List collections*, *Search and read items*, *Save items*, *Save files and images* and *AI suggestions*.

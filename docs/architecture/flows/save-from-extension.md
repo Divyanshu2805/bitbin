@@ -12,7 +12,7 @@ Until the extension is on the Chrome Web Store, users install it from BitBin:
 
 ## Connecting
 
-1. A user on Pro opens **Settings → Browser extension** (`components/settings/extension-settings.tsx`) and creates a token. The `createApiToken` action (`src/actions/api-tokens.ts`) checks Pro, allows at most 10 tokens, sets the expiry the user picked (30 days, 90 by default or 1 year; there is no "never") and the permissions (all four by default: list collections, save items, save files and images, AI suggestions; the extension doesn't need the third), generates `bb_…` with `generateApiToken` (`src/lib/api-tokens.ts`), and stores only its SHA-256 hash and display prefix in `api_tokens`.
+1. A user on Pro opens **Settings → Browser extension** (`components/settings/extension-settings.tsx`) and creates a token. The `createApiToken` action (`src/actions/api-tokens.ts`) checks Pro, allows at most 10 tokens, sets the expiry the user picked (30 days, 90 by default or 1 year; there is no "never") and the permissions (all of them by default; the extension uses list collections, save items, AI suggestions and, to attach a file or image, save files and images), generates `bb_…` with `generateApiToken` (`src/lib/api-tokens.ts`), and stores only its SHA-256 hash and display prefix in `api_tokens`.
 2. The token is shown once. The user pastes it into the extension's options page, which calls `GET /api/v1/me` to check it and saves it in `chrome.storage.local`.
 
 ## Saving
@@ -31,6 +31,8 @@ Ctrl+Shift+B (or the context menu)
 - The context-menu entry (`background.js`) stores the selection in `chrome.storage.session`, then opens the popup. Where `chrome.action.openPopup` isn't available, it opens the popup in a small window instead. This also covers pages where scripts can't run, such as PDFs.
 - **Title:** for snippets and commands, it's the nearest `h1`–`h3` above the selection, then the page title without the site name (`How to read a file - Stack Overflow` → `How to read a file`). A first line of code rarely makes a good name. Notes and prompts use their first line when it's short.
 - **Language:** snippets get a language picker, pre-filled by `guessLanguage` in `lib.js`. Its values mirror `LANGUAGES` in `src/lib/constants/editor.ts`, so the app highlights the snippet correctly. Commands are saved as `bash`.
+- **Files and images:** *+ Attach a file or image* (or dropping one on the popup) saves a file instead of text, through `POST /api/v1/files` (`uploadFile` in `lib.js`; a file over 4 MB goes up in parts first). The toolbar popup closes when the file picker takes focus, so from the popup the button opens the same page as a window (`popup.html?window=1&attach=1`, carrying the selection through `chrome.storage.session`) and the picker runs there. A drop works in the popup itself. The same size and type limits as a web upload apply; the server is the one that decides.
+- **Speed:** the form opens as soon as the tab has been read (at most 1.2 s for a heavy page); the collection list is shown from the last answer stored in `chrome.storage.local` and replaced when `GET /api/v1/collections` answers, so a slow server no longer holds the popup on "Loading…".
 - For text types, the page URL is saved as the description (`Saved from …`). For links, it's the item's `url`.
 
 ## On the server

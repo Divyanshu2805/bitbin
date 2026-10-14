@@ -1,8 +1,12 @@
 import {
+  FILE_ACCEPT,
   ITEM_TYPES,
   PENDING_TTL_MS,
   api,
+  checkFile,
+  classifyFile,
   cleanCommand,
+  formatSize,
   getSettings,
   guessItemType,
   guessLanguage,
@@ -11,6 +15,8 @@ import {
   saveSettings,
   suggestTitle,
   titleFrom,
+  titleFromFileName,
+  uploadFile,
 } from './lib.js';
 
 const $ = (id) => document.getElementById(id);
@@ -19,6 +25,9 @@ const isWindow = new URLSearchParams(location.search).has('window');
 let settings;
 let tags = [];
 let page = { selection: '', title: '', url: '', heading: '' };
+/** A file or image chosen instead of text, or null. */
+let attached = null;
+let titleTouched = false;
 
 function show(panel) {
   for (const id of ['loading', 'setup', 'done', 'form']) {
@@ -44,6 +53,13 @@ async function takePendingSelection() {
   return Date.now() - pending.at < PENDING_TTL_MS ? pending : null;
 }
 
+/** A heavy page can be slow to answer; after this long the popup opens with just the tab's title and address. */
+const READ_TAB_TIMEOUT_MS = 1200;
+
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+}
+
 /** Read the selection, title and URL from the active tab. */
 async function readActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -51,7 +67,7 @@ async function readActiveTab() {
 
   const fallback = { selection: '', title: tab.title ?? '', url: tab.url ?? '' };
   try {
-    const [result] = await chrome.scripting.executeScript({
+    const [result] = await withTimeout(chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => {
         const active = document.activeElement;
@@ -73,7 +89,7 @@ async function readActiveTab() {
         }
         return { selection, title: document.title, url: location.href, heading };
       },
-    });
+    }), READ_TAB_TIMEOUT_MS);
     return result?.result ?? fallback;
   } catch {
     // chrome:// pages, the Web Store and PDFs don't allow scripts
@@ -117,12 +133,13 @@ function commitTagDraft() {
 }
 
 function applyType(type) {
-  const isLink = type === 'link';
+  const isLink = type === 'link' && !attached;
+  $('type-field').hidden = Boolean(attached);
   $('url-field').hidden = !isLink;
-  $('content-field').hidden = isLink;
+  $('content-field').hidden = isLink || Boolean(attached);
   $('url').required = isLink;
   $('content').placeholder = type === 'command' ? 'npm run dev' : '';
-  $('language-field').hidden = type !== 'snippet';
+  $('language-field').hidden = type !== 'snippet' || Boolean(attached);
   if (type === 'snippet' && !$('language').dataset.touched) {
     $('language').value = guessLanguage($('content').value);
   }
@@ -148,18 +165,29 @@ function prefill() {
   applyType(type);
 }
 
+/** Fill the picker, keeping the current choice (or the one last used) when it is still there. */
+function renderCollections(collections) {
+  const chosen = $('collection').value || settings.lastCollectionId;
+  $('collection').replaceChildren(new Option('No collection', ''));
+  for (const collection of collections) {
+    $('collection').append(new Option(collection.name, collection.id));
+  }
+  if (collections.some((c) => c.id === chosen)) $('collection').value = chosen;
+}
+
+/** The last list the API gave, so the picker is full the moment the popup opens. */
+async function showCachedCollections() {
+  const { collectionsCache } = await chrome.storage.local.get('collectionsCache');
+  if (Array.isArray(collectionsCache)) renderCollections(collectionsCache);
+}
+
+/** Ask the API for the list. False when the token was refused and the setup panel is showing. */
 async function loadCollections() {
   try {
     const collections = await api('/collections', { settings });
-    for (const collection of collections) {
-      const option = document.createElement('option');
-      option.value = collection.id;
-      option.textContent = collection.name;
-      $('collection').append(option);
-    }
-    if (collections.some((c) => c.id === settings.lastCollectionId)) {
-      $('collection').value = settings.lastCollectionId;
-    }
+    const slim = collections.map(({ id, name }) => ({ id, name }));
+    renderCollections(slim);
+    await chrome.storage.local.set({ collectionsCache: slim });
     return true;
   } catch (error) {
     if (error.status === 401 || error.status === 403) {
@@ -169,6 +197,50 @@ async function loadCollections() {
     setStatus(error.message, 'error');
     return true;
   }
+}
+
+/** Show a file or image (or take it away): it replaces the type picker and the text fields. */
+function applyAttachment(file) {
+  attached = file;
+  $('attachment').hidden = !file;
+  $('attach').hidden = Boolean(file);
+  if (file) {
+    $('attachment-name').textContent = file.name;
+    $('attachment-name').title = file.name;
+    $('attachment-size').textContent = `${classifyFile(file.name)} · ${formatSize(file.size)}`;
+    // The page's title is only a guess; a title the person typed is kept
+    if (!titleTouched) $('title').value = titleFromFileName(file.name);
+  }
+  applyType($('type').value);
+}
+
+function attachFile(file) {
+  const problem = checkFile(file.name, file.size);
+  if (problem) {
+    setStatus(problem, 'error');
+    return;
+  }
+  setStatus('');
+  applyAttachment(file);
+}
+
+/**
+ * The file picker would take focus from the toolbar popup and close it, so from the popup the page
+ * opens again as a window (carrying the selection with it), where the picker works.
+ */
+async function pickFile() {
+  if (isWindow) {
+    $('file-input').click();
+    return;
+  }
+  await chrome.storage.session.set({ pending: { ...page, at: Date.now() } });
+  await chrome.windows.create({
+    url: chrome.runtime.getURL('popup.html?window=1&attach=1'),
+    type: 'popup',
+    width: 500,
+    height: 660,
+  });
+  window.close();
 }
 
 function showNewCollection(visible) {
@@ -208,7 +280,7 @@ async function createCollection() {
 async function suggestWithAi() {
   const button = $('suggest');
   const type = $('type').value;
-  const content = type === 'link' ? $('url').value : $('content').value;
+  const content = attached ? attached.name : type === 'link' ? $('url').value : $('content').value;
 
   if (!$('title').value.trim()) {
     setStatus('Add a title first.', 'error');
@@ -218,10 +290,10 @@ async function suggestWithAi() {
   const body = {
     title: $('title').value,
     content,
-    typeName: type,
-    language: type === 'snippet' ? $('language').value : null,
+    typeName: attached ? 'note' : type,
+    language: type === 'snippet' && !attached ? $('language').value : null,
   };
-  if (type === 'link') body.url = $('url').value;
+  if (type === 'link' && !attached) body.url = $('url').value;
 
   button.disabled = true;
   button.textContent = '…';
@@ -253,6 +325,31 @@ async function save(event) {
   const type = $('type').value;
   const collectionId = $('collection').value;
   const written = $('description').value.trim();
+
+  if (attached) {
+    $('save').disabled = true;
+    setStatus('Uploading…');
+    try {
+      await uploadFile(
+        attached,
+        {
+          title: $('title').value.trim(),
+          description: written,
+          tags: currentTags().join(','),
+          collectionId,
+        },
+        settings
+      );
+      await saveSettings({ lastCollectionId: collectionId });
+      show('done');
+      setTimeout(() => window.close(), isWindow ? 1500 : 1200);
+    } catch (error) {
+      setStatus(error.message, 'error');
+      $('save').disabled = false;
+    }
+    return;
+  }
+
   const body = {
     typeName: type,
     title: $('title').value.trim(),
@@ -337,20 +434,54 @@ async function init() {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !$('form').hidden) save(event);
   });
 
-  settings = await getSettings();
+  $('title').addEventListener('input', () => { titleTouched = true; });
+  $('attach').addEventListener('click', pickFile);
+  $('attachment-clear').addEventListener('click', () => {
+    $('file-input').value = '';
+    applyAttachment(null);
+  });
+  $('file-input').accept = FILE_ACCEPT;
+  $('file-input').addEventListener('change', () => {
+    const [file] = $('file-input').files;
+    if (file) attachFile(file);
+  });
+  // A file dropped on the popup attaches without the picker, so it works from the toolbar popup too
+  document.addEventListener('dragover', (event) => {
+    if (!$('form').hidden) {
+      event.preventDefault();
+      document.body.classList.add('dropping');
+    }
+  });
+  document.addEventListener('dragleave', (event) => {
+    if (!event.relatedTarget) document.body.classList.remove('dropping');
+  });
+  document.addEventListener('drop', (event) => {
+    event.preventDefault();
+    document.body.classList.remove('dropping');
+    const [file] = event.dataTransfer?.files ?? [];
+    if (file && !$('form').hidden) attachFile(file);
+  });
+  if (isWindow) document.documentElement.classList.add('window');
+
+  // The settings, the selection handed over by the context menu and the last list of collections
+  // are all read from the browser's own storage, so they come together
+  const [loaded, pending] = await Promise.all([getSettings(), takePendingSelection()]);
+  settings = loaded;
   if (!settings.token) {
     showSetup('Connect the extension to your BitBin account first.');
     return;
   }
+  await showCachedCollections();
 
-  page = (await takePendingSelection()) ?? (isWindow ? page : await readActiveTab());
+  // The collections come from the network, which can be slow, so the form opens without waiting for
+  // them: the cached list is already in the picker, and the fresh one replaces it when it arrives
+  const collectionsLoaded = loadCollections();
+  page = pending ?? (isWindow ? page : await readActiveTab());
   prefill();
-
-  if (await loadCollections()) {
-    show('form');
-    $('title').focus();
-    $('title').select();
-  }
+  show('form');
+  $('title').focus();
+  $('title').select();
+  await collectionsLoaded;
 }
 
 init();

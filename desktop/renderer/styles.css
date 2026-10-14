@@ -108,7 +108,7 @@ input:focus, select:focus, textarea:focus,
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-lime) 13%, transparent);
 }
 textarea { resize: vertical; min-height: 110px; font-family: var(--mono); font-size: 12px; line-height: 1.55; }
-textarea.description { min-height: 56px; font-family: var(--font); font-size: 13px; line-height: 1.5; }
+textarea.description { min-height: 96px; font-family: var(--font); font-size: 13px; line-height: 1.5; }
 
 /* The chevron is drawn with gradients: nothing here may load a data: image */
 select {
@@ -288,7 +288,7 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
 
 .tags-row { display: flex; gap: 8px; }
 .tags-row input { flex: 1; }
-.tags-row button { white-space: nowrap; font-size: 12px; padding: 6px 12px; }
+.tags-row button { flex: none; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 0 12px; height: 36px; }
 
 .foot { display: grid; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--border); background: var(--card); }
 .foot .status:empty { display: none; }
@@ -358,6 +358,23 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
 .new-collection input { flex: 1; min-width: 0; }
 .new-collection button { padding: 6px 12px; font-size: 12px; white-space: nowrap; }
 .field > button.link { justify-self: start; }
+.field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.field-head label { display: block; }
+
+/* A file or image attached instead of text */
+.attachment {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card);
+  animation: fade-up 0.35s var(--ease) both;
+}
+.attachment .clip { color: var(--brand-lime); font-size: 16px; }
+.attachment .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px var(--mono); color: var(--foreground); }
+.attachment .size { font: 11px var(--mono); color: var(--faint); white-space: nowrap; }
+.attachment button { width: 22px; height: 22px; padding: 0; font-size: 16px; line-height: 1; color: var(--muted-foreground); }
+.attachment button:hover:not(:disabled) { color: var(--destructive); }
+button.attach { justify-self: start; padding: 0; font: 600 12px var(--mono); letter-spacing: 0.02em; }
+button.attach .sub { margin-left: 8px; font-weight: 400; color: var(--faint); }
+.dropping { outline: 2px dashed var(--brand-lime); outline-offset: -8px; }
 
 kbd {
   font: 600 11px var(--mono);
