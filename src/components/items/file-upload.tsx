@@ -197,10 +197,11 @@ export default function FileUpload({
 
           <Button
       type="button"
-      variant="ghost"
+      variant="outline"
       size="icon"
-      className="h-8 w-8 flex-shrink-0"
+      className="term-bare term-danger h-8 w-8 flex-shrink-0"
       onClick={handleRemoveFile}
+      aria-label="Remove file"
       disabled={disabled}
      >
             <X className="h-4 w-4" />

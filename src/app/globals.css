@@ -1562,7 +1562,7 @@ html:has(.landing)::-webkit-scrollbar {
     & :is(.lucide-pin, .lucide-sticky-note, .lucide-lock) { rotate: -14deg; }
     & :is(.lucide-copy, .lucide-log-out, .lucide-arrow-right, .lucide-terminal, .lucide-panel-left) { translate: 2px 0; }
     & .lucide-panel-left-close { translate: -2px 0; }
-    & .lucide-pencil { animation: ic-scribble 0.5s ease; }
+    & :is(.lucide-pencil, .lucide-pencil-line) { animation: ic-scribble 0.5s ease; }
     & .lucide-save { animation: ic-press 0.4s ease; }
     & :is(.lucide-key, .lucide-key-round) { rotate: -35deg; }
     & :is(.lucide-refresh-cw, .lucide-history) { rotate: -180deg; }
