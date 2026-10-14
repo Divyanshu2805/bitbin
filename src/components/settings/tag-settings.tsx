@@ -117,8 +117,8 @@ export default function TagSettings({ tags }: TagSettingsProps) {
                         <Button
              type="button"
              size="icon"
-             variant="ghost"
-             className="h-8 w-8"
+             variant="outline"
+             className="term-bare h-8 w-8"
              aria-label="Cancel"
              onClick={() => setEditing(null)}
                           disabled={saving}
@@ -135,8 +135,8 @@ export default function TagSettings({ tags }: TagSettingsProps) {
                         <Button
              type="button"
              size="icon"
-             variant="ghost"
-             className="h-8 w-8"
+             variant="outline"
+             className="term-bare h-8 w-8"
              aria-label={`Rename ${tag.name}`}
              onClick={() => startEdit(tag)}
                         >

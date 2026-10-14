@@ -55,11 +55,11 @@ export default function EditableName({ name }: { name: string | null }) {
           {name || <span className="text-muted-foreground">No name set</span>}
         </p>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon-xs"
           onClick={startEditing}
           aria-label="Edit name"
-          className="shrink-0 text-muted-foreground hover:text-lime"
+          className="term-bare shrink-0"
         >
           <PencilLine />
         </Button>
@@ -95,7 +95,7 @@ export default function EditableName({ name }: { name: string | null }) {
         <Button type="submit" size="icon-sm" disabled={saving} aria-label="Save name">
           <Check />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={cancel} aria-label="Cancel">
+        <Button type="button" variant="outline" size="icon-sm" onClick={cancel} aria-label="Cancel" className="term-bare">
           <X />
         </Button>
       </div>
