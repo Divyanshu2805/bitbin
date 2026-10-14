@@ -223,10 +223,6 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                         <p className="truncate font-mono text-xs text-muted-foreground">
                           {token.prefix}… · created {formatRelativeDate(token.createdAt)} ·{' '}
                           {token.lastUsedAt ? `used ${formatRelativeDate(token.lastUsedAt)}` : 'never used'} ·{' '}
-                          {token.scopes.length > 0
-                            ? token.scopes.map((scope) => API_SCOPE_INFO[scope].label.toLowerCase()).join(', ')
-                            : 'no permissions'}{' '}
-                          ·{' '}
                           <span
                             className={
                               token.expiresAt && token.expiresAt.getTime() <= Date.now()
@@ -237,15 +233,30 @@ export default function ExtensionSettings({ isPro, tokens }: ExtensionSettingsPr
                             {formatExpiry(token.expiresAt)}
                           </span>
                         </p>
+                        {/* Every permission as its own chip on its own lines, so a long list wraps instead of being cut off */}
+                        <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Permissions">
+                          {token.scopes.length > 0 ? (
+                            token.scopes.map((scope) => (
+                              <li
+                                key={scope}
+                                className="rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                              >
+                                {API_SCOPE_INFO[scope].label.toLowerCase()}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="font-mono text-[11px] text-muted-foreground">no permissions</li>
+                          )}
+                        </ul>
                       </div>
                     </div>
                     <Button
            type="button"
-           variant="ghost"
+           variant="outline"
            size="icon"
            onClick={() => setRevoking(token)}
                       aria-label={`Revoke ${token.name}`}
-                      className="text-destructive hover:bg-[color-mix(in_srgb,var(--destructive)_12%,var(--card))] hover:text-destructive"
+                      className="term-bare term-danger"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
