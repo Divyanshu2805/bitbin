@@ -1,12 +1,8 @@
 import {
-  acceptFor,
   ITEM_TYPES,
   PENDING_TTL_MS,
   api,
-  checkFile,
-  classifyFile,
   cleanCommand,
-  formatSize,
   getSettings,
   guessItemType,
   guessLanguage,
@@ -15,25 +11,15 @@ import {
   saveSettings,
   suggestTitle,
   titleFrom,
-  titleFromFileName,
-  uploadFile,
 } from './lib.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const isWindow = params.has('window');
 
-/** File and Image items carry a file instead of text. */
-function isAttachType(type) {
-  return type === 'file' || type === 'image';
-}
-
 let settings;
 let tags = [];
 let page = { selection: '', title: '', url: '', heading: '' };
-/** A file or image chosen instead of text, or null. */
-let attached = null;
-let titleTouched = false;
 
 function show(panel) {
   for (const id of ['loading', 'setup', 'done', 'form']) {
@@ -140,17 +126,11 @@ function commitTagDraft() {
 
 function applyType(type) {
   const isLink = type === 'link';
-  const carriesFile = isAttachType(type);
   $('url-field').hidden = !isLink;
-  $('content-field').hidden = isLink || carriesFile;
+  $('content-field').hidden = isLink;
   $('url').required = isLink;
   $('content').placeholder = type === 'command' ? 'npm run dev' : '';
   $('language-field').hidden = type !== 'snippet';
-  // Choosing a file only makes sense for the File and Image types
-  $('attach-zone').hidden = !carriesFile;
-  $('attachment').hidden = !attached;
-  $('attach').hidden = Boolean(attached);
-  $('attach').firstChild.textContent = type === 'image' ? '+ Choose an image ' : '+ Choose a file ';
   if (type === 'snippet' && !$('language').dataset.touched) {
     $('language').value = guessLanguage($('content').value);
   }
@@ -210,51 +190,6 @@ async function loadCollections() {
   }
 }
 
-/** Show a file or image (or take it away). A file sets the type to File or Image to match. */
-function applyAttachment(file) {
-  attached = file;
-  if (file) {
-    $('type').value = classifyFile(file.name);
-    $('attachment-name').textContent = file.name;
-    $('attachment-name').title = file.name;
-    $('attachment-size').textContent = `${classifyFile(file.name)} · ${formatSize(file.size)}`;
-    // The page's title is only a guess; a title the person typed is kept
-    if (!titleTouched) $('title').value = titleFromFileName(file.name);
-  }
-  applyType($('type').value);
-}
-
-function attachFile(file) {
-  const problem = checkFile(file.name, file.size);
-  if (problem) {
-    setStatus(problem, 'error');
-    return;
-  }
-  setStatus('');
-  applyAttachment(file);
-}
-
-/**
- * The file picker would take focus from the toolbar popup and close it, so from the popup the page
- * opens again as a window (carrying the selection with it), where the picker works.
- */
-async function pickFile() {
-  const kind = $('type').value;
-  if (isWindow) {
-    $('file-input').accept = acceptFor(kind);
-    $('file-input').click();
-    return;
-  }
-  await chrome.storage.session.set({ pending: { ...page, at: Date.now() } });
-  await chrome.windows.create({
-    url: chrome.runtime.getURL(`popup.html?window=1&attach=${kind}`),
-    type: 'popup',
-    width: 500,
-    height: 660,
-  });
-  window.close();
-}
-
 function showNewCollection(visible) {
   $('new-collection').hidden = !visible;
   $('show-new-collection').hidden = visible;
@@ -292,11 +227,7 @@ async function createCollection() {
 async function suggestWithAi() {
   const button = $('suggest');
   const type = $('type').value;
-  if (isAttachType(type) && !attached) {
-    setStatus(type === 'image' ? 'Choose an image first.' : 'Choose a file first.', 'error');
-    return;
-  }
-  const content = attached ? attached.name : type === 'link' ? $('url').value : $('content').value;
+  const content = type === 'link' ? $('url').value : $('content').value;
 
   if (!$('title').value.trim()) {
     setStatus('Add a title first.', 'error');
@@ -306,10 +237,10 @@ async function suggestWithAi() {
   const body = {
     title: $('title').value,
     content,
-    typeName: attached ? 'note' : type,
-    language: type === 'snippet' && !attached ? $('language').value : null,
+    typeName: type,
+    language: type === 'snippet' ? $('language').value : null,
   };
-  if (type === 'link' && !attached) body.url = $('url').value;
+  if (type === 'link') body.url = $('url').value;
 
   button.disabled = true;
   button.textContent = '…';
@@ -339,36 +270,8 @@ async function save(event) {
   if (!$('form').reportValidity()) return;
 
   const type = $('type').value;
-  if (isAttachType(type) && !attached) {
-    setStatus(type === 'image' ? 'Choose an image first.' : 'Choose a file first.', 'error');
-    return;
-  }
   const collectionId = $('collection').value;
   const written = $('description').value.trim();
-
-  if (attached) {
-    $('save').disabled = true;
-    setStatus('Uploading…');
-    try {
-      await uploadFile(
-        attached,
-        {
-          title: $('title').value.trim(),
-          description: written,
-          tags: currentTags().join(','),
-          collectionId,
-        },
-        settings
-      );
-      await saveSettings({ lastCollectionId: collectionId });
-      show('done');
-      setTimeout(() => window.close(), isWindow ? 1500 : 1200);
-    } catch (error) {
-      setStatus(error.message, 'error');
-      $('save').disabled = false;
-    }
-    return;
-  }
 
   const body = {
     typeName: type,
@@ -413,7 +316,7 @@ async function init() {
   }
   $('language').addEventListener('change', () => { $('language').dataset.touched = '1'; });
 
-  for (const type of [...ITEM_TYPES, 'file', 'image']) {
+  for (const type of ITEM_TYPES) {
     const option = document.createElement('option');
     option.value = type;
     option.textContent = type[0].toUpperCase() + type.slice(1);
@@ -423,11 +326,6 @@ async function init() {
   $('open-options').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('open-bitbin').addEventListener('click', () => chrome.tabs.create({ url: `${settings.baseUrl}/dashboard` }));
   $('type').addEventListener('change', () => {
-    // A file stays only while the type still matches it
-    if (attached && classifyFile(attached.name) !== $('type').value) {
-      $('file-input').value = '';
-      applyAttachment(null);
-    }
     applyType($('type').value);
   });
   $('suggest').addEventListener('click', suggestWithAi);
@@ -460,33 +358,6 @@ async function init() {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !$('form').hidden) save(event);
   });
-
-  $('title').addEventListener('input', () => { titleTouched = true; });
-  $('attach').addEventListener('click', pickFile);
-  $('attachment-clear').addEventListener('click', () => {
-    $('file-input').value = '';
-    applyAttachment(null);
-  });
-  $('file-input').addEventListener('change', () => {
-    const [file] = $('file-input').files;
-    if (file) attachFile(file);
-  });
-  // A file dropped on the popup attaches without the picker, so it works from the toolbar popup too
-  document.addEventListener('dragover', (event) => {
-    if (!$('form').hidden) {
-      event.preventDefault();
-      document.body.classList.add('dropping');
-    }
-  });
-  document.addEventListener('dragleave', (event) => {
-    if (!event.relatedTarget) document.body.classList.remove('dropping');
-  });
-  document.addEventListener('drop', (event) => {
-    event.preventDefault();
-    document.body.classList.remove('dropping');
-    const [file] = event.dataTransfer?.files ?? [];
-    if (file && !$('form').hidden) attachFile(file);
-  });
   if (isWindow) document.documentElement.classList.add('window');
 
   // The settings, the selection handed over by the context menu and the last list of collections
@@ -504,12 +375,6 @@ async function init() {
   const collectionsLoaded = loadCollections();
   page = pending ?? (isWindow ? page : await readActiveTab());
   prefill();
-  // The window the picker opened in starts on the type that was asked for
-  const wanted = params.get('attach');
-  if (isAttachType(wanted)) {
-    $('type').value = wanted;
-    applyType(wanted);
-  }
   show('form');
   $('title').focus();
   $('title').select();

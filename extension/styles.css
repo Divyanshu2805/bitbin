@@ -264,17 +264,15 @@ button.primary:hover:not(:disabled)::before {
 }
 
 /* Text-only buttons and the little x's: no box, no lift */
-button.link, .tag-chip button, #close, .attachment button {
+button.link, .tag-chip button, #close {
   overflow: visible;
   border: none;
   background: none;
   box-shadow: none;
   transform: none;
 }
-button.link:hover:not(:disabled), .tag-chip button:hover:not(:disabled), #close:hover:not(:disabled),
-.attachment button:hover:not(:disabled) { transform: none; box-shadow: none; background: none; }
-button.link:active:not(:disabled), .tag-chip button:active:not(:disabled), #close:active:not(:disabled),
-.attachment button:active:not(:disabled) { transform: scale(0.94); box-shadow: none; background: none; }
+button.link:hover:not(:disabled), .tag-chip button:hover:not(:disabled), #close:hover:not(:disabled) { transform: none; box-shadow: none; background: none; }
+button.link:active:not(:disabled), .tag-chip button:active:not(:disabled), #close:active:not(:disabled) { transform: scale(0.94); box-shadow: none; background: none; }
 button.link {
   padding: 0;
   color: var(--brand-lime);
@@ -287,7 +285,7 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
 
 .tags-row { display: flex; gap: 8px; }
 .tags-row input { flex: 1; }
-.tags-row button { flex: none; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 0 12px; height: 36px; }
+.tags-row > button { flex: none; align-self: flex-start; white-space: nowrap; font-size: 12px; padding: 0 12px; height: 36px; }
 
 .foot { display: grid; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--border); background: var(--card); }
 .foot .status:empty { display: none; }
@@ -351,7 +349,7 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
   font: 12px var(--mono); color: var(--foreground);
   animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.tag-chip button { padding: 0 3px; font-size: 14px; line-height: 1; color: var(--muted-foreground); }
+.tag-chip button { width: 16px; height: 16px; padding: 0; display: grid; place-items: center; font-size: 14px; line-height: 1; color: var(--muted-foreground); }
 .tag-chip button:hover:not(:disabled) { color: var(--destructive); }
 .new-collection { display: flex; gap: 8px; animation: fade-up 0.35s var(--ease) both; }
 .new-collection input { flex: 1; min-width: 0; }
@@ -359,22 +357,6 @@ button.link:hover:not(:disabled) { color: var(--logo-light); }
 .field > button.link { justify-self: start; }
 .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .field-head label { display: block; }
-
-/* A file or image attached instead of text */
-.attachment {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card);
-  animation: fade-up 0.35s var(--ease) both;
-}
-.attachment .clip { color: var(--brand-lime); font-size: 16px; }
-.attachment .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px var(--mono); color: var(--foreground); }
-.attachment .size { font: 11px var(--mono); color: var(--faint); white-space: nowrap; }
-.attachment button { width: 22px; height: 22px; padding: 0; font-size: 16px; line-height: 1; color: var(--muted-foreground); }
-.attachment button:hover:not(:disabled) { color: var(--destructive); }
-.attach-zone { display: grid; gap: 10px; }
-button.attach { justify-self: start; padding: 0; font: 600 12px var(--mono); letter-spacing: 0.02em; }
-button.attach .sub { margin-left: 8px; font-weight: 400; color: var(--faint); }
-.dropping { outline: 2px dashed var(--brand-lime); outline-offset: -8px; }
 
 kbd {
   font: 600 11px var(--mono);

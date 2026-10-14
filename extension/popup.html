@@ -11,7 +11,7 @@
     form#form { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     form#form > main { flex: 1; min-height: 0; overflow-y: auto; align-content: start; }
     body > .panel { flex: 1; align-content: center; }
-    /* Opened as a window (from the context menu, or to pick a file): it fills the window */
+    /* Opened as a window (from the context menu): it fills the window */
     html.window, html.window body { width: 100%; height: 100vh; }
   </style>
 </head>
@@ -81,18 +81,6 @@
       <label id="url-field">URL
         <input id="url" type="url" placeholder="https://">
       </label>
-
-      <!-- Only for the File and Image types -->
-      <div id="attach-zone" class="attach-zone" hidden>
-        <button id="attach" class="link attach" type="button">+ Choose a file <span class="sub">or drop one here</span></button>
-        <input id="file-input" type="file" hidden>
-        <div id="attachment" class="attachment" hidden>
-          <span class="clip" aria-hidden="true">▤</span>
-          <span id="attachment-name" class="name"></span>
-          <span id="attachment-size" class="size"></span>
-          <button id="attachment-clear" class="link" type="button" aria-label="Remove the file">×</button>
-        </div>
-      </div>
 
       <div class="field">
         <label for="tags">Tags</label>
