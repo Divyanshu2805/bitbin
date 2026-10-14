@@ -270,9 +270,7 @@ async function save(event) {
     if (page.url && /^https?:\/\//i.test(page.url)) {
       // Where it came from goes under the description. The API caps descriptions
       // at 1000 characters; a very long URL is cut to fit
-      body.description = [written, `Saved from ${page.url}`].filter(Boolean).join('
-
-').slice(0, 1000);
+      body.description = [written, `Saved from ${page.url}`].filter(Boolean).join('\n\n').slice(0, 1000);
     }
   }
 
