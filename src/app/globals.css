@@ -94,8 +94,8 @@
   --card-radius: 22px;
   /* The pricing cards' ground, on the landing page and the upgrade page: the page's darkest colour */
   --plan-ink: #0e0e0d;
-  /* Item and collection cards: the page's own warm charcoal, a shade darker, so the colour on them stands out */
-  --card-ink: #100f0e;
+  /* Item and collection cards: the same warm brown as the dashboard overview card; their previews sit on --background */
+  --card-ink: #222120;
   /* The app has one theme, and it is dark. `.dark` is set on <html> in the root layout so `dark:` utilities apply */
   color-scheme: dark;
   --brand-lime: #e3a184;
@@ -500,7 +500,7 @@
 }
 
 /*
- * Item and collection cards: a shade darker than the page, with a neutral hairline. Their colour lives in the type chip,
+ * Item and collection cards: the overview card's brown, with a neutral hairline. Their colour lives in the type chip,
  * the content preview or the folder icon, not on the card. On hover it only rises: no colour, no glow.
  */
 @utility card-ink {

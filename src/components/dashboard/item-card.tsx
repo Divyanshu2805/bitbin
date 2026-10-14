@@ -43,7 +43,7 @@ function previewLines(content: string) {
 /**
  * The code-ish preview under the title, where the card's type colour (`--tone`) shows, the way an
  * editor shows it: snippets get their line numbers and gutter rule in it, commands their `$` prompt,
- * links their icon. Prompts and notes are a four-line excerpt behind a rule in it, like a quote.
+ * links their icon. Prompts and notes are a four-line excerpt behind a rule in it, like a quote, in the same boxed tile.
  */
 function ContentPreview({ item }: { item: ItemWithType }) {
   const type = item.itemType.name;
@@ -91,11 +91,13 @@ function ContentPreview({ item }: { item: ItemWithType }) {
   // Prose: an excerpt set off by a rule in the type's colour, like a quote from the item
   if ((type === "prompt" || type === "note") && item.content) {
     return (
-      <blockquote className="border-l-2 border-l-(--tone) pl-3">
-        <p className="line-clamp-4 text-[13px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
-          {item.content}
-        </p>
-      </blockquote>
+      <div className="rounded-xl border border-border bg-background px-3 py-2.5">
+        <blockquote className="border-l-2 border-l-(--tone) pl-3">
+          <p className="line-clamp-4 text-[13px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
+            {item.content}
+          </p>
+        </blockquote>
+      </div>
     );
   }
 

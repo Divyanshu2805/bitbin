@@ -13,7 +13,7 @@ see-through, blurred or glowing: every surface is a solid colour. All tokens liv
 | `--background` | `#151514` | Page background |
 | `--surface` | `#1c1b19` | Title bars, panel header strips, nested tiles, every second sheet of the landing page |
 | `--card` | `#222120` | Cards, panes, panels |
-| `--card-ink` | `#100f0e` | Item and collection cards (`card-ink`): the page's warm charcoal, a shade darker |
+| `--card-ink` | `#100f0e` | Item and collection cards (`card-ink`): the same brown as `--card` |
 | `--popover` | `#2b2927` | Menus, dialogs, the ⌘K palette |
 | `--muted` / `--secondary` | `#2f2d2a` | Chips, kbd, subtle fills |
 | `--border` | `#4b453b` | Hairlines |
@@ -268,11 +268,11 @@ dimmed overlay. Tiles nested in a card (a code preview, a stat, a usage meter) a
 `backdrop-blur` or a coloured `box-shadow`.
 
 Item and collection cards (`ItemCard`, `ImageThumbnailCard`, `CollectionCard`) are the exception:
-`card-ink` puts them a shade darker than the page (`--card-ink`) with the same neutral hairline, and on hover they only
+`card-ink` gives them the overview card's brown (`--card-ink`, the same as `--card`) with the same neutral hairline, and on hover they only
 rise (no colour, no glow). The `--tone` stays off the card itself. On an item card it shows where an
 editor would show it: the type chip (mixed into `--card-ink`), a snippet's line numbers and gutter rule,
-a command's `$`, a link's icon, and the rule beside a prompt's or note's excerpt, which is a quote, not a
-boxed tile. On a collection card it is the folder icon's sage, beside the bar of its item types.
+a command's `$`, a link's icon, and the rule beside a prompt's or note's excerpt. Every preview is the same
+rounded `--background` tile with a hairline, so it reads darker than the card. On a collection card it is the folder icon's sage, beside the bar of its item types.
 
 > `.btn` and `.btn-kbd` are unlayered CSS, so they beat Tailwind utilities such
 > as `hidden` or `sm:inline-flex`. Put responsive visibility on a wrapper
