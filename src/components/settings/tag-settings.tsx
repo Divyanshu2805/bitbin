@@ -145,8 +145,8 @@ export default function TagSettings({ tags }: TagSettingsProps) {
                         <Button
              type="button"
              size="icon"
-             variant="ghost"
-             className="h-8 w-8 text-destructive hover:text-destructive"
+             variant="outline"
+             className="term-bare term-danger h-8 w-8"
              aria-label={`Remove ${tag.name}`}
              onClick={() => setDeleting(tag)}
                         >
