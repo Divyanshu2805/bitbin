@@ -25,7 +25,7 @@ see-through, blurred or glowing: every surface is a solid colour. All tokens liv
 | `--logo-light` / `--logo-deep` / `--logo-bit` | `#f4bfa5` / `#d98863` / `#ffc857` | The logo only: the bin and the `Bin` of the wordmark (`.logo-word`) run from the light clay down to the deep one, and the falling bit is amber. `icon.svg`, `apple-icon.tsx` and `opengraph-image.tsx` repeat the three values |
 | `--brand-cyan` | `#afc6b1` | Collections. Sage |
 | `--brand-violet` | `#c9a4c1` | The AI helpers. Heather |
-| `--brand-green` | `#7fd196` | The homepage's data and privacy section and its navbar link. Green |
+| `--brand-green` | `#7fd196` | The homepage's capture section (the extension and desktop app). Green |
 | `--destructive` | `#ff8679` | Delete actions, errors |
 | `--tok-*` | | | Syntax colours for code previews and terminal output |
 
@@ -49,10 +49,8 @@ theme provider. New code uses the tokens directly and needs neither a `dark:` va
   Sign in on the right; a hairline and a light blur come in once the page scrolls. One card highlights its
   links (`.nav-pill`): the section you are in is a solid card popped up out of the bar in the section's
   colour, not an underline, and it glides to the next link as you scroll; the link under the pointer or focus
-  gets the same card, lighter, sliding from link to link. Hovering Features opens a panel under the bar laid
-  out like Claude's menus: a column per group, a small heading over plain links, the one you are in in its colour.
-  Once the page is inside one of the five feature sections, "Features" unfolds in place into a link for
-  each (Types, MCP, AI, Capture, Shortcuts) with the card on the current one, and folds back on leaving.
+  gets the same card, lighter, sliding from link to link. The links are always all in the bar, none behind a menu:
+  Why BitBin, the five feature sections (Snippets, MCP, AI, Capture, Shortcuts), Pricing and FAQ.
   Its demo windows use the theme's surfaces like the app does (`bg-card`,
   `bg-background` for terminals), pass type colours through `readableColor()` /
   `readableTint()`, and write theme-dependent shadows or keycaps as
@@ -192,7 +190,7 @@ scroll as it enters; blocks hinge, tilt and widen in place.
 | Sheets | Every `main > section` is opaque, alternates `--surface` / `--background` (the hero is the first, starting under the navbar), has rounded shoulders and overlaps the end of the one before. While it is covered, the outgoing section's inner block sinks, shrinks and dims (`sheet-recede`). The section itself never moves, so in-page links and the scroll spy measure the real layout |
 | `data-scroll="unfold"` | Hinged at its top edge, the block swings up to face you |
 | `data-scroll="tilt"` | Lies back like a screen and stands up (the hero demo, the shortcuts demo) |
-| `data-scroll="book-left"` / `"book-right"` | A pair opens like two pages (pricing cards, the data and privacy panels). `unfold` below 768px |
+| `data-scroll="book-left"` / `"book-right"` | A pair opens like two pages (pricing cards). `unfold` below 768px |
 | `data-scroll="widen"` | Grows outward from its middle |
 | `data-scroll="cascade"` / `"stack"` | On a parent: its children open one after another across a row, or each as it arrives down a column (the FAQ) |
 | `.ink` | A section heading is inked in reading order as it climbs the screen (`SectionHeading` wraps the title) |

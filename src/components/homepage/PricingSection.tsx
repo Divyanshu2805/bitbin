@@ -19,7 +19,7 @@ export default function PricingSection() {
   return (
     <Section
       id="pricing"
-      index="03"
+      index="02"
       label="pricing"
       align="center"
       title={

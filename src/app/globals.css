@@ -1017,12 +1017,6 @@ html.vt-slide.vt-back::view-transition-new(root) {
   from { transform: translateX(-100%); }
 }
 
-/* While the navbar's Features panel is open, the landing page behind it holds still */
-html[data-features-open] main *,
-html[data-features-open] main *::before,
-html[data-features-open] main *::after {
-  animation-play-state: paused !important;
-}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

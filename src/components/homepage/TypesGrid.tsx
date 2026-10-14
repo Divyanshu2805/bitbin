@@ -548,7 +548,7 @@ export default function TypesGrid() {
     <Section
       id="types"
       index="01.1"
-      label="item types"
+      label="snippets & more"
       title={
         <>
           Seven item types. <Accent>One place to find them.</Accent>

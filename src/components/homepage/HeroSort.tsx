@@ -332,8 +332,8 @@ export default function HeroSort() {
       lastScroll += scrolled;
       if (!live.current.running) return;
       const p = progress();
-      // The navbar's pause control and its Features panel stop the ring turning; the scroll still places everything
-      if (!root.hasAttribute("data-features-open") && !root.hasAttribute("data-motion-paused")) {
+      // The navbar's pause control stops the ring turning; the scroll still places everything
+      if (!root.hasAttribute("data-motion-paused")) {
         rate += ((hover && p < FLY_START ? HOVER_RATE : 1) - rate) * Math.min(1, dt * 4);
         spin *= Math.exp(-3.5 * dt);
         turn += (rate / LAP_S + spin) * dt;

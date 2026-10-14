@@ -8,8 +8,7 @@ import { cn } from "@/lib/utils";
 // brand-coloured glows, a rain of "bits" (code glyphs) drifting down the page
 // into the bin, and a soft lime light that follows the pointer anywhere on the
 // page, brightening the bits it passes. Fixed to the viewport, so it costs
-// nothing to scroll; the rain pauses while the tab is hidden or the navbar's
-// Features panel is open, and is drawn once,
+// nothing to scroll; the rain pauses while the tab is hidden, and is drawn once,
 // still, for reduced motion. `contained` fills the nearest positioned ancestor
 // instead of the viewport (the auth pages' brand panel).
 
@@ -141,12 +140,11 @@ export default function LandingBackdrop({
       pointer.x = pointer.y = -9999;
       if (light) light.style.opacity = "0";
     };
-    // Runs while the tab is visible and the navbar's Features panel is closed
+    // Runs while the tab is visible
     const onVisibility = () => {
       cancelAnimationFrame(frame);
       last = 0;
-      const paused = document.hidden || document.documentElement.hasAttribute("data-features-open");
-      if (!paused && !prefersReducedMotion()) frame = requestAnimationFrame(tick);
+      if (!document.hidden && !prefersReducedMotion()) frame = requestAnimationFrame(tick);
     };
 
     const observer = new ResizeObserver(() => {
@@ -161,10 +159,6 @@ export default function LandingBackdrop({
       draw();
     });
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    const menuObserver = new MutationObserver(onVisibility);
-    if (!prefersReducedMotion()) {
-      menuObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-features-open"] });
-    }
     window.addEventListener("pointermove", onPointer, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
     if (!prefersReducedMotion()) {
@@ -176,7 +170,6 @@ export default function LandingBackdrop({
       cancelAnimationFrame(frame);
       observer.disconnect();
       themeObserver.disconnect();
-      menuObserver.disconnect();
       window.removeEventListener("pointermove", onPointer);
       document.documentElement.removeEventListener("pointerleave", onLeave);
       document.removeEventListener("visibilitychange", onVisibility);

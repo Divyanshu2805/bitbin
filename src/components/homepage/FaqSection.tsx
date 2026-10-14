@@ -94,7 +94,7 @@ export default function FaqSection() {
       <div className="mx-auto grid max-w-(--landing-max) grid-cols-1 gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionHeading
-            index="04"
+            index="03"
             label="faq"
             title="Questions, answered."
             description="Anything else? Sign in and press ? for shortcuts, or open Settings for your data and billing."

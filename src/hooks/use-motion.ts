@@ -63,26 +63,24 @@ export function useInView(ref: RefObject<Element | null>, { once = false, thresh
   return inView;
 }
 
-const PAUSE_ATTR = "data-features-open";
 /** Set on <html> by lib/smooth-scroll.ts while the homepage is being scrolled. */
 export const SCROLLING_ATTR = "data-scrolling";
 
 function subscribePaused(onChange: () => void) {
   const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: [PAUSE_ATTR, SCROLLING_ATTR, "data-motion-paused"] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: [SCROLLING_ATTR, "data-motion-paused"] });
   return () => observer.disconnect();
 }
 
 /**
- * True while the landing navbar's Features panel covers the page, or while the
- * homepage is being scrolled. Looping demos hold their clocks then: the blurred
- * page behind the panel stops repainting, and a scroll gets the whole frame to
- * itself instead of sharing it with a dozen re-rendering demos.
+ * True while the homepage is being scrolled or its motion is paused. Looping
+ * demos hold their clocks then: a scroll gets the whole frame to itself instead
+ * of sharing it with a dozen re-rendering demos.
  */
 export function usePagePaused() {
   return useSyncExternalStore(
     subscribePaused,
-    () => document.documentElement.hasAttribute(PAUSE_ATTR) || document.documentElement.hasAttribute(SCROLLING_ATTR) || document.documentElement.hasAttribute("data-motion-paused"),
+    () => document.documentElement.hasAttribute(SCROLLING_ATTR) || document.documentElement.hasAttribute("data-motion-paused"),
     () => false
   );
 }

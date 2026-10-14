@@ -8,7 +8,6 @@ import AgentSection from "@/components/homepage/AgentSection";
 import AiSection from "@/components/homepage/AiSection";
 import ExtensionSection from "@/components/homepage/ExtensionSection";
 import ShortcutsSection from "@/components/homepage/ShortcutsSection";
-import PrivacySection from "@/components/homepage/PrivacySection";
 import PricingSection from "@/components/homepage/PricingSection";
 import FaqSection from "@/components/homepage/FaqSection";
 import BackToTop from "@/components/homepage/BackToTop";
@@ -57,7 +56,6 @@ export default function Home() {
         <AiSection />
         <ExtensionSection />
         <ShortcutsSection />
-        <PrivacySection />
         <PricingSection />
         <FaqSection />
       </main>
