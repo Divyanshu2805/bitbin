@@ -1815,11 +1815,16 @@ html:has(.landing)::-webkit-scrollbar {
   color: currentColor;
 }
 .term-danger {
+  --btn-accent: var(--destructive);
   --btn-fill: var(--destructive);
   --btn-ink: var(--background);
   color: var(--destructive);
   border-color: color-mix(in srgb, var(--destructive) 40%, var(--card));
   background: color-mix(in srgb, var(--destructive) 10%, var(--card));
+}
+/* On the red fill the icon takes the dark ink; outline's accent rule would otherwise keep it red on red */
+.term-danger:is(:hover, :focus-visible):not(:disabled) .lucide {
+  color: var(--btn-ink);
 }
 
 /* The destructive action as a solid button, like .term-primary but red; it fills cream on hover and the label turns dark */
