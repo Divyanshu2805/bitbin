@@ -13,8 +13,8 @@ import { SOURCES, type Source } from "./sources";
 // The hero is pinned for a stretch of the page (landing.css), and how far through it you are
 // (`p`, 0 to 1) is the story's clock:
 // Without (the top of the page): twelve things you saved ride a ring around the headline, each
-//   a card led by the logo of the app it is stuck in. The ring is wider than the screen, so cards
-//   come and go at its edges. It turns by itself, quicker under the pointer; the scroll carries it
+//   a card led by the logo of the app it is stuck in. The ring reaches the edges of the screen, so cards
+//   come and go there. It turns by itself, quicker under the pointer; the scroll carries it
 //   along, and a wheel-up at the very top spins it backwards. One card at a time fades to a "?".
 //   The bin waits at the foot of the screen.
 // Scrolling: the words lift away, the bin rises to the middle of the ring, and the cards spiral
@@ -194,9 +194,16 @@ export default function HeroSort() {
       if (!stageW || !height) return;
       stageH = stageW * (L.h / 100);
       unit = stageW / 100;
-      // Wider than the screen is tall, so the ring's top and bottom are off it; on a phone, its sides
-      radius = Math.min(Math.max(width * 0.37, height * 0.46), 660);      // A card on the ring is bigger than one in the bin: its logo is the picture
-      ringScale = Math.max(112, Math.min(212, L.tw * unit * 1.4)) / (L.tw * unit);
+      // Wider than the screen is tall, so the ring's top and bottom are off it; on a phone, wider than the screen however
+      // short it is, so its sides are off it and the cards pass above and below the words. landing.css sizes the words to fit inside it
+      // It grows with a very wide screen (past about 1940px) instead of stopping at 660px
+      radius = wide
+        ? Math.min(Math.max(width * 0.42, height * 0.46), Math.max(660, width * 0.34))
+        : Math.min(Math.max(width * 0.5 + 80, height * 0.46), 660);
+      // A card on the ring is bigger than one in the bin: its logo is the picture. Beside the words it is sized by the
+      // ring, so a smaller ring has smaller cards and they keep clear of the words
+      const ringWidth = wide ? Math.max(100, Math.min(280, radius * 0.3)) : Math.max(112, Math.min(212, L.tw * unit * 1.4));
+      ringScale = ringWidth / (L.tw * unit);
       rest = height / 2 + stageH / 2 - Math.min(NAV, height * 0.1);
       const start = section.getBoundingClientRect().top + window.scrollY - NAV;
       geo.current = { start, span: Math.max(1, section.offsetHeight - height) };

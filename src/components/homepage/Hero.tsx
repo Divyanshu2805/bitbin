@@ -16,11 +16,11 @@ export default function Hero() {
         <div className="landing-hero-copy">
           <HeroLogo />
           <h1 className="landing-headline animate-fade-up" style={{ animationDelay: "80ms" }}>
-            <span className="hero-line"><span>A home for</span></span>
-            <span className="hero-line"><span>everything</span></span>
+            <span className="hero-line"><span>Every snippet, prompt</span></span>
+            <span className="hero-line"><span>and command you need,</span></span>
             <span className="hero-line">
               <span>
-                you know.
+                one keystroke away.
                 {/* A pen stroke that draws itself under the last line */}
                 <svg aria-hidden className="hero-underline" viewBox="0 0 300 18" preserveAspectRatio="none" fill="none">
                   <path pathLength={100} d="M3 12 C 60 3, 120 3, 170 9 S 262 15, 297 6" />
@@ -29,7 +29,8 @@ export default function Hero() {
             </span>
           </h1>
           <p className="landing-hero-description animate-fade-up" style={{ animationDelay: "160ms" }}>
-            Good ideas deserve better than forgotten tabs.
+            Stop digging through old tabs, chats and gists. Keep what you&apos;ve learned in one searchable
+            library, back on screen with ⌘K.
           </p>
           <div className="landing-hero-actions animate-fade-up" style={{ animationDelay: "240ms" }}>
             <CtaLink href="/register">Try BitBin</CtaLink>

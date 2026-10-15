@@ -34,7 +34,8 @@
 .hero-pin { position: sticky; top: 72px; height: calc(100svh - 72px); overflow: clip; border-radius: inherit; }
 /* The words sit in the middle of the ring, and lift away as the scroll begins: HeroSort writes their opacity and
    translate (and the warm light's opacity) as the page moves, so they are a layer of their own until they are gone */
-.landing-hero-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px 12svh; text-align: center; will-change: opacity, translate; }
+/* --hero-ring is the cards' ring radius on a tablet or desktop, as HeroSort sets it: the words are sized to sit inside it */
+.landing-hero-copy { --hero-ring: min(max(42vw, (100svh - 72px) * .46), max(660px, 34vw)); position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px 12svh; text-align: center; will-change: opacity, translate; }
 .landing-hero[data-deep] :is(.landing-hero-copy, .hero-backdrop) { visibility: hidden; }
 .landing-hero::before {
   content: ""; position: absolute; z-index: -1; pointer-events: none;
@@ -44,10 +45,10 @@
     radial-gradient(ellipse at 30% 70%, color-mix(in srgb, var(--brand-lime) 4%, transparent), transparent 55%);
 }
 .landing .logo-mark.landing-hero-logo { display: block; width: clamp(64px, 9svh, 88px); height: clamp(64px, 9svh, 88px); }
-.landing .landing-headline { margin: 24px 0; font-size: clamp(50px, 5vw, 80px); line-height: 1.04; letter-spacing: -.035em; font-weight: 400; }
+.landing .landing-headline { margin: 24px 0; font-size: clamp(28px, min(5.2vw, (var(--hero-ring) * 2 - 220px) / 11.2, max(70px, 3.65vw)), 110px); line-height: 1.04; letter-spacing: -.035em; font-weight: 400; }
 .landing-headline .hero-line:nth-child(2) > span { animation-delay: .12s; }
 .landing-headline .hero-line:nth-child(3) > span { position: relative; display: inline-block; color: var(--brand-lime); animation-delay: .24s; }
-.landing-hero-description { max-width: 520px; color: var(--muted-foreground); font-size: 16px; line-height: 1.85; }
+.landing-hero-description { max-width: min(max(500px, 26vw), var(--hero-ring) * 2 - 290px); color: var(--muted-foreground); font-size: clamp(14px, .5vw + 7px, 20px); line-height: 1.8; }
 .landing-hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 24px; margin-top: 30px; }
 .landing .landing-hero-actions .btn { min-height: 50px; border-radius: 10px; padding-inline: 22px 8px; font-size: 15px; }
 
@@ -62,8 +63,8 @@
    HeroSort lays the bin out (three panels to a row, or two on a narrow screen) and sets its height over its
    width (--ar), a tile's size (--tw, --th, in cqw) and --k, which scales the title bar and footer (--u) so they
    keep their size when the bin is wider. */
-.hero-scene { --pin: calc(100svh - 72px); --w: min(1080px, 100vw - 40px, (var(--pin) - 90px) / var(--ar, .52)); position: absolute; inset: 0; pointer-events: none; }
-.sort-stage { --u: calc(var(--k, .7) * 1cqw); position: absolute; top: 50%; left: 50%; width: var(--w); height: calc(var(--w) * var(--ar, .52)); translate: -50% calc(-50% + var(--lift, calc(var(--pin) / 2 + var(--w) * var(--ar, .52) / 2 - min(84px, var(--pin) * .1)))); pointer-events: auto; container-type: inline-size; font-size: clamp(8.5px, var(--w) * var(--k, .7) * .0205, 15.5px); isolation: isolate; }
+.hero-scene { --pin: calc(100svh - 72px); --w: min(max(1080px, 52vw), 100vw - 40px, (var(--pin) - 90px) / var(--ar, .52)); position: absolute; inset: 0; pointer-events: none; }
+.sort-stage { --u: calc(var(--k, .7) * 1cqw); position: absolute; top: 50%; left: 50%; width: var(--w); height: calc(var(--w) * var(--ar, .52)); translate: -50% calc(-50% + var(--lift, calc(var(--pin) / 2 + var(--w) * var(--ar, .52) / 2 - min(84px, var(--pin) * .1)))); pointer-events: auto; container-type: inline-size; font-size: clamp(8.5px, var(--w) * var(--k, .7) * .0205, 19.5px); isolation: isolate; }
 /* A field of dots that thins out to nothing, and a glow under the bin that warms as it fills */
 .sort-stage::before { content: ""; position: absolute; inset: -34cqw -26cqw -30cqw; z-index: -1; pointer-events: none; background: radial-gradient(color-mix(in srgb, var(--foreground) 16%, transparent) 1px, transparent 1.5px) 0 0 / 4cqw 4cqw; -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); }
 .sort-stage::after { content: ""; position: absolute; inset: -14cqw -18cqw -16cqw; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--brand-lime) 22%, transparent), transparent 62%); opacity: .35; transition: opacity 1.2s ease; }
@@ -316,8 +317,9 @@ html[data-motion-paused] .landing [class*="animate-"] { animation: none !importa
   /* On a phone the ring passes above and below the words, so they sit in the middle and stay compact */
   .landing-hero-copy { padding-bottom: 0; }
   .landing .logo-mark.landing-hero-logo { width: 56px; height: 56px; }
-  .landing .landing-headline { margin: 18px 0; font-size: clamp(42px, 12vw, 68px); }
-  .landing-hero-description { max-width: 500px; font-size: 15px; line-height: 1.7; }
+  /* Sized so the longest line (about 10.4em) fits the screen: each line stays one row, as on desktop */
+  .landing .landing-headline { margin: 18px 0; font-size: calc((100vw - 40px) / 10.6); }
+  .landing-hero-description { max-width: 500px; font-size: 14px; line-height: 1.7; }
   .flow-stack { margin-top: 40px; max-width: none; }
   .flow-card { top: calc(72px + var(--i) * 14px); }
   .flow-card-body { grid-template-columns: minmax(0, 1fr); gap: 18px; min-height: 0; padding: 20px 16px; border-radius: 18px; }
