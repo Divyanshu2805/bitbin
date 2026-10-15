@@ -106,12 +106,16 @@ function layout(cols: number): Layout {
 }
 const WIDE = layout(3);
 const NARROW = layout(2);
+// A tablet or wider: the ring goes round the words. Three panels to a row from 1024px, where they stay readable
 const WIDE_QUERY = "(min-width: 768px)";
-const subscribeWide = (change: () => void) => {
-  const query = window.matchMedia(WIDE_QUERY);
+const ROOMY_QUERY = "(min-width: 1024px)";
+const subscribeTo = (media: string) => (change: () => void) => {
+  const query = window.matchMedia(media);
   query.addEventListener("change", change);
   return () => query.removeEventListener("change", change);
 };
+const subscribeWide = subscribeTo(WIDE_QUERY);
+const subscribeRoomy = subscribeTo(ROOMY_QUERY);
 
 // Without BitBin: what you'd be thinking while you look for one of them
 const THOUGHTS = ["which tab was that in?", "did I even save it?", "Slack… or was it Notion?", "I wrote this before. somewhere.", "it was right here last week"];
@@ -137,9 +141,9 @@ export default function HeroSort() {
   const [still, setStill] = useState(false);
   // Until someone has used the switch, it pulses to say it can be
   const [tried, setTried] = useState(false);
-  // Three panels to a row on a wide screen, two on a narrow one
   const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE_QUERY).matches, () => true);
-  const L = wide ? WIDE : NARROW;
+  const roomy = useSyncExternalStore(subscribeRoomy, () => window.matchMedia(ROOMY_QUERY).matches, () => true);
+  const L = roomy ? WIDE : NARROW;
 
   useEffect(() => {
     const id = window.setTimeout(() => setStill(prefersReducedMotion()), 0);
@@ -171,7 +175,7 @@ export default function HeroSort() {
 
   // One loop places everything from the scroll position and the ring's turn.
   useEffect(() => {
-    const L = wide ? WIDE : NARROW;
+    const L = roomy ? WIDE : NARROW;
     const scene = ref.current;
     const stage = stageRef.current;
     const section = scene?.closest<HTMLElement>("section");
@@ -320,6 +324,7 @@ export default function HeroSort() {
           });
     observer?.observe(scene);
     observer?.observe(section);
+    observer?.observe(stage);
     // Reduced motion: everything is in the bin, and nothing follows the scroll
     if (reduced) {
       return () => {
@@ -378,7 +383,7 @@ export default function HeroSort() {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("resize", measure);
     };
-  }, [wide]);
+  }, [wide, roomy]);
 
   // The switch scrolls to the other end of the story
   const choose = () => {

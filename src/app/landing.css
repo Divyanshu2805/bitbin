@@ -63,7 +63,7 @@
    HeroSort lays the bin out (three panels to a row, or two on a narrow screen) and sets its height over its
    width (--ar), a tile's size (--tw, --th, in cqw) and --k, which scales the title bar and footer (--u) so they
    keep their size when the bin is wider. */
-.hero-scene { --pin: calc(100svh - 72px); --w: min(max(1080px, 52vw), 100vw - 40px, (var(--pin) - 90px) / var(--ar, .52)); position: absolute; inset: 0; pointer-events: none; }
+.hero-scene { --pin: calc(100svh - 72px); --w: min(max(1080px, 52vw), 64vw + 140px, 100vw - 40px, (var(--pin) - 90px) / var(--ar, .52)); position: absolute; inset: 0; pointer-events: none; }
 .sort-stage { --u: calc(var(--k, .7) * 1cqw); position: absolute; top: 50%; left: 50%; width: var(--w); height: calc(var(--w) * var(--ar, .52)); translate: -50% calc(-50% + var(--lift, calc(var(--pin) / 2 + var(--w) * var(--ar, .52) / 2 - min(84px, var(--pin) * .1)))); pointer-events: auto; container-type: inline-size; font-size: clamp(8.5px, var(--w) * var(--k, .7) * .0205, 19.5px); isolation: isolate; }
 /* A field of dots that thins out to nothing, and a glow under the bin that warms as it fills */
 .sort-stage::before { content: ""; position: absolute; inset: -34cqw -26cqw -30cqw; z-index: -1; pointer-events: none; background: radial-gradient(color-mix(in srgb, var(--foreground) 16%, transparent) 1px, transparent 1.5px) 0 0 / 4cqw 4cqw; -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); mask-image: radial-gradient(ellipse at 50% 50%, #000 0%, transparent 68%); }
