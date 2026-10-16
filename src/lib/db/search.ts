@@ -90,6 +90,12 @@ const itemColumns = Prisma.sql`
 
 /**
  * Items matching what was typed: title matches first, then the most recently edited.
+ *
+ * A text search finds its rows in two parts joined by UNION - text-field matches, and tag matches -
+ * rather than one WHERE with `OR EXISTS (tag match)`. With the EXISTS inside the OR, Postgres
+ * cannot combine the trigram indexes and reads every one of the user's rows instead; split, the
+ * text part is served by the indexes and the tag part by `tags_name_trgm_idx`. UNION (not UNION
+ * ALL) returns an item matched both ways once.
  */
 export async function searchItems(
   userId: string,
@@ -113,12 +119,21 @@ export async function searchItems(
         ORDER BY i."updatedAt" DESC
         LIMIT ${limit}`
     : await prisma.$queryRaw<ItemRow[]>`
-        SELECT ${itemColumns}
-        FROM "items" i JOIN "item_types" t ON t.id = i."itemTypeId"
-        WHERE i."userId" = ${userId} AND (
-          i.title ILIKE ${pattern} OR i.content ILIKE ${pattern}
-          OR i.description ILIKE ${pattern} OR i.url ILIKE ${pattern} OR ${tagMatch}
+        WITH hits AS (
+          SELECT m.id FROM "items" m
+          WHERE m."userId" = ${userId} AND (
+            m.title ILIKE ${pattern} OR m.content ILIKE ${pattern}
+            OR m.description ILIKE ${pattern} OR m.url ILIKE ${pattern}
+          )
+          UNION
+          SELECT tg."A" FROM "tags" tn
+          JOIN "_ItemTags" tg ON tg."B" = tn.id
+          JOIN "items" m ON m.id = tg."A" AND m."userId" = ${userId}
+          WHERE tn.name ILIKE ${pattern}
         )
+        SELECT ${itemColumns}
+        FROM hits h JOIN "items" i ON i.id = h.id JOIN "item_types" t ON t.id = i."itemTypeId"
+        WHERE i."userId" = ${userId}
         ORDER BY (i.title ILIKE ${pattern}) DESC, i."updatedAt" DESC
         LIMIT ${limit}`;
 

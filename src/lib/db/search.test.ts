@@ -101,7 +101,7 @@ describe('searchItems', () => {
     await searchItems('user-1', "x'; DROP TABLE items; --");
 
     const { text, values } = sqlOf();
-    expect(text).toContain('i."userId" =');
+    expect(text).toContain('m."userId" =');
     expect(values).toContain('user-1');
     expect(text).not.toContain('DROP TABLE');
     expect(values).toContain("%x'; DROP TABLE items; --%");
@@ -111,10 +111,42 @@ describe('searchItems', () => {
     await searchItems('user-1', 'debounce');
 
     const { text } = sqlOf();
-    for (const column of ['i.title ILIKE', 'i.content ILIKE', 'i.description ILIKE', 'i.url ILIKE', 'g.name ILIKE']) {
+    for (const column of ['m.title ILIKE', 'm.content ILIKE', 'm.description ILIKE', 'm.url ILIKE', 'tn.name ILIKE']) {
       expect(text).toContain(column);
     }
     expect(text).toContain('ORDER BY (i.title ILIKE');
+  });
+
+  it('finds text matches and tag matches as two sets joined by UNION, so the trigram indexes can serve each', async () => {
+    await searchItems('user-1', 'debounce');
+
+    const { text } = sqlOf();
+    const [textPart, tagPart] = text.split(/\bUNION\b/);
+    expect(tagPart).toBeDefined();
+    expect(textPart).toContain('m.title ILIKE');
+    expect(textPart).not.toContain('EXISTS');
+    expect(textPart).not.toContain('tn.name ILIKE');
+    expect(tagPart).toContain('tn.name ILIKE');
+    expect(tagPart).not.toContain('m.title ILIKE');
+  });
+
+  it('returns an item matched by both its text and a tag once (UNION, not UNION ALL)', async () => {
+    await searchItems('user-1', 'debounce');
+
+    const { text } = sqlOf();
+    expect(text.match(/\bUNION\b/g)).toHaveLength(1);
+    expect(text).not.toMatch(/UNION\s+ALL/);
+  });
+
+  it('scopes the text matches, the tag matches and the rows read back to the user', async () => {
+    await searchItems('user-1', 'debounce');
+
+    const { text, values } = sqlOf();
+    const [textPart, tagPart] = text.split(/\bUNION\b/);
+    expect(textPart).toContain('m."userId" =');
+    expect(tagPart).toContain('m."userId" =');
+    expect(tagPart).toContain('i."userId" =');
+    expect(values.filter((value) => value === 'user-1')).toHaveLength(3);
   });
 
   it('looks only at tags for a #tag search', async () => {
