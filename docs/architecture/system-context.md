@@ -2,34 +2,6 @@
 
 BitBin is a single Next.js 16 App Router application. There is no separate API server: pages are React Server Components that read from PostgreSQL through Prisma, writes go through **server actions**, and a small set of **route handlers** covers what needs a real HTTP endpoint — authentication flows, file transfer, export and ZIP import, Stripe, a token-authenticated API for the browser extension and the desktop app, and two cron endpoints.
 
-```mermaid
-flowchart LR
-  subgraph Clients
-    W[Web UI]
-    X[Browser extension]
-    D[Desktop tray app]
-  end
-  subgraph "Next.js app on Vercel"
-    P[Pages · RSC]
-    A[Server actions]
-    R[Route handlers]
-    T["/api/v1 token API"]
-    C["Cron routes"]
-    L["lib/db · every query scoped by userId"]
-  end
-  W --> P & A & R
-  X --> T
-  D --> T
-  P & A & R & T & C --> L
-  L --> DB[(Neon PostgreSQL)]
-  R & T & C --> S3[(Cloudflare R2)]
-  R --> ST[Stripe]
-  A & T --> AI[OpenAI-compatible API]
-  R --> RS[Resend]
-  A & R & T --> UP[(Upstash Redis)]
-  VC[Vercel Cron] --> C
-```
-
 ## Inside the app
 
 | Layer | Location | Responsibility |

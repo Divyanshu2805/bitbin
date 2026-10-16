@@ -2,19 +2,6 @@
 
 A user's data can leave BitBin in a readable form and come back in. Everything is under **Settings → Data**, except per-collection export, which is in a collection's ⋯ menu.
 
-```mermaid
-flowchart LR
-  subgraph Export
-    E1["GET /api/export?format=json|zip<br/>[&collection=id]"] --> E2[lib/db/export.ts<br/>manifest]
-    E2 -->|json| E3[bitbin-export-*.json]
-    E2 -->|zip, Pro| E4[lib/export-zip.ts<br/>manifest + readable files + R2 binaries]
-  end
-  subgraph Import
-    I1[".json → previewImport / importData<br/>(server actions)"] --> I3[lib/db/import.ts<br/>one transaction]
-    I2[".zip → POST /api/import<br/>(Pro)"] --> Z1[lib/zip-import.ts<br/>capped inflate] --> Z2[lib/zip-restore.ts<br/>ingestFile each file] --> I3
-  end
-```
-
 ## Export
 
 | What | Format | Plan | Request | File name |

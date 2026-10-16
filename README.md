@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://bitbin.divyanshuagrahari.dev"><img src="docs/assets/screenshots/landing.webp" alt="The BitBin landing page: 'A home for everything you know', over footage of a screen at work" width="900" /></a>
+  <a href="https://bitbin.divyanshuagrahari.dev"><img src="docs/assets/screenshots/landing.webp" alt="The BitBin landing page: 'Every snippet, prompt and command you need, one keystroke away', over footage of a screen at work" width="900" /></a>
 </p>
 
 <p align="center">
@@ -9,14 +9,28 @@
 
 <p align="center">
   <a href="https://github.com/Divyanshu2805/bitbin/actions/workflows/ci.yml"><img src="https://github.com/Divyanshu2805/bitbin/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Next.js-16-0a0b0d?logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19-0a0b0d?logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Neon-0a0b0d?logo=postgresql" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Next.js-16_App_Router-0a0b0d?logo=nextdotjs" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/React-19_Compiler-0a0b0d?logo=react" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript 5" />
+  <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind CSS 4" />
+  <img src="https://img.shields.io/badge/shadcn%2Fui-Components-0a0b0d?logo=shadcnui" alt="shadcn/ui" />
+  <img src="https://img.shields.io/badge/Monaco-Editor-0a0b0d" alt="Monaco editor" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Neon-0a0b0d?logo=postgresql" alt="PostgreSQL on Neon" />
+  <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma 7" />
+  <img src="https://img.shields.io/badge/NextAuth-v5_JWT-0a0b0d?logo=nextdotjs" alt="NextAuth v5" />
   <img src="https://img.shields.io/badge/Stripe-Billing-0a0b0d?logo=stripe" alt="Stripe" />
+  <img src="https://img.shields.io/badge/Cloudflare_R2-Files-0a0b0d?logo=cloudflare" alt="Cloudflare R2" />
+  <img src="https://img.shields.io/badge/Upstash-Rate_limits-0a0b0d?logo=upstash" alt="Upstash Redis" />
+  <img src="https://img.shields.io/badge/OpenAI-AI_helpers-0a0b0d?logo=openai" alt="OpenAI-compatible AI" />
+  <img src="https://img.shields.io/badge/MCP-Assistants-0a0b0d" alt="Model Context Protocol server" />
+  <img src="https://img.shields.io/badge/Resend-Email-0a0b0d" alt="Resend" />
+  <img src="https://img.shields.io/badge/Sentry-Errors-0a0b0d?logo=sentry" alt="Sentry" />
   <img src="https://img.shields.io/badge/Electron-Desktop-0a0b0d?logo=electron" alt="Electron" />
+  <img src="https://img.shields.io/badge/Chrome-Extension-0a0b0d?logo=googlechrome" alt="Browser extension" />
+  <img src="https://img.shields.io/badge/Vitest-Unit_tests-0a0b0d?logo=vitest" alt="Vitest" />
+  <img src="https://img.shields.io/badge/ESLint-Lint-0a0b0d?logo=eslint" alt="ESLint" />
+  <img src="https://img.shields.io/badge/Vercel-Deploy-0a0b0d?logo=vercel" alt="Vercel" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0a0b0d" alt="MIT License" /></a>
 </p>
 
 <p align="center">
@@ -98,33 +112,6 @@ Limits are enforced on the server (under a row lock, so concurrent requests can'
 ## Architecture
 
 BitBin is one Next.js 16 App Router application with no separate API server. Pages are React Server Components that read through `lib/db`, the only module that touches Prisma. Every UI write is a **server action** that checks the session, validates with Zod, applies plan and rate limits, and runs a query scoped to the signed-in user. Route handlers exist only where real HTTP is needed: auth flows, file transfer, export and ZIP import, Stripe, two crons, and the token API used by the extension and the desktop app.
-
-```mermaid
-flowchart LR
-  subgraph Clients
-    W[Web UI]
-    X[Browser extension]
-    D[Desktop tray app]
-  end
-  subgraph "Next.js app on Vercel"
-    P[Pages · RSC]
-    A[Server actions]
-    R[Route handlers]
-    T["/api/v1 token API"]
-    C[Cron routes]
-    L["lib/db · every query scoped by userId"]
-  end
-  W --> P & A & R
-  X & D --> T
-  P & A & R & T & C --> L
-  L --> DB[(Neon PostgreSQL)]
-  R & T & C --> S3[(Cloudflare R2)]
-  R --> ST[Stripe]
-  A & T --> AI[OpenAI-compatible API]
-  R --> RS[Resend]
-  A & R & T --> UP[(Upstash Redis · rate limits)]
-  VC[Vercel Cron] --> C
-```
 
 | Area | Choice |
 |---|---|
