@@ -13,8 +13,6 @@
   <img src="https://img.shields.io/badge/React-19_Compiler-0a0b0d?logo=react" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript 5" />
   <img src="https://img.shields.io/badge/Tailwind-4-0a0b0d?logo=tailwindcss" alt="Tailwind CSS 4" />
-  <img src="https://img.shields.io/badge/shadcn%2Fui-Components-0a0b0d?logo=shadcnui" alt="shadcn/ui" />
-  <img src="https://img.shields.io/badge/Monaco-Editor-0a0b0d" alt="Monaco editor" />
   <img src="https://img.shields.io/badge/PostgreSQL-Neon-0a0b0d?logo=postgresql" alt="PostgreSQL on Neon" />
   <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma 7" />
   <img src="https://img.shields.io/badge/NextAuth-v5_JWT-0a0b0d?logo=nextdotjs" alt="NextAuth v5" />
@@ -23,13 +21,9 @@
   <img src="https://img.shields.io/badge/Upstash-Rate_limits-0a0b0d?logo=upstash" alt="Upstash Redis" />
   <img src="https://img.shields.io/badge/OpenAI-AI_helpers-0a0b0d?logo=openai" alt="OpenAI-compatible AI" />
   <img src="https://img.shields.io/badge/MCP-Assistants-0a0b0d" alt="Model Context Protocol server" />
-  <img src="https://img.shields.io/badge/Resend-Email-0a0b0d" alt="Resend" />
-  <img src="https://img.shields.io/badge/Sentry-Errors-0a0b0d?logo=sentry" alt="Sentry" />
   <img src="https://img.shields.io/badge/Electron-Desktop-0a0b0d?logo=electron" alt="Electron" />
   <img src="https://img.shields.io/badge/Chrome-Extension-0a0b0d?logo=googlechrome" alt="Browser extension" />
   <img src="https://img.shields.io/badge/Vitest-Unit_tests-0a0b0d?logo=vitest" alt="Vitest" />
-  <img src="https://img.shields.io/badge/ESLint-Lint-0a0b0d?logo=eslint" alt="ESLint" />
-  <img src="https://img.shields.io/badge/Vercel-Deploy-0a0b0d?logo=vercel" alt="Vercel" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0a0b0d" alt="MIT License" /></a>
 </p>
 
