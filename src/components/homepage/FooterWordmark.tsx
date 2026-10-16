@@ -17,7 +17,7 @@ export default function FooterWordmark() {
     <p
       ref={ref}
       aria-hidden
-      className="mx-auto max-w-(--landing-max) select-none overflow-hidden px-5 text-center font-display text-[clamp(4rem,19vw,15rem)] font-extrabold leading-[0.8] tracking-[-0.06em] sm:px-8"
+      className="mx-auto max-w-(--landing-max) select-none overflow-hidden px-5 text-center font-display text-[clamp(4rem,33vw,15rem)] font-extrabold leading-[0.8] tracking-[-0.06em] sm:px-8"
     >
       {WORD.split("").map((letter, i) => (
         <span

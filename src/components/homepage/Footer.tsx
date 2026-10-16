@@ -31,8 +31,8 @@ export default function Footer() {
         <div><h2>Make room for your next idea.</h2><p>Build a library that gets more useful with everything you save.</p></div>
         <div data-scroll="unfold"><CtaLink href="/register">Start your knowledge hub</CtaLink></div>
       </div>
-      <div className="mx-auto grid max-w-(--landing-max) gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
-        <div>
+      <div className="mx-auto grid max-w-(--landing-max) grid-cols-2 gap-x-6 gap-y-10 px-5 py-14 sm:px-8 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-10">
+        <div className="col-span-2 md:col-span-1">
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
             One bin for snippets, prompts, commands, notes, files and links.
