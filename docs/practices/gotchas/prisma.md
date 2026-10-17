@@ -34,6 +34,10 @@ Prisma runs each call on its own. `updateItem` (collection links plus the item),
 
 `Item.tags` uses Prisma's implicit relation, stored in `_ItemTags` with columns `A` and `B`. Raw SQL against it needs those names; it has no timestamps or extra columns, and adding any means converting it to an explicit model (like `ItemCollection`) with a migration.
 
+## A keyset condition must be an index range
+
+A list page is "the rows after this cursor", and the obvious Prisma `where` for it is an `OR` across the pinned and unpinned groups. Postgres can't start an index scan at the cursor with that `OR`, so a page in the middle of a long list reads, and throws away, every row before it: correct results, a full scan's cost. `lib/keyset.ts` reads a page in segments instead, each one plain range (`isPinned = …`, `updatedAt <= cursor`) of the `(userId, isPinned, updatedAt, id)` index. Keep any new list condition expressible as such a range, and check the plan on a large account before trusting it.
+
 ## The search indexes are declared in the schema
 
 The trigram indexes (`gin_trgm_ops`) are written in `schema.prisma` with `@@index(..., type: Gin, map: "…")` as well as in their migration. Without the declaration, `prisma migrate dev` sees them as drift and offers to drop them. A new raw-SQL index needs the same pair.

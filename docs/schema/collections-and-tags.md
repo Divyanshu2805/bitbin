@@ -13,7 +13,7 @@
 | `defaultTypeId` | FK → `item_types.id`, nullable | Reserved for a per-collection default item type; not used by the app yet |
 | `createdAt`, `updatedAt` | timestamp | |
 
-Indexes: `collections(userId)`, `collections(userId, isFavorite)`, `collections(userId, isPinned)`, `collections(userId, updatedAt)`, and a GIN trigram index on `name` for search.
+Indexes: `collections(userId)`, `collections(userId, isFavorite)`, `collections(userId, isPinned, updatedAt, id)` (the list's order, for keyset pages, and the pinned section), `collections(userId, updatedAt)`, and a GIN trigram index on `name` for search.
 
 A collection's colour isn't stored; it's computed from its items — see the [collections flow](../architecture/flows/collections.md#dominant-colour).
 

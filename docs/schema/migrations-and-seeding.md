@@ -24,6 +24,7 @@ npm run db:migrate:deploy     # prisma migrate deploy — apply pending migratio
 | `20261005120000_add_api_token_expiry` | `api_tokens.expiresAt` |
 | `20261006190731_add_token_scopes` | `api_tokens.scopes`. Backward compatible (a defaulted column), plus two data statements: existing tokens get the three scopes that existed then (`files:write` came later), and tokens with no expiry get a year |
 | `20261007153001_add_search_trigram_indexes` | The `pg_trgm` extension and six GIN trigram indexes (item title, content, description and URL; collection and tag names) for the search palette. Safe to run twice; old code ignores them |
+| `20261017120000_add_list_order_indexes` | `(userId, isPinned, updatedAt, id)` on `items` and `collections`, replacing `(userId, isPinned)`, so a keyset page starts at its cursor; `items(userId, itemTypeId)` for counts by type. Indexes only; old code keeps working |
 
 ### Adding one
 

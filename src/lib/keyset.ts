@@ -1,9 +1,10 @@
 /**
  * Keyset ("seek") pagination for the card lists, which are ordered pinned first, then by last edit:
  * `isPinned DESC, updatedAt DESC, id DESC`. A page is asked for with the position of the row it
- * starts after (`after`) or ends before (`before`), not with a row count to skip. That keeps deep
- * pages as fast as the first and stops rows from shifting or repeating when something is edited
- * while you page. `id` breaks ties between rows with the same timestamp, so the order is total.
+ * starts after (`after`) or ends before (`before`), not with a row count to skip. With the
+ * `(userId, isPinned, updatedAt, id)` index that keeps every page as fast as the first, and it stops
+ * rows from shifting or repeating when something is edited while you page. `id` breaks ties between
+ * rows with the same timestamp, so the order is total.
  */
 
 export interface ListCursor {
@@ -67,35 +68,63 @@ export function readPageRequest(request: PageRequest | undefined): { cursor: Lis
   return { cursor: null, direction: 'after' };
 }
 
-type Condition = {
+/** Part of a list on one side of the cursor, as a Prisma condition to `AND` with the list's own filter. */
+export type KeysetSegment = {
   isPinned: boolean;
-  updatedAt?: Date | { lt: Date } | { gt: Date };
-  id?: { lt: string } | { gt: string };
+  updatedAt?: { lte: Date } | { gte: Date };
+  OR?: Array<{ updatedAt: { lt: Date } | { gt: Date } } | { id: { lt: string } | { gt: string } }>;
 };
 
 /**
- * The rows that come after (in list order) or before the cursor, as a Prisma `OR`. A boolean has no
- * "less than" in Prisma, so the pinned/unpinned boundary is spelled out. Combine with the list's own
- * filter using `AND`.
+ * Where the rows after (in list order) or before the cursor are, as segments to read in order until
+ * the page is full: the cursor's own group (pinned or not) from the cursor on, then, if that runs
+ * out, the other group from its start. Each segment is one range of the `(userId, isPinned,
+ * updatedAt, id)` index, and the bound on `updatedAt` lets the scan start at the cursor. A single
+ * `OR` across both groups would not: a page in the middle of a long list then read every row before
+ * it. A boolean has no "less than" in Prisma, so the groups are spelled out.
  */
-export function keysetWhere(cursor: ListCursor | null, direction: PageDirection): { OR: Condition[] } | undefined {
-  if (!cursor) return undefined;
+export function keysetSegments(cursor: ListCursor | null, direction: PageDirection): KeysetSegment[] {
+  if (!cursor) return [];
   const { pinned, updatedAt, id } = cursor;
 
   if (direction === 'after') {
     // Lower in the list: older, or (same time) a smaller id; unpinned rows follow all the pinned ones
-    const sameGroup: Condition[] = [
-      { isPinned: pinned, updatedAt: { lt: updatedAt } },
-      { isPinned: pinned, updatedAt, id: { lt: id } },
-    ];
-    return { OR: pinned ? [{ isPinned: false }, ...sameGroup] : sameGroup };
+    const sameGroup: KeysetSegment = {
+      isPinned: pinned,
+      updatedAt: { lte: updatedAt },
+      OR: [{ updatedAt: { lt: updatedAt } }, { id: { lt: id } }],
+    };
+    return pinned ? [sameGroup, { isPinned: false }] : [sameGroup];
   }
 
-  const sameGroup: Condition[] = [
-    { isPinned: pinned, updatedAt: { gt: updatedAt } },
-    { isPinned: pinned, updatedAt, id: { gt: id } },
-  ];
-  return { OR: pinned ? sameGroup : [{ isPinned: true }, ...sameGroup] };
+  const sameGroup: KeysetSegment = {
+    isPinned: pinned,
+    updatedAt: { gte: updatedAt },
+    OR: [{ updatedAt: { gt: updatedAt } }, { id: { gt: id } }],
+  };
+  return pinned ? [sameGroup] : [sameGroup, { isPinned: true }];
+}
+
+/**
+ * Reads up to `take` rows of a page, one segment at a time (see `keysetSegments`). `fetch` gets the
+ * condition to add to the list's filter (none on the first page) and how many rows are still
+ * wanted. Usually the first segment fills the page and only one query runs.
+ */
+export async function fetchKeysetRows<Row>(
+  cursor: ListCursor | null,
+  direction: PageDirection,
+  take: number,
+  fetch: (position: KeysetSegment | undefined, take: number) => Promise<Row[]>
+): Promise<Row[]> {
+  const segments = keysetSegments(cursor, direction);
+  if (segments.length === 0) return fetch(undefined, take);
+
+  const rows: Row[] = [];
+  for (const segment of segments) {
+    rows.push(...(await fetch(segment, take - rows.length)));
+    if (rows.length >= take) break;
+  }
+  return rows;
 }
 
 /** List order for a page that goes forward, or its reverse for one that goes back (flipped again afterwards). */

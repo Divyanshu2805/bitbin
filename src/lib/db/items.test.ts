@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getItemById, getItemsByCollection, getItemsByType, deleteItem, createItem, setItemInCollection, getCollectionsForItem } from './items';
-import { decodeCursor, encodeCursor, keysetWhere } from '@/lib/keyset';
+import { decodeCursor, encodeCursor, keysetSegments } from '@/lib/keyset';
 
 // Mock Prisma client
 const mockDeleteFromR2 = vi.hoisted(() => vi.fn());
@@ -395,8 +395,23 @@ describe('getItemsByType and getItemsByCollection (keyset pages)', () => {
 
     const call = vi.mocked(prisma.item.findMany).mock.calls[0][0] as { where: { AND: unknown[] } };
     expect(call.where.AND[0]).toEqual({ userId: 'user-1', collections: { some: { collectionId: 'col-1' } } });
-    expect(call.where.AND[1]).toEqual(keysetWhere({ pinned: true, updatedAt: new Date(7000), id: 'item-9' }, 'after'));
+    expect(call.where.AND[1]).toEqual(keysetSegments({ pinned: true, updatedAt: new Date(7000), id: 'item-9' }, 'after')[0]);
     expect(result.pageInfo.hasPrev).toBe(true);
+  });
+
+  it('after a pinned row, tops the page up from the unpinned rows, still scoped to the user', async () => {
+    vi.mocked(prisma.item.findMany).mockResolvedValueOnce(rows(2) as never).mockResolvedValueOnce(rows(4) as never);
+    const after = encodeCursor({ id: 'item-9', isPinned: true, updatedAt: new Date(7000) });
+
+    const result = await getItemsByType('user-1', 'snippet', { after }, 5);
+
+    const calls = vi.mocked(prisma.item.findMany).mock.calls as unknown as [{ where: { AND: unknown[] }; take: number }][];
+    expect(calls).toHaveLength(2);
+    expect(calls[0][0].take).toBe(6);
+    expect(calls[1][0].take).toBe(4);
+    expect(calls[1][0].where.AND).toEqual([{ userId: 'user-1', itemType: { name: 'snippet', isSystem: true } }, { isPinned: false }]);
+    expect(result.items).toHaveLength(5);
+    expect(result.pageInfo.hasNext).toBe(true);
   });
 
   it('counts with the list filter only, so the total does not depend on the page', async () => {

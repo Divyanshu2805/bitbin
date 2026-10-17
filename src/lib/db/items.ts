@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma/client';
-import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
+import { fetchKeysetRows, keysetOrderBy, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 import { clampLimit } from '@/lib/constants/pagination';
 
@@ -273,19 +273,20 @@ async function pageOfItems(
   limit: number
 ): Promise<PaginatedItems> {
   const { cursor, direction } = readPageRequest(request);
-  const position = keysetWhere(cursor, direction);
 
   const [fetched, totalCount] = await Promise.all([
-    prisma.item.findMany({
-      where: position ? { AND: [where, position] } : where,
-      orderBy: keysetOrderBy(direction),
-      // One more than shown: its presence says there is another page
-      take: limit + 1,
-      include: {
-        itemType: true,
-        tags: true,
-      },
-    }),
+    // One more than shown: its presence says there is another page
+    fetchKeysetRows(cursor, direction, limit + 1, (position, take) =>
+      prisma.item.findMany({
+        where: position ? { AND: [where, position] } : where,
+        orderBy: keysetOrderBy(direction),
+        take,
+        include: {
+          itemType: true,
+          tags: true,
+        },
+      })
+    ),
     prisma.item.count({ where }),
   ]);
 

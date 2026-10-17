@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { decodeCursor, encodeCursor, keysetWhere } from '@/lib/keyset';
+import { decodeCursor, encodeCursor, keysetSegments } from '@/lib/keyset';
 import { getCollectionById, getAllCollections, updateCollection, deleteCollection, toggleCollectionPin } from './collections';
 
 // Mock Prisma client
@@ -306,7 +306,7 @@ describe('getAllCollections', () => {
 
     const call = vi.mocked(prisma.collection.findMany).mock.calls[0][0] as { where: { AND: unknown[] } };
     expect(call.where.AND[0]).toEqual({ userId: 'user-1' });
-    expect(call.where.AND[1]).toEqual(keysetWhere({ pinned: false, updatedAt: new Date(5000), id: 'col-6' }, 'after'));
+    expect(call.where.AND[1]).toEqual(keysetSegments({ pinned: false, updatedAt: new Date(5000), id: 'col-6' }, 'after')[0]);
     expect(result.pageInfo).toMatchObject({ hasNext: false, hasPrev: true, nextCursor: null });
   });
 

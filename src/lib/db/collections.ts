@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma/client';
-import { keysetOrderBy, keysetWhere, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
+import { fetchKeysetRows, keysetOrderBy, readPageRequest, resolvePage, type PageInfo, type PageRequest } from '@/lib/keyset';
 import { LimitReachedError, lockUserForLimit } from '@/lib/limit-error';
 import { clampLimit } from '@/lib/constants/pagination';
 
@@ -298,38 +298,39 @@ export async function getAllCollections(
   limit: number = 21
 ): Promise<PaginatedCollections> {
   const { cursor, direction } = readPageRequest(request);
-  const position = keysetWhere(cursor, direction);
   const where: Prisma.CollectionWhereInput = { userId };
 
   const [fetched, totalCount] = await Promise.all([
-    prisma.collection.findMany({
-      where: position ? { AND: [where, position] } : where,
-      orderBy: keysetOrderBy(direction),
-      // One more than shown: its presence says there is another page
-      take: limit + 1,
-      include: {
-        _count: {
-          select: { items: true },
-        },
-        items: {
-          take: MAX_ITEMS_FOR_TYPE_SAMPLE,
-          include: {
-            item: {
-              select: {
-                itemType: {
-                  select: {
-                    id: true,
-                    name: true,
-                    icon: true,
-                    color: true,
+    // One more than shown: its presence says there is another page
+    fetchKeysetRows(cursor, direction, limit + 1, (position, take) =>
+      prisma.collection.findMany({
+        where: position ? { AND: [where, position] } : where,
+        orderBy: keysetOrderBy(direction),
+        take,
+        include: {
+          _count: {
+            select: { items: true },
+          },
+          items: {
+            take: MAX_ITEMS_FOR_TYPE_SAMPLE,
+            include: {
+              item: {
+                select: {
+                  itemType: {
+                    select: {
+                      id: true,
+                      name: true,
+                      icon: true,
+                      color: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    }),
+      })
+    ),
     prisma.collection.count({ where }),
   ]);
 

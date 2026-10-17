@@ -139,7 +139,10 @@ model Item {
   @@index([userId])
   @@index([itemTypeId])
   @@index([createdAt])
-  @@index([userId, isPinned])
+  // The card lists' order: a page starts at its cursor and stops after one page (lib/keyset.ts)
+  @@index([userId, isPinned, updatedAt, id])
+  // Counts by type (each list's total, the sidebar) read only this index
+  @@index([userId, itemTypeId])
   @@index([userId, isFavorite])
   @@index([userId, updatedAt])
   // Trigram indexes: they make the contains-style search (ILIKE '%text%') use an index
@@ -196,7 +199,8 @@ model Collection {
 
   @@index([userId])
   @@index([userId, isFavorite])
-  @@index([userId, isPinned])
+  // The list's order: a page starts at its cursor (lib/keyset.ts)
+  @@index([userId, isPinned, updatedAt, id])
   @@index([userId, updatedAt])
   @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "collections_name_trgm_idx")
   @@map("collections")

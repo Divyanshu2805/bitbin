@@ -21,15 +21,16 @@ Relations: many-to-many with `tags` (implicit `_ItemTags`) and with `collections
 
 ### Indexes
 
-The B-tree indexes come from the `add_query_indexes` migration and back the dashboard and list queries; the trigram indexes come from `add_search_trigram_indexes` and back the ⌘K search:
+The B-tree indexes come from the `add_query_indexes` and `add_list_order_indexes` migrations and back the dashboard and list queries; the trigram indexes come from `add_search_trigram_indexes` and back the ⌘K search:
 
 | Index | Serves |
 |---|---|
 | `items(userId)` | Every per-user query |
-| `items(userId, isPinned)` | The dashboard's pinned section |
+| `items(userId, isPinned, updatedAt, id)` | The card lists' order: a page starts at its cursor ([pagination](../architecture/cross-cutting-concerns.md#pagination)); the dashboard's pinned section |
+| `items(userId, itemTypeId)` | Counts by type: each list's total and the sidebar |
 | `items(userId, isFavorite)` | `/favorites` |
 | `items(userId, updatedAt)` | Recent items, search ordering |
-| `items(itemTypeId)` | `/items/[type]` |
+| `items(itemTypeId)` | The foreign key to `item_types` |
 | `items(createdAt)` | Ordering |
 | GIN trigram on `title`, `content`, `description`, `url` | `ILIKE '%text%'` in the search palette (`pg_trgm`) |
 

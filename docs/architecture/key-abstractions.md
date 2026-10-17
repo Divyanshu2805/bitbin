@@ -36,7 +36,7 @@ A personal access token (`bb_…`, stored only as a SHA-256 hash, expiring, revo
 
 ## Cursor (keyset) pagination
 
-Every list (`/items/[type]`, a collection's items, `/collections`) is paged by an opaque cursor holding the position of a row (`[pinned, updatedAt, id]`), not by page number, so deep pages cost the same as the first and rows don't shift while you page (`lib/keyset.ts`). See [cross-cutting concerns](cross-cutting-concerns.md#pagination).
+Every list (`/items/[type]`, a collection's items, `/collections`) is paged by an opaque cursor holding the position of a row (`[pinned, updatedAt, id]`), not by page number. With the list-order index each page reads only its own rows, so deep pages cost the same as the first, and rows don't shift while you page (`lib/keyset.ts`). See [cross-cutting concerns](cross-cutting-concerns.md#pagination).
 
 ## The demo account
 

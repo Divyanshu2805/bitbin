@@ -101,7 +101,7 @@ Sliding windows in Upstash Redis, keyed by IP and, where it applies, the user or
 |---|---|
 | Application source (TypeScript and TSX, without tests or generated code) | about 29,700 lines |
 | Test code | about 11,600 lines |
-| Database models / migrations | 10 / 9 |
+| Database models / migrations | 10 / 10 |
 | Route handlers / server actions | 29 (including NextAuth's) / 28 |
 | React components | 143 |
 | Item types | 7 (snippet, prompt, command, note, file, image, link) |
