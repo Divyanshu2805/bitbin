@@ -91,11 +91,17 @@ const itemColumns = Prisma.sql`
 /**
  * Items matching what was typed: title matches first, then the most recently edited.
  *
- * A text search finds its rows in two parts joined by UNION - text-field matches, and tag matches -
- * rather than one WHERE with `OR EXISTS (tag match)`. With the EXISTS inside the OR, Postgres
- * cannot combine the trigram indexes and reads every one of the user's rows instead; split, the
- * text part is served by the indexes and the tag part by `tags_name_trgm_idx`. UNION (not UNION
- * ALL) returns an item matched both ways once.
+ * - **One character** matches nearly every item and no trigram index can serve it, so one pass over
+ *   the user's rows (text fields, then a tag check per row) is the cheapest plan.
+ * - **Anything longer** first looks up the ids of the tags whose name matches (`tags_name_trgm_idx`;
+ *   usually none), then finds the rows in two parts joined by UNION: text-field matches, served by
+ *   the trigram indexes, and items carrying one of those tags. With the tag check inside the text
+ *   `OR`, Postgres cannot combine the trigram indexes and reads every one of the user's rows. Passing
+ *   the tag ids rather than joining from the tag names lets the planner see how many items carry
+ *   them, and skip the tag part entirely when no tag matches. UNION (not UNION ALL) returns an item
+ *   matched both ways once.
+ * - **`#tag`** looks only at tags. It is ordered by last edit alone, so scanning the newest items and
+ *   checking each stops after `limit` matches, which suits the short, broad prefixes typed first.
  */
 export async function searchItems(
   userId: string,
@@ -111,31 +117,55 @@ export async function searchItems(
     WHERE it."A" = i.id AND g.name ILIKE ${pattern}
   )`;
 
-  const rows = search.tagsOnly
-    ? await prisma.$queryRaw<ItemRow[]>`
-        SELECT ${itemColumns}
-        FROM "items" i JOIN "item_types" t ON t.id = i."itemTypeId"
-        WHERE i."userId" = ${userId} AND ${tagMatch}
-        ORDER BY i."updatedAt" DESC
-        LIMIT ${limit}`
-    : await prisma.$queryRaw<ItemRow[]>`
-        WITH hits AS (
-          SELECT m.id FROM "items" m
-          WHERE m."userId" = ${userId} AND (
-            m.title ILIKE ${pattern} OR m.content ILIKE ${pattern}
-            OR m.description ILIKE ${pattern} OR m.url ILIKE ${pattern}
-          )
+  if (search.tagsOnly) {
+    const rows = await prisma.$queryRaw<ItemRow[]>`
+      SELECT ${itemColumns}
+      FROM "items" i JOIN "item_types" t ON t.id = i."itemTypeId"
+      WHERE i."userId" = ${userId} AND ${tagMatch}
+      ORDER BY i."updatedAt" DESC
+      LIMIT ${limit}`;
+    return rows.map(toSearchableItem);
+  }
+
+  if (search.text.length === 1) {
+    const rows = await prisma.$queryRaw<ItemRow[]>`
+      SELECT ${itemColumns}
+      FROM "items" i JOIN "item_types" t ON t.id = i."itemTypeId"
+      WHERE i."userId" = ${userId} AND (
+        i.title ILIKE ${pattern} OR i.content ILIKE ${pattern}
+        OR i.description ILIKE ${pattern} OR i.url ILIKE ${pattern} OR ${tagMatch}
+      )
+      ORDER BY (i.title ILIKE ${pattern}) DESC, i."updatedAt" DESC
+      LIMIT ${limit}`;
+    return rows.map(toSearchableItem);
+  }
+
+  const tagIds = (await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM "tags" WHERE name ILIKE ${pattern}`).map((tag) => tag.id);
+
+  const tagHits =
+    tagIds.length > 0
+      ? Prisma.sql`
           UNION
-          SELECT tg."A" FROM "tags" tn
-          JOIN "_ItemTags" tg ON tg."B" = tn.id
+          SELECT tg."A" FROM "_ItemTags" tg
           JOIN "items" m ON m.id = tg."A" AND m."userId" = ${userId}
-          WHERE tn.name ILIKE ${pattern}
-        )
-        SELECT ${itemColumns}
-        FROM hits h JOIN "items" i ON i.id = h.id JOIN "item_types" t ON t.id = i."itemTypeId"
-        WHERE i."userId" = ${userId}
-        ORDER BY (i.title ILIKE ${pattern}) DESC, i."updatedAt" DESC
-        LIMIT ${limit}`;
+          WHERE tg."B" = ANY(${tagIds})`
+      : Prisma.empty;
+
+  const rows = await prisma.$queryRaw<ItemRow[]>`
+    WITH hits AS (
+      SELECT m.id FROM "items" m
+      WHERE m."userId" = ${userId} AND (
+        m.title ILIKE ${pattern} OR m.content ILIKE ${pattern}
+        OR m.description ILIKE ${pattern} OR m.url ILIKE ${pattern}
+      )
+      ${tagHits}
+    )
+    SELECT ${itemColumns}
+    FROM hits h JOIN "items" i ON i.id = h.id JOIN "item_types" t ON t.id = i."itemTypeId"
+    WHERE i."userId" = ${userId}
+    ORDER BY (i.title ILIKE ${pattern}) DESC, i."updatedAt" DESC
+    LIMIT ${limit}`;
 
   return rows.map(toSearchableItem);
 }

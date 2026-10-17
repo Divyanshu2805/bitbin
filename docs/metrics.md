@@ -1,17 +1,17 @@
 # Project Metrics
 
-Measured figures for BitBin, each with how to re-check it. Nothing here is an estimate unless it says "about". Last measured on 2026-10-11; the Lighthouse scores are from 2026-10-06.
+Measured figures for BitBin, each with how to re-check it. Nothing here is an estimate unless it says "about". The tests and coverage were last measured on 2026-10-17, the rest on 2026-10-11; the Lighthouse scores are from 2026-10-06.
 
 ## Quality
 
 | Metric | Value | How to check |
 |---|---|---|
-| Unit tests | 994 across 83 files (Vitest), all passing | `npm run test` |
+| Unit tests | 1,007 across 83 files (Vitest), all passing | `npm run test` |
 | Desktop app tests | 45 (`node:test`), all passing | `cd desktop && npm test` |
-| Statement coverage | 85.2% (2,353 of 2,761) | `npm run test:coverage` |
-| Branch coverage | 85.3% (1,501 of 1,760) | same |
-| Line coverage | 85.4% (2,106 of 2,465) | same |
-| Function coverage | 75.5% (333 of 441) | same |
+| Statement coverage | 85.9% (2,580 of 3,005) | `npm run test:coverage` |
+| Branch coverage | 86.0% (1,657 of 1,926) | same |
+| Line coverage | 86.0% (2,297 of 2,671) | same |
+| Function coverage | 76.9% (377 of 490) | same |
 | Coverage floor enforced in CI | 80% statements, branches and lines; 70% functions | `vitest.config.ts` |
 | Scope of coverage | `src/actions`, `src/lib`, `src/app/api` (server code); components are checked in the browser | `vitest.config.ts` |
 | Route handlers with tests | 28 of 28 (every handler except NextAuth's own) | `src/app/api/**/route.test.ts` |

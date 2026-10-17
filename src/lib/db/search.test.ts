@@ -97,51 +97,83 @@ describe('searchItems', () => {
     queryRaw.mockResolvedValue([row()]);
   });
 
+  /** A text search of two or more characters: the matching tags' ids first, then the items */
+  function mockTagIds(ids: string[]) {
+    queryRaw.mockResolvedValueOnce(ids.map((id) => ({ id })));
+  }
+
   it('is scoped to the user and binds the text as a parameter, never into the SQL', async () => {
     await searchItems('user-1', "x'; DROP TABLE items; --");
 
-    const { text, values } = sqlOf();
+    for (const call of [0, 1]) {
+      const { text, values } = sqlOf(call);
+      expect(text).not.toContain('DROP TABLE');
+      expect(values).toContain("%x'; DROP TABLE items; --%");
+    }
+    const { text, values } = sqlOf(1);
     expect(text).toContain('m."userId" =');
     expect(values).toContain('user-1');
-    expect(text).not.toContain('DROP TABLE');
-    expect(values).toContain("%x'; DROP TABLE items; --%");
+  });
+
+  it('looks up the ids of the tags whose name matches before reading items', async () => {
+    mockTagIds(['t1']);
+    await searchItems('user-1', 'debounce');
+
+    const { text, values } = sqlOf(0);
+    expect(text).toContain('FROM "tags" WHERE name ILIKE');
+    expect(values).toEqual(['%debounce%']);
   });
 
   it('matches the text fields and the tags, ranking title matches first', async () => {
+    mockTagIds(['t1', 't2']);
     await searchItems('user-1', 'debounce');
 
-    const { text } = sqlOf();
-    for (const column of ['m.title ILIKE', 'm.content ILIKE', 'm.description ILIKE', 'm.url ILIKE', 'tn.name ILIKE']) {
+    const { text, values } = sqlOf(1);
+    for (const column of ['m.title ILIKE', 'm.content ILIKE', 'm.description ILIKE', 'm.url ILIKE', 'tg."B" = ANY(']) {
       expect(text).toContain(column);
     }
+    expect(values).toContainEqual(['t1', 't2']);
     expect(text).toContain('ORDER BY (i.title ILIKE');
   });
 
   it('finds text matches and tag matches as two sets joined by UNION, so the trigram indexes can serve each', async () => {
+    mockTagIds(['t1']);
     await searchItems('user-1', 'debounce');
 
-    const { text } = sqlOf();
+    const { text } = sqlOf(1);
     const [textPart, tagPart] = text.split(/\bUNION\b/);
     expect(tagPart).toBeDefined();
     expect(textPart).toContain('m.title ILIKE');
     expect(textPart).not.toContain('EXISTS');
-    expect(textPart).not.toContain('tn.name ILIKE');
-    expect(tagPart).toContain('tn.name ILIKE');
+    expect(textPart).not.toContain('"_ItemTags"');
+    expect(tagPart).toContain('tg."B" = ANY(');
     expect(tagPart).not.toContain('m.title ILIKE');
   });
 
-  it('returns an item matched by both its text and a tag once (UNION, not UNION ALL)', async () => {
+  it('leaves the tag part out when no tag name matches', async () => {
+    mockTagIds([]);
     await searchItems('user-1', 'debounce');
 
-    const { text } = sqlOf();
+    const { text } = sqlOf(1);
+    expect(text).not.toMatch(/\bUNION\b/);
+    expect(text).not.toContain('"_ItemTags" tg');
+    expect(text).toContain('m.title ILIKE');
+  });
+
+  it('returns an item matched by both its text and a tag once (UNION, not UNION ALL)', async () => {
+    mockTagIds(['t1']);
+    await searchItems('user-1', 'debounce');
+
+    const { text } = sqlOf(1);
     expect(text.match(/\bUNION\b/g)).toHaveLength(1);
     expect(text).not.toMatch(/UNION\s+ALL/);
   });
 
   it('scopes the text matches, the tag matches and the rows read back to the user', async () => {
+    mockTagIds(['t1']);
     await searchItems('user-1', 'debounce');
 
-    const { text, values } = sqlOf();
+    const { text, values } = sqlOf(1);
     const [textPart, tagPart] = text.split(/\bUNION\b/);
     expect(textPart).toContain('m."userId" =');
     expect(tagPart).toContain('m."userId" =');
@@ -149,9 +181,23 @@ describe('searchItems', () => {
     expect(values.filter((value) => value === 'user-1')).toHaveLength(3);
   });
 
+  it('reads a one-character search in a single pass over the user\'s rows, tags included', async () => {
+    await searchItems('user-1', 'a');
+
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+    const { text, values } = sqlOf(0);
+    expect(text).not.toMatch(/\bUNION\b/);
+    expect(text).toContain('i."userId" =');
+    expect(text).toContain('i.title ILIKE');
+    expect(text).toContain('g.name ILIKE');
+    expect(values).toContain('user-1');
+    expect(values).toContain('%a%');
+  });
+
   it('looks only at tags for a #tag search', async () => {
     await searchItems('user-1', '#react');
 
+    expect(queryRaw).toHaveBeenCalledTimes(1);
     const { text, values } = sqlOf();
     expect(text).toContain('g.name ILIKE');
     expect(text).not.toContain('i.title ILIKE');
@@ -200,6 +246,12 @@ describe('searchItems', () => {
   it("never selects an item's whole content, only its first 101 characters", async () => {
     await searchItems('user-1', 'x');
     expect(sqlOf().text).toContain('left(i.content, 101)');
+
+    vi.clearAllMocks();
+    mockTagIds([]);
+    queryRaw.mockResolvedValueOnce([]);
+    await searchItems('user-1', 'debounce');
+    expect(sqlOf(1).text).toContain('left(i.content, 101)');
   });
 });
 

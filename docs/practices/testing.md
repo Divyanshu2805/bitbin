@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-994 tests in 83 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+1,007 tests in 83 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -17,7 +17,7 @@ npm run test:watch   # watch mode
 | Collections | `src/actions/collections.test.ts`, `src/lib/db/collections.test.ts` | CRUD, favorite and pin toggles, the Free collection cap, dominant colour, pinned-first ordering |
 | Tags | `src/actions/tags.test.ts`, `src/lib/db/tags.test.ts` | Validation, rate limit, rename, merge and delete touching only the caller's own items, unused rows removed |
 | Plan limits | `src/lib/usage.test.ts`, `src/lib/db/plan-limits.test.ts` | Free / Pro limits, and the locked count-then-insert under a concurrent race |
-| Search | `src/actions/search.test.ts`, `src/lib/db/search.test.ts` | Result shape, `#tag` parsing, escaping of `%` and `_`, previews cut in SQL |
+| Search | `src/actions/search.test.ts`, `src/lib/db/search.test.ts` | Result shape, `#tag` parsing, escaping of `%` and `_`, previews cut in SQL; the tag-id lookup, the tag part left out when no tag matches, the one-character single pass |
 | Pagination | `src/lib/keyset.test.ts` | Cursor round trips, bad cursors, `after` / `before`, page edges; segments bounded at the cursor, a page topped up from the other pinned group in both directions |
 | AI | `src/actions/ai.test.ts`, `src/lib/ai-json.test.ts`, `src/lib/openai.test.ts`, `src/app/api/v1/ai/*/route.test.ts` | Auth and Pro guards, validation, rate limiting, prompts, JSON mode with a fallback, JSON found in fences and sentences, the `AI_API_KEY` / `OPENAI_API_KEY` names, the token endpoints' status codes |
 | API tokens and `/api/v1` | `src/actions/api-tokens.test.ts`, `src/lib/api-tokens.test.ts`, `src/lib/api-auth.test.ts`, `src/app/api/v1/*/route.test.ts`, `src/lib/mcp.test.ts` | Pro guard, token limit, hash-only storage, expiry, scopes per endpoint, scoped revoke; Bearer parsing; `401` / `403` / `413` / `429`; `POST /api/v1/files` cleaning up after a failed create; searching and reading items without a stored file's address; the MCP server (protocol answers, tools hidden and refused by scope, saving into a collection by name) |

@@ -15,8 +15,9 @@ CommandPalette (cmdk dialog) → PaletteBody (mounted only while open)
    └── the answer replaces the list; an older answer that arrives late is dropped
 ```
 
-- **The database does the matching.** `searchItems` is one query: a case-insensitive "contains" (`ILIKE '%text%'`) over the title, content, description, URL and tag names, scoped by `userId`. Items whose **title** matches come first, then the most recently edited. `#react` looks only at tags. Collections match on name.
+- **The database does the matching.** `searchItems` is a case-insensitive "contains" (`ILIKE '%text%'`) over the title, content, description, URL and tag names, scoped by `userId`. Items whose **title** matches come first, then the most recently edited. `#react` looks only at tags. Collections match on name.
 - **Indexed.** GIN trigram indexes (`pg_trgm`) on those columns make `ILIKE '%…%'` use an index; they come from the `add_search_trigram_indexes` migration and are declared in `schema.prisma` so Prisma doesn't treat them as drift. Without the migration the search still works, just by scanning the user's rows.
+- **Three shapes, by what was typed.** Two or more characters: first the ids of the tags whose name matches (usually none), then text matches `UNION` items carrying one of those tags. Kept apart, the text part is served by the trigram indexes, the tag part is left out when no tag matches, and the planner can see how many items carry the tags. One character matches nearly every item and no trigram can serve it, so it is one pass over the user's rows. `#tag` scans the newest items and stops after 20 matches, which suits the broad prefixes typed first.
 - **Literal matching.** `%`, `_` and `\` in what you type are escaped (`containsPattern`), so "50%" finds "50%", not everything starting "50". The text is bound as a query parameter, never concatenated into the SQL.
 - **Only a handful of rows leave the database**, and an item's preview is `left(content, 101)` cut in SQL, so the full text of an item is never loaded to draw a one-line preview.
 - **Rate limited**: 240 searches a minute per user (the `search` limit), far more than typing produces.
