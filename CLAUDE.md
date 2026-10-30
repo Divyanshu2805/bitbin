@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. It exists so an agent 
 
 ## Project overview
 
-BitBin is a personal store for developer knowledge — snippets, prompts, commands, notes, files, images and links — organized into collections, tagged, and searchable with ⌘K. Free and Pro plans (Stripe); Pro adds files, images, AI helpers, API tokens (a browser extension, a desktop tray app and an MCP server for AI assistants use them) and ZIP export and import. The full feature list is [`docs/features.md`](docs/features.md).
+BitBin is a personal store for developer knowledge — snippets, prompts, commands, notes, files, images and links — organized into collections, tagged, and searchable with ⌘K. Free and Pro plans (Stripe); Pro adds files, images, AI helpers, API tokens (a browser extension, a desktop tray app and an MCP server for AI assistants use them) and ZIP export and import. The feature list is in the [`README`](README.md).
 
 - **One Next.js 16 App Router app**, React 19, TypeScript 5. No separate API server.
 - PostgreSQL (Neon) through Prisma 7 with the pg driver adapter; NextAuth v5 with JWT sessions; Tailwind v4 + shadcn/ui.
@@ -16,14 +16,14 @@ These are authoritative and kept current:
 
 | Need | Read |
 |---|---|
-| Layers, module map, request flows, "where do I change X" | [`docs/architecture/`](docs/architecture/README.md) |
-| Why the app is shaped as it is | [`docs/architecture/decisions/`](docs/architecture/decisions/README.md) |
-| Security boundaries and where they're enforced | [`docs/architecture/security-model.md`](docs/architecture/security-model.md) |
-| Tables, item types, migrations | [`docs/schema/`](docs/schema/README.md) |
-| Every route handler and server action, errors, rate limits | [`docs/api/`](docs/api/README.md) |
-| Setup, configuration, troubleshooting | [`docs/local-development/`](docs/local-development/README.md) |
-| Vercel, provider callbacks, crons, releases | [`docs/deployment/`](docs/deployment/README.md), [`operations.md`](docs/deployment/operations.md) |
-| What the app does, and its numbers | [`docs/features.md`](docs/features.md), [`docs/metrics.md`](docs/metrics.md) |
+| Layers, request flows, security, design decisions | [`docs/architecture.md`](docs/architecture.md) |
+| "Where do I change X" | [`.claude/practices/where-to-change.md`](.claude/practices/where-to-change.md) |
+| Tables, item types, indexes, migrations, seed | [`docs/data-model.md`](docs/data-model.md) |
+| Every route handler and server action, errors, rate limits, the token API | [`docs/api.md`](docs/api.md) |
+| Setup, configuration, commands, troubleshooting | [`docs/development.md`](docs/development.md) |
+| Vercel, CI, schema releases, crons, operations | [`docs/deployment.md`](docs/deployment.md) |
+| What the app does, and its measured numbers | [`README.md`](README.md), [`docs/results.md`](docs/results.md) |
+| The checklist after a deploy | [`.claude/practices/smoke-test.md`](.claude/practices/smoke-test.md) |
 
 If a change would make any doc inaccurate, **update that doc in the same change**.
 
@@ -52,7 +52,7 @@ desktop/              Electron tray app (global shortcut saves the clipboard), p
                       outside the Next build (tsconfig/eslint/vitest exclude it); `cd desktop && npm test` runs its tests
 scripts/              cleanup-users.ts, copy-monaco.mjs, copy-pdfjs.mjs
 .github/              workflows/ci.yml (audit, lint, tests + coverage floor, build)
-docs/                 documentation — start at docs/README.md
+docs/                 documentation — start at docs/README.md; the working notes imported below are in .claude/practices/
 ```
 
 ## Commands
@@ -82,7 +82,7 @@ npx vitest run src/actions/items.test.ts      # one test file
 - **Every stored file goes through `ingestFile`** (`lib/file-ingest.ts`): the web upload, `/api/v1/files` and the ZIP import all use it. A new way to store a file must too.
 - **Free-plan limits are enforced under a lock.** A new way to create items or collections must pass `maxItems` / `maxCollections` so the count and insert run in one transaction (`lockUserForLimit`).
 - **`demo@bitbin.dev` is a public sandbox.** Its password is published, so anything that changes an account itself (password, name, deletion, billing, email, sessions) must refuse it with `isDemoEmail` (`lib/demo.ts`); what it saves is shown to the next visitor, so no links, long pastes or imports (`demoItemRestriction`). A daily cron (`/api/cron/reset-demo`, needs `CRON_SECRET`) restores its library; a weekly one (`/api/cron/sweep-files`) deletes stored files no item points at.
-- **Expensive or abusable endpoints get a rate limit** (`checkRateLimit`, or `checkActionRateLimit` in actions); the table is in `docs/api/errors-and-rate-limits.md`.
+- **Expensive or abusable endpoints get a rate limit** (`checkRateLimit`, or `checkActionRateLimit` in actions); the table is in `docs/api.md`.
 - **A cookie-authenticated route that changes state calls `rejectCrossSite(request)` first** (`lib/same-origin.ts`).
 - **Nothing third-party loads in a page.** The Content Security Policy (`lib/csp.ts`) lists this site only; the code editor is served from `public/monaco` (generated by `scripts/copy-monaco.mjs`), not a CDN. Never add `'unsafe-eval'` outside development.
 - **`/api/v1` handlers pass the scope they need** to `authenticateApiRequest(request, scope)`; tokens always expire and carry scopes (`lib/api-scopes.ts`). The MCP endpoint is the one that passes none: each tool in `lib/mcp.ts` names its scope, and a new tool must too.
@@ -99,27 +99,27 @@ npx vitest run src/actions/items.test.ts      # one test file
 
 The following are imported in full.
 
-@docs/practices/security-guardrails.md
+@.claude/practices/security-guardrails.md
 
-@docs/practices/coding-conventions.md
+@.claude/practices/coding-conventions.md
 
-@docs/practices/testing.md
+@.claude/practices/testing.md
 
-@docs/practices/definition-of-done.md
+@.claude/practices/definition-of-done.md
 
 ## Known pitfalls
 
 Silent-failure traps this stack has hit, imported in full. Check here first when something "should work" but doesn't.
 
-@docs/practices/gotchas/nextjs-and-auth.md
+@.claude/practices/gotchas/nextjs-and-auth.md
 
-@docs/practices/gotchas/prisma.md
+@.claude/practices/gotchas/prisma.md
 
-@docs/practices/gotchas/integrations.md
+@.claude/practices/gotchas/integrations.md
 
-@docs/practices/gotchas/security-and-csp.md
+@.claude/practices/gotchas/security-and-csp.md
 
-@docs/practices/gotchas/tooling-and-ci.md
+@.claude/practices/gotchas/tooling-and-ci.md
 
 ## Commits
 

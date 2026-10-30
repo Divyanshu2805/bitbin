@@ -54,7 +54,7 @@ Actions don't revalidate; components call `router.refresh()` after a successful 
 
 ## The palette searches on the server, as you type
 
-`CommandPalette` calls the `searchLibrary` action after a pause in typing, so what you just saved is found without any refresh, and nothing is preloaded. `shouldFilter={false}` stops cmdk filtering the answer a second time. The search is a raw `ILIKE` query: user text goes through `containsPattern` (which escapes `%`, `_` and `\`) and is bound as a parameter, never put into the SQL. See [search](../../architecture/flows/search.md).
+`CommandPalette` calls the `searchLibrary` action after a pause in typing, so what you just saved is found without any refresh, and nothing is preloaded. `shouldFilter={false}` stops cmdk filtering the answer a second time. The search is a raw `ILIKE` query: user text goes through `containsPattern` (which escapes `%`, `_` and `\`) and is bound as a parameter, never put into the SQL. See [search](../../../docs/architecture.md#search).
 
 ## `'use server'` files may only export async functions
 

@@ -14,7 +14,7 @@ File cards draw a PDF's first page with `pdfjs-dist`; its worker, fonts and char
 
 ## `script-src 'unsafe-inline'` is a trade-off, not an oversight
 
-A strict nonce-based policy would make every page render dynamically. See [ADR 0010](../../architecture/decisions/0010-content-security-policy-without-script-nonces.md). Don't "fix" it by adding a nonce to one component; the whole approach changes, or none of it does. Don't add `'unsafe-eval'` for convenience outside development.
+A strict nonce-based policy would make every page render dynamically. See [ADR 0010](../../../docs/architecture.md#design-decisions). Don't "fix" it by adding a nonce to one component; the whole approach changes, or none of it does. Don't add `'unsafe-eval'` for convenience outside development.
 
 ## The CSP applies to downloads differently
 

@@ -9,7 +9,7 @@ npm run test:watch   # watch mode
 
 ## What's covered
 
-1,007 tests in 83 files, grouped by area. Re-measured figures are on [project metrics](../metrics.md).
+1,007 tests in 83 files, grouped by area. Re-measured figures are on [project metrics](../../docs/results.md).
 
 | Area | Files | Focus |
 |---|---|---|
@@ -52,7 +52,7 @@ Check these by hand when a change touches them:
 - Components, layout and responsive behaviour, including `prefers-reduced-motion`.
 - Real integrations: Stripe (use `stripe listen` and a test card), R2, Resend, OpenAI.
 
-The [deployment smoke test](../deployment/smoke-test.md) is the end-to-end checklist.
+The [deployment smoke test](smoke-test.md) is the end-to-end checklist.
 
 ## Coverage and CI
 

@@ -8,7 +8,7 @@ In Prisma 7, `npm run db:migrate` (`prisma migrate dev`) **doesn't regenerate th
 
 ## Never `db push`
 
-`npm run db:push` is overridden to fail. `npx prisma db push` still works if typed directly — and silently diverges the database from the migration history. Always `npm run db:migrate`. See [ADR 0006](../../architecture/decisions/0006-schema-changes-only-through-migrations.md).
+`npm run db:push` is overridden to fail. `npx prisma db push` still works if typed directly — and silently diverges the database from the migration history. Always `npm run db:migrate`. See [ADR 0006](../../../docs/architecture.md#design-decisions).
 
 ## Vercel doesn't run migrations
 

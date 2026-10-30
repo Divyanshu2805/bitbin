@@ -20,7 +20,7 @@
 ## Upstash
 
 - **It fails open when unconfigured** (and for AI, uploads and the token API on a Redis error; credential limits fail closed on an error). Missing, placeholder or invalid variables mean no rate limiting at all, with only a log line to show for it. A production deploy without the `UPSTASH_*` variables looks fine and has no brute-force protection.
-- **Local testing trips limits quickly.** Five sign-in attempts in 15 minutes is easy to hit while developing. Clear the keys or unset the variables — see [resetting data](../../local-development/resetting-data.md#clear-rate-limits).
+- **Local testing trips limits quickly.** Five sign-in attempts in 15 minutes is easy to hit while developing. Clear the keys or unset the variables — see [resetting data](../../../docs/development.md#troubleshooting).
 
 ## Resend
 

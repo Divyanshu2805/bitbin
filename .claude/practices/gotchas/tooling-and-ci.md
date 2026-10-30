@@ -30,7 +30,7 @@ Next 16 caches Turbopack's build work in `.next/cache/turbopack` by default, and
 
 ## CI doesn't gate the deploy
 
-Vercel builds every push to `main` on its own. A red CI run doesn't stop that deploy, so treat a failure as something to fix at once, not something that was prevented. See [ADR 0009](../../architecture/decisions/0009-ci-checks-and-a-coverage-floor.md).
+Vercel builds every push to `main` on its own. A red CI run doesn't stop that deploy, so treat a failure as something to fix at once, not something that was prevented. See [ADR 0009](../../../docs/architecture.md#design-decisions).
 
 ## Lighthouse numbers need a production build
 

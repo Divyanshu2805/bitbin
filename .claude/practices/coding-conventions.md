@@ -7,7 +7,7 @@ The patterns the codebase already follows. Match them rather than introducing a 
 - Pages (`src/app/**/page.tsx`) are server components: call `auth()`, redirect when signed out, load data with `Promise.all` over `lib/db` functions, render.
 - Signed-in pages live in `src/app/(app)/`, whose `layout.tsx` renders the shell (`DashboardLayout`) and loads the sidebar's data. A page there renders only its content, loads only its own data, and still checks the session itself.
 - Client components call **server actions** for writes, or `fetch` a route handler when HTTP is required (uploads, the drawer's item fetch, Stripe redirects).
-- Queries live in `src/lib/db/`. Integrations live in thin wrappers in `src/lib/`. See the [module map](../architecture/module-map.md#layering-rules).
+- Queries live in `src/lib/db/`. Integrations live in thin wrappers in `src/lib/`. See the [module map](../../docs/architecture.md#overview).
 
 ## Server actions
 
@@ -45,7 +45,7 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 ## Route handlers
 
 - `auth()` first; return `401` JSON without a session.
-- Return `NextResponse.json({ error }, { status })` for every failure, with the status that matches the [error table](../api/errors-and-rate-limits.md#route-handlers).
+- Return `NextResponse.json({ error }, { status })` for every failure, with the status that matches the [error table](../../docs/api.md#errors).
 - Wrap the body in `try/catch`, `console.error` the real error with context, and return a generic `500` message.
 - A handler authorised by the session cookie that changes state starts with `const crossSite = rejectCrossSite(request); if (crossSite) return crossSite` (`lib/same-origin.ts`).
 - Only add a route handler when a server action can't do the job — a public URL (auth emails, webhooks), streaming bytes, or a non-browser caller.
@@ -93,7 +93,7 @@ export async function renameItem(itemId: string, input: z.infer<typeof renameSch
 ## What to avoid
 
 - Importing `prisma` in a component or a new page — add a `lib/db` function.
-- `prisma db push` — see [migrations](../schema/migrations-and-seeding.md).
+- `prisma db push` — see [migrations](../../docs/data-model.md#migrations).
 - Checking Pro in the UI only. Every limit is enforced on the server.
 - Logging secrets, tokens or full request bodies.
 - Adding a global client store — a small context next to the feature is the pattern.

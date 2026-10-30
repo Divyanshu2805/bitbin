@@ -1,6 +1,6 @@
 # Security Guardrails
 
-The boundaries no change may weaken. The reasoning behind them is in the [security model](../architecture/security-model.md).
+The boundaries no change may weaken. The reasoning behind them is in the [security model](../../docs/architecture.md#security).
 
 1. **The user id comes from the session, only.** Actions use `getAuthedSession()`, route handlers and pages use `auth()`. No endpoint takes a user id from a body, query string or path — the download route compares the path to the session, it doesn't trust it.
 2. **Every query is scoped.** A `lib/db` function that reads or writes user data filters by `userId`, or loads the row and checks `userId` before touching it. Something that belongs to another user is reported as not found.

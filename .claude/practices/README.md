@@ -10,3 +10,5 @@ How code is written, tested and changed in this repository.
 | [Definition of done](definition-of-done.md) | The checklist every change meets before it merges |
 | [Design system](design-system.md) | Colours, type, motion, reusable UI pieces, accessibility |
 | [Known pitfalls](gotchas/README.md) | Silent-failure traps this stack has hit, by area |
+| [Where do I change…?](where-to-change.md) | A task-oriented index into the code |
+| [Smoke test](smoke-test.md) | The checklist after a deploy |

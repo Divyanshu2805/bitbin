@@ -329,4 +329,4 @@ Every page that lists items or collections renders them through `ItemsView` / `C
 ## Related
 
 - [Coding conventions](coding-conventions.md#components)
-- [Where do I change…?](../architecture/where-to-change.md#look-and-feel)
+- [Where do I change…?](where-to-change.md#look-and-feel)

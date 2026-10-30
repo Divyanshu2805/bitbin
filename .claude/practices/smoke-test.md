@@ -50,7 +50,7 @@ Run through this after a deploy that touches anything beyond copy or styling. It
 
 - [ ] Stripe dashboard → Webhooks shows the deliveries as succeeded (`200`).
 - [ ] Vercel's function logs show no `Upstash Redis not configured`, `Invalid Upstash Redis config` or `Rate limit check failed` lines.
-- [ ] Vercel → Cron Jobs lists `/api/cron/reset-demo` and `/api/cron/sweep-files`, and `CRON_SECRET` is set. A dry run of the sweep (`?dryRun=1`, see [operations](operations.md#scheduled-jobs)) answers `200` and `aborted: null`.
+- [ ] Vercel → Cron Jobs lists `/api/cron/reset-demo` and `/api/cron/sweep-files`, and `CRON_SECRET` is set. A dry run of the sweep (`?dryRun=1`, see [operations](../../docs/deployment.md#scheduled-jobs)) answers `200` and `aborted: null`.
 - [ ] **Settings → Desktop app → Download for Windows** downloads `BitBin-Setup.exe` (a GitHub Release exists).
 - [ ] The latest GitHub Actions run on `main` is green, and Sentry is receiving events (`SENTRY_DSN` set).
 - [ ] The Cloudflare R2 bucket still has public access off: a direct object URL returns `403`/`404`, while images render in the app.
