@@ -1,4 +1,4 @@
-// Client for BitBin's token API (docs/api/token-api.md). Runs in the main
+// Client for BitBin's token API (docs/api.md). Runs in the main
 // process only, so the token never reaches a renderer.
 
 const { parseTags } = require('./guess');

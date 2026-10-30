@@ -10,7 +10,7 @@ import { prefersReducedMotion, useInView, usePagePaused } from "@/hooks/use-moti
 import { Accent, SectionHeading } from "./ui";
 
 // BitBin as an MCP server: an assistant in a terminal, connected to the bin
-// through POST /api/v1/mcp (lib/mcp.ts, docs/api/token-api.md), using the
+// through POST /api/v1/mcp (lib/mcp.ts, docs/api.md), using the
 // server's real tools. Two requests take turns. Saving: it looks for the
 // command first (search_items), finds the collection (list_collections) and
 // files it there (save_item). Finding: it searches (search_items) and reads the

@@ -2,7 +2,7 @@
 
 A tray app for Windows, macOS and Linux. Press a system-wide shortcut (`Ctrl+Alt+B`, `⌘⌥B` on macOS) and the clipboard opens in a small window, ready to save as a BitBin item: text becomes a snippet, command, note or link, and a copied screenshot or an attached file becomes an image or file item. Requires BitBin Pro.
 
-Electron, plain JavaScript (CommonJS), no build step. The folder has its own `package.json` and is excluded from the Next app's TypeScript and ESLint config, and from Vitest. It talks only to the [token API](../docs/api/token-api.md).
+Electron, plain JavaScript (CommonJS), no build step. The folder has its own `package.json` and is excluded from the Next app's TypeScript and ESLint config, and from Vitest. It talks only to the [token API](../docs/api.md#token-api).
 
 | File | Does |
 |---|---|

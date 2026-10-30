@@ -35,7 +35,7 @@ The suggested key is `Ctrl+B` (`⌘+B` on macOS). Many sites and editors use it 
 
 ## API
 
-It talks only to the [token API](../docs/api/token-api.md) (`/api/v1/me`, `/collections`, `/items`, `/ai/tags`, `/ai/description`) with `Authorization: Bearer bb_…`. The token is kept in `chrome.storage.local` on this device.
+It talks only to the [token API](../docs/api.md#token-api) (`/api/v1/me`, `/collections`, `/items`, `/ai/tags`, `/ai/description`) with `Authorization: Bearer bb_…`. The token is kept in `chrome.storage.local` on this device.
 
 ## Adding another site
 
