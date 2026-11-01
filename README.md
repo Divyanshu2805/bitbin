@@ -14,6 +14,10 @@
   <img src="https://img.shields.io/badge/TypeScript-5-0a0b0d?logo=typescript" alt="TypeScript 5" />
   <img src="https://img.shields.io/badge/PostgreSQL-Neon-0a0b0d?logo=postgresql" alt="PostgreSQL on Neon" />
   <img src="https://img.shields.io/badge/Prisma-7-0a0b0d?logo=prisma" alt="Prisma 7" />
+  <img src="https://img.shields.io/badge/Redis-Upstash-0a0b0d?logo=redis" alt="Redis on Upstash" />
+  <img src="https://img.shields.io/badge/Stripe-Billing-0a0b0d?logo=stripe" alt="Stripe" />
+  <img src="https://img.shields.io/badge/Cloudflare-R2-0a0b0d?logo=cloudflare" alt="Cloudflare R2" />
+  <img src="https://img.shields.io/badge/Electron-Desktop-0a0b0d?logo=electron" alt="Electron" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0a0b0d" alt="MIT License" /></a>
 </p>
 
@@ -66,16 +70,6 @@ The demo account is shared and resets every day, so it can't change its password
 | AI helpers | | ✓ |
 | Extension, desktop app, MCP | | ✓ |
 | Export and import | JSON | JSON and ZIP with files |
-
-## Engineering highlights
-
-Measured on 1,000,000 synthetic items in a local Postgres. Details in [docs/results.md](docs/results.md).
-
-- **Rare-word search: 311 ms → 0.11 ms** in a 100,000-item account. The search was split so its trigram indexes serve it.
-- **Tag-name search: 344 ms → 33 ms**, and **20.8 ms → 12.6 ms** in a 5,000-item account once matching tags are looked up first.
-- **Deep list pages: 45.6 ms → 9.3 ms** 90% down a 40,000-snippet list. Cursor pages read in index ranges instead of `OFFSET`.
-- **Free-plan limits hold under concurrency.** Counts and inserts run in one transaction under a row lock, so two requests at 49 items can't both get through.
-- **1,007 tests**, about 86% coverage of the server code, and Lighthouse accessibility 100 on all 12 pages measured.
 
 ## Screenshots
 
